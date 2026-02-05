@@ -1,0 +1,80 @@
+plugins {
+    id 'java'
+    id("xyz.jpenilla.run-paper") version "2.3.1"
+    id 'com.gradleup.shadow' version '9.3.0'
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.19"
+}
+
+version = "1.0"
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "paper-repo"
+        url = "https://repo.papermc.io/repository/maven-public/"
+    }
+    maven {
+        name = "cm-repo"
+        url = "https://repo.bsdevelopment.org/releases/"
+    }
+    maven { url 'https://jitpack.io' }
+    maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
+
+    maven { url = uri("https://repo.codemc.io/repository/maven-snapshots/") }
+}
+
+dependencies {
+//    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
+    compileOnly("org.projectlombok:lombok:1.18.42")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
+        exclude group: "org.bukkit", module: "bukkit"
+    }
+    compileOnly("com.github.retrooper:packetevents-spigot:2.11.2")
+    annotationProcessor("org.projectlombok:lombok:1.18.42")
+    testCompileOnly("org.projectlombok:lombok:1.18.42")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.42")
+    implementation("com.github.thatsmusic99:ConfigurationMaster-API:v2.0.0-rc.3")
+    implementation("com.github.stefvanschie.inventoryframework:IF:0.11.6")
+    implementation("com.zaxxer:HikariCP:7.0.2")
+}
+
+paperweight {
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks {
+    runServer {
+        // Configure the Minecraft version for our task.
+        // This is the only required configuration besides applying the plugin.
+        // Your plugin's jar (or shadowJar if present) will be used automatically.
+        minecraftVersion("1.21.11")
+    }
+
+    shadowJar {
+        relocate("com.github.stefvanschie.inventoryframework", "orderium.if")
+        relocate("com.zaxxer", "orderium.zaxxer")
+    }
+}
+
+def targetJavaVersion = 21
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+
+    filteringCharset 'UTF-8'
+    filesMatching('paper-plugin.yml') {
+        expand props
+    }
+}
