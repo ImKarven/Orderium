@@ -19,10 +19,6 @@ public class YourOrderGUI {
         final DBManager db = plugin.getDbManager();
         final UUID pUUID = p.getUniqueId();
         final List<Order> orders = db.getOrders(pUUID);
-        if (orders.size() > 27) {
-            p.sendRichMessage("<red>You exceeded the maximum amount of orders"); // TODO: get message from config
-            return;
-        }
         final ConfigManager cache = plugin.getConfigs();
         final MiniMessage mm = plugin.mm;
         final ChestGui gui = new ChestGui(3, ComponentHolder.of(mm.deserialize(cache.getYoGuiTitle())));
@@ -31,11 +27,11 @@ public class YourOrderGUI {
         for (Order order : orders) {
             ordersPane.addItem(ConvertUtils.parseOrder(order, rawLore, e -> {
                 e.setCancelled(true);
-                // TODO: Handle managing your order
+                ManageOrderDialog.show(order, p);
             }));
         }
 
-        if (orders.size() != 27) {
+        if (orders.size() < 27) {
             ordersPane.addItem(ConvertUtils.parseButton(cache.getNewOrderButton(), e -> {
                 e.setCancelled(true);
                 NewOrderDialog.start(p);

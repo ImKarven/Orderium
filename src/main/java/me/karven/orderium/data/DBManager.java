@@ -3,6 +3,7 @@ package me.karven.orderium.data;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
+import lombok.val;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.MoneyTransaction;
 import me.karven.orderium.obj.Order;
@@ -19,7 +20,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class DBManager {
     private final Orderium plugin;
@@ -60,6 +60,26 @@ public class DBManager {
         exec("CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, before DOUBLE, amount DOUBLE, after DOUBLE)");
 
         reloadOrders();
+    }
+
+    public CompletableFuture<List<ItemStack>> getItems() {
+        final HikariConfig itemConfig = new HikariConfig();
+        itemConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "items.db");
+        final HikariDataSource itemDataSource = new HikariDataSource(itemConfig);
+        final String TABLE_NAME = "items_v" + plugin.VERSION;
+        final List<ItemStack> items = new ArrayList<>();
+        final CompletableFuture<List<ItemStack>> res = new CompletableFuture<>();
+        query(itemDataSource, "SELECT * FROM " + TABLE_NAME).thenAccept(raw -> {
+            try (raw) {
+                while (raw.next()) {
+                    items.add(ItemStack.deserializeBytes(raw.getBytes(1)));
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().severe(e.toString());
+            }
+            res.complete(items);
+        });
+        return res;
     }
 
     private void reloadOrders() {
@@ -114,29 +134,24 @@ public class DBManager {
         int idx = getIdx(orderId);
         if (idx == -1) return;
         final Order order = orders.get(idx);
+        collectOrder(order, amount);
+    }
+    public void collectOrder(Order order, int amount) {
         final int newVal = order.inStorage() - amount;
         order.setInStorage(newVal);
-        exec("UPDATE " + ORDER_TABLE + " SET in_storage = ? WHERE id = ?", newVal, orderId);
+        exec("UPDATE " + ORDER_TABLE + " SET in_storage = ? WHERE id = ?", newVal, order.id());
 
-        if (order.inStorage() == 0 && order.delivered() == order.amount()) deleteOrder(orderId);
+        if (order.inStorage() == 0 && order.delivered() == order.amount()) deleteOrder(order);
     }
 
-    @Deprecated
     public void deliverOrder(int orderId, int amount) {
         int idx = getIdx(orderId);
         if (idx == -1) return;
         final Order order = orders.get(idx);
-        mostDelivered.remove(order);
-        mostPaid.remove(order);
-        final int newVal = Math.min(order.delivered() + amount, order.amount());
-        order.setDelivered(newVal);
-        order.setInStorage(order.inStorage() + amount);
-        exec("UPDATE " + ORDER_TABLE + " SET delivered = ? WHERE id = ?", newVal, orderId);
-        mostDelivered.add(order);
-        mostPaid.add(order);
+        deliverOrder(order, amount);
     }
 
-    public double deliverOrder(Order order, int amount) {
+    public void deliverOrder(Order order, int amount) {
         mostDelivered.remove(order);
         mostPaid.remove(order);
         final int newVal = order.delivered() + amount;
@@ -145,19 +160,22 @@ public class DBManager {
         exec("UPDATE " + ORDER_TABLE + " SET delivered = ? WHERE id = ?", newVal, order.id());
         mostDelivered.add(order);
         mostPaid.add(order);
-        return order.moneyPer() * amount;
     }
 
     public void deleteOrder(int orderId) {
         int idx = getIdx(orderId);
         if (idx == -1) return;
         final Order order = orders.get(idx);
+        deleteOrder(order);
+    }
+
+    public void deleteOrder(Order order) {
         mostMoneyPerItem.remove(order);
         recentlyListed.remove(order);
         mostDelivered.remove(order);
         mostPaid.remove(order);
-        orders.remove(idx);
-        exec("DELETE FROM " + ORDER_TABLE + " WHERE id = ?", orderId);
+        orders.remove(order);
+        exec("DELETE FROM " + ORDER_TABLE + " WHERE id = ?", order.id());
     }
 
     private int getIdx(int orderId) {
@@ -189,12 +207,22 @@ public class DBManager {
     }
 
     public List<Order> getOrders(UUID ownerId) {
-        return orders.stream().filter(order -> order.owner().equals(ownerId)).toList();
+        val toDel = new ArrayList<Order>();
+        val res = orders.stream().filter(order -> {
+            if (!order.owner().equals(ownerId)) return false;
+            if (order.shouldBeDeleted()) {
+                toDel.add(order);
+                return false;
+            }
+            return true;
+        }).toList();
+        toDel.forEach(this::deleteOrder);
+        return res;
     }
 
     public void logTransaction() {
         final UUID uuid = moneyTransaction.player;
-        exec("INSERT INTO " + TRANSACTION_TABLE + " (time, player_most, player_least, before, amount, after)",
+        exec("INSERT INTO " + TRANSACTION_TABLE + " (time, player_most, player_least, before, amount, after) VALUES (?, ?, ?, ?, ?, ?)",
                 System.currentTimeMillis(),
                 uuid.getMostSignificantBits(),
                 uuid.getLeastSignificantBits(),
@@ -222,6 +250,22 @@ public class DBManager {
     }
 
     private CompletableFuture<ResultSet> query(String stmt, Object... params) {
+        final CompletableFuture<ResultSet> completableFuture = new CompletableFuture<>();
+        Bukkit.getAsyncScheduler().runNow(plugin, t -> {
+            try (
+                    final Connection connection = dataSource.getConnection();
+                    final PreparedStatement preparedStatement = connection.prepareStatement(stmt)
+            ) {
+                processStatement(preparedStatement, params);
+                completableFuture.complete(preparedStatement.executeQuery());
+            } catch (SQLException e) {
+                plugin.getLogger().severe(e.toString());
+            }
+        });
+        return completableFuture;
+    }
+
+    private CompletableFuture<ResultSet> query(HikariDataSource dataSource, String stmt, Object... params) {
         final CompletableFuture<ResultSet> completableFuture = new CompletableFuture<>();
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
             try (

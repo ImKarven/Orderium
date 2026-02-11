@@ -12,7 +12,6 @@ public enum SortTypes {
     RECENTLY_LISTED("recently-listed"),
     MOST_DELIVERED("most-delivered"),
     MOST_PAID("most-paid"),
-    DEFAULT("default"),
     A_Z("a-z"),
     Z_A("z-a");
 

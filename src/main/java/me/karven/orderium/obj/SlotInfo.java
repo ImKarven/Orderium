@@ -5,10 +5,9 @@ import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
 import lombok.Getter;
 import lombok.Setter;
 import me.karven.orderium.load.Orderium;
-import org.bukkit.Material;
+import me.karven.orderium.utils.ConvertUtils;
+import org.bukkit.inventory.ItemType;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 @Getter
@@ -17,31 +16,32 @@ public class SlotInfo implements Cloneable {
     private int slot;
     private List<String> lore;
     private String displayName;
-    private Material type;
+    private ItemType type;
 
-    public SlotInfo(int slot, List<String> lore, String displayName, Material type) {
+    public SlotInfo(int slot, List<String> lore, String displayName, ItemType type) {
         this.slot = slot;
         this.lore = lore;
         this.displayName = displayName;
         this.type = type;
     }
 
+
     public void addDefault(ConfigFile config, String section) {
         config.addDefault(section + ".slot", slot);
         if (!lore.isEmpty()) config.addDefault(section + ".lore", lore);
         config.addDefault(section + ".display-name", displayName);
-        config.addDefault(section + ".type", type.toString());
+        config.addDefault(section + ".type", type.getKey().toString());
     }
 
     public void deserialize(ConfigSection section) {
         if (section == null) {
-            Orderium.getInst().getLogger().severe("Button deserialization failed because section is null at " + displayName);
+            Orderium.getInst().getLogger().severe("Button deserialization failed because section is null");
             return;
         }
         slot = section.getInteger("slot");
         lore = section.getStringList("lore");
         displayName = section.getString("display-name");
-        type = Material.valueOf(section.getString("type", "AIR").toUpperCase());
+        type = ConvertUtils.getItemType(section.getString("type", "minecraft:stone"));
     }
 
     @Override

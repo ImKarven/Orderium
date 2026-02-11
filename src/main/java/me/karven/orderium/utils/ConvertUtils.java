@@ -1,20 +1,26 @@
 package me.karven.orderium.utils;
 
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
+import io.papermc.paper.datacomponent.DataComponentType;
+import io.papermc.paper.registry.RegistryKey;
+import io.papermc.paper.registry.TypedKey;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
+import org.bukkit.Registry;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ItemType;
 import org.intellij.lang.annotations.Subst;
 
 import java.sql.ResultSet;
@@ -25,19 +31,39 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+@SuppressWarnings("UnstableApiUsage")
 public class ConvertUtils {
     private static DBManager dbManager;
     private static Orderium plugin;
     private static MiniMessage mm;
     private static ConfigManager cache;
+    private static final Registry<ItemType> itemRegistry = Registry.ITEM;
+    private static final Registry<DataComponentType> dataComponentTypeRegistry = Registry.DATA_COMPONENT_TYPE;
 
     public static void init(Orderium pl) {
         plugin = pl;
         dbManager = pl.getDbManager();
         mm = pl.mm;
         cache = pl.getConfigs();
+
     }
 
+    public static ItemType getItemType(final String identifier) {
+        @Subst("ignored")
+        final ItemType itemType = itemRegistry.get(TypedKey.create(RegistryKey.ITEM, Key.key(identifier)));
+        if (itemType == null) return ItemType.STONE;
+        return itemType;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> DataComponentType.Valued<T> getDataComponentType(final String identifier) {
+        final DataComponentType component = dataComponentTypeRegistry.get(TypedKey.create(RegistryKey.DATA_COMPONENT_TYPE, Key.key(identifier)));
+
+        if (component instanceof DataComponentType.Valued) {
+            return (DataComponentType.Valued<T>) component;
+        }
+        return null;
+    }
 
     public static List<Order> convertOrders(ResultSet raw) {
         final List<Order> orders = new ArrayList<>();
@@ -64,23 +90,58 @@ public class ConvertUtils {
     }
 
     public static GuiItem parseOrder(Order order, List<String> rawLore, Consumer<InventoryClickEvent> action) {
-        final ItemStack item = order.item();
+        return new GuiItem(parseOrder(order, rawLore), action);
+    }
+
+    public static ItemStack parseOrder(Order order, List<String> rawLore) {
+        final ItemStack item = order.item().clone();
         final String playerName = Bukkit.getOfflinePlayer(order.owner()).getName();
         final String pName = playerName == null ? String.valueOf(order.owner()) : playerName;
-        final List<Component> lore = rawLore.stream().map(str -> mm.deserialize(str,
+        final List<Component> lore = rawLore.stream().map(str -> delOrder(str, order, pName).decoration(TextDecoration.ITALIC, false)).toList();
+        item.lore(lore);
+
+        return item;
+    }
+
+    /// Deserialize a text with orders placeholders
+    public static Component delOrder(String s, Order order) {
+        final String playerName = Bukkit.getOfflinePlayer(order.owner()).getName();
+        final String pName = playerName == null ? String.valueOf(order.owner()) : playerName;
+        return delOrder(s, order, pName);
+    }
+
+    /// Deserialize a text with orders placeholders
+    public static Component delOrder(String s, Order order, String pName) {
+        long millis = order.expiresAt() - System.currentTimeMillis();
+        long sec = millis / 1000;
+        long min = sec / 60;
+        long hour = min / 60;
+        final long day = hour / 24;
+        hour %= 24;
+        min %= 60;
+        sec %= 60;
+        millis %= 1000;
+        return mm.deserialize(s,
                 Placeholder.unparsed("money-per", formatNumber(order.moneyPer())),
                 Placeholder.unparsed("paid", formatNumber(order.moneyPer() * order.delivered())),
                 Placeholder.unparsed("total", formatNumber(order.moneyPer() * order.amount())),
                 Placeholder.unparsed("delivered", formatNumber(order.delivered())),
                 Placeholder.unparsed("amount", formatNumber(order.amount())),
-                Placeholder.unparsed("player", pName)
-        ).decoration(TextDecoration.ITALIC, false)).toList();
-        item.lore(lore);
-        return new GuiItem(item, action);
+                Placeholder.unparsed("in-storage", formatNumber(order.inStorage())),
+                Placeholder.unparsed("player", pName),
+                Placeholder.component("item", Component.translatable(order.item().translationKey())),
+                Placeholder.component("order-status", mm.deserialize(order.getStatus().getText(),
+                        Placeholder.unparsed("day", String.valueOf(day)),
+                        Placeholder.unparsed("hour", String.valueOf(hour)),
+                        Placeholder.unparsed("minute", String.valueOf(min)),
+                        Placeholder.unparsed("second", String.valueOf(sec)),
+                        Placeholder.unparsed("millisecond", String.valueOf(millis))
+                        ))
+        );
     }
 
     public static GuiItem parseButton(SlotInfo info, Consumer<InventoryClickEvent> action, TagResolver... placeholders) {
-        final ItemStack item = ItemStack.of(info.getType());
+        final ItemStack item = info.getType().createItemStack();
         item.editMeta(meta -> {
             meta.displayName(mm.deserialize(info.getDisplayName(), placeholders).decoration(TextDecoration.ITALIC, false));
             final List<Component> lore = info.getLore().stream().map(str -> mm.deserialize(str, placeholders).decoration(TextDecoration.ITALIC, false)).toList();
@@ -90,7 +151,7 @@ public class ConvertUtils {
     }
 
     public static GuiItem parseSortButton(SlotInfo info, SortTypes type, Consumer<InventoryClickEvent> action) {
-        final ItemStack item = ItemStack.of(info.getType());
+        final ItemStack item = info.getType().createItemStack();
         List<TagResolver> placeholders = new ArrayList<>(List.of(cache.getSortPlaceholders()));
         @Subst("ignored")
         final String identifier = type.getIdentifier();
@@ -168,4 +229,5 @@ public class ConvertUtils {
         num *= unit.get(suffix);
         return num;
     }
+
 }

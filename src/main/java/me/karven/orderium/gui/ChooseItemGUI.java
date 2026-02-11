@@ -4,24 +4,22 @@ import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHold
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
-import com.github.stefvanschie.inventoryframework.pane.Pane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.NMSUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class ChooseItemGUI {
-//    private static final List<ChestGui> pages = new ArrayList<>();
     private static final List<ChestGui> AZ = new ArrayList<>();
     private static final List<ChestGui> ZA = new ArrayList<>();
     private static Orderium plugin;
@@ -33,87 +31,109 @@ public class ChooseItemGUI {
         ChooseItemGUI.plugin = plugin;
         mm = plugin.mm;
         cache = plugin.getConfigs();
-        final int itemsAmount = NMSUtils.getItemsList().size();
+        final int itemsAmount = NMSUtils.getItems(SortTypes.A_Z).size();
 
-        // This wouldn't happen (hopefully) so we don't need to care
-//        if (itemsAmount == 0) {
-//            pagesAmount = -1;
-//            final StaticPane buttons = new StaticPane(0, 5, 9, 1);
-//            addButtons(buttons, 0, );
-//            final ChestGui page = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
-//            page.addPane(buttons);
-//            pages.add(page);
-//            AZ.add(page);
-//            ZA.add(page);
-//            return;
-//        }
         pagesAmount = ConvertUtils.ceil_div(itemsAmount, 45);
+
+        AZ.clear();
+        ZA.clear();
 
         createPages(AZ, SortTypes.A_Z);
         createPages(ZA, SortTypes.Z_A);
     }
 
-
-
-
-    public static void choose(Player p, int sortIdx, int pageIdx) {
-        switch (cache.getChooseSortsOrder().get(sortIdx)) {
-            case A_Z -> AZ.get(pageIdx).show(p);
-            case Z_A -> ZA.get(pageIdx).show(p);
+    private static List<ChestGui> getPages(SortTypes sortType) {
+        switch (sortType) {
+            case A_Z -> { return AZ; }
+            case Z_A -> { return ZA; }
         }
+        return AZ;
     }
 
-    private static void addButtons(StaticPane buttons, SortTypes sortType, final int idx, final List<ChestGui> pages) {
+    public static void choose(Player p, int sortIdx, int pageIdx) {
+        getPages(cache.getChooseSortsOrder().get(sortIdx)).get(pageIdx).show(p);
+    }
 
+    public static void choose(Player p, int sortIdx, String search) {
+        final List<ChestGui> pages = new ArrayList<>();
+        createPages(pages, cache.getChooseSortsOrder().get(sortIdx), search);
+        pages.getFirst().show(p);
+    }
+
+    private static void addButtons(StaticPane buttons, SortTypes sortType, final int idx) {
+        addButtons(buttons, sortType, idx, pagesAmount);
+    }
+
+    private static void addButtons(StaticPane buttons, SortTypes sortType, final int idx, final int pagesAmount) {
+        final List<SortTypes> sortOrder = cache.getChooseSortsOrder();
+        final int sortIdx = sortOrder.indexOf(sortType);
         if (idx > 0) buttons.addItem(ConvertUtils.parseButton(cache.getChooseBackButton(), e -> {
             e.setCancelled(true);
             if (!(e.getWhoClicked() instanceof Player p)) return;
-            pages.get(idx - 1).show(p);
+            getPages(sortType).get(idx - 1).show(p);
         }), cache.getChooseBackButton().getSlot(), 0);
 
         if (idx + 1 < pagesAmount) buttons.addItem(ConvertUtils.parseButton(cache.getChooseNextButton(), e -> {
             e.setCancelled(true);
             if (!(e.getWhoClicked() instanceof Player p)) return;
-            pages.get(idx + 1).show(p);
+            getPages(sortType).get(idx + 1).show(p);
         }), cache.getChooseNextButton().getSlot(), 0);
 
         buttons.addItem(ConvertUtils.parseSortButton(cache.getChooseSortButton(), sortType, e -> {
             e.setCancelled(true);
             if (!(e.getWhoClicked() instanceof Player p)) return;
-            final List<SortTypes> sortOrder = cache.getChooseSortsOrder();
-            int nextIdx = sortOrder.indexOf(sortType);
-            if (nextIdx == sortOrder.size() - 1) nextIdx = 0;
-            else nextIdx++;
-
+            final int nextIdx = sortIdx == sortOrder.size() - 1 ? 0 : sortIdx + 1;
             choose(p, nextIdx, idx);
-        }), cache.getChooseSearchButton().getSlot(), 0);
+        }), cache.getChooseSortButton().getSlot(), 0);
 
         buttons.addItem(ConvertUtils.parseButton(cache.getChooseSearchButton(), e -> {
             e.setCancelled(true);
-            // TODO: Add search
+            if (!(e.getWhoClicked() instanceof Player p)) return;
+            SignGUI.newSession(
+                    p,
+                    (s) -> p.getScheduler().run(plugin, t -> ChooseItemGUI.choose(p, sortIdx, s), null),
+                    cache.getLines(),
+                    cache.getSignBlock(),
+                    cache.getSearchLine()
+            );
 
         }), cache.getChooseSearchButton().getSlot(), 0);
     }
 
     private static void createPages(List<ChestGui> pages, SortTypes sortType) {
+        createPages(pages, sortType, NMSUtils.getItems(sortType));
+    }
+
+    private static void createPages(List<ChestGui> pages, SortTypes sortType, String search) {
+        if (search.isEmpty()) {
+            createPages(pages, sortType);
+            return;
+        }
+
+        final List<ItemStack> items = AlgoUtils.searchItem(search, NMSUtils.getItems(sortType));
+        createPages(pages, sortType, items);
+    }
+
+    private static void createPages(List<ChestGui> pages, SortTypes sortType, Collection<ItemStack> items) {
+        final int pagesAmount = ConvertUtils.ceil_div(items.size(), 45);
+
         OutlinePane itemsPane = new OutlinePane(0, 0, 9, 5);
         StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
-        addButtons(buttonsPane, sortType, 0, pages);
+        addButtons(buttonsPane, sortType, 0, pagesAmount);
         ChestGui currPage = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
         int idx = 0, cnt = 0;
-        for (final ItemStack item : NMSUtils.getItems(sortType)) {
+        for (final ItemStack item : items) {
             if (cnt == 45) {
                 cnt = 0;
+                idx++;
                 currPage.addPane(itemsPane);
                 currPage.addPane(buttonsPane);
                 pages.add(currPage);
 
                 itemsPane = new OutlinePane(0, 0, 9, 5);
                 buttonsPane = new StaticPane(0, 5, 9, 1);
-                addButtons(buttonsPane, sortType, idx + 1, pages);
+                addButtons(buttonsPane, sortType, idx, pagesAmount);
                 currPage = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
-
-                idx++;
             }
             itemsPane.addItem(new GuiItem(item, e -> {
                 e.setCancelled(true);

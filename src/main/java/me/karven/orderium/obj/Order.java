@@ -1,10 +1,25 @@
 package me.karven.orderium.obj;
 
+import io.papermc.paper.datacomponent.DataComponentType;
 import lombok.Setter;
+import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
+import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.EconUtils;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.key.Keyed;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.DataComponentValue;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Setter
@@ -16,12 +31,14 @@ public class Order {
     public final int amount;
     public int delivered;
     public int inStorage;
-    public final long expiresAt;
+    public long expiresAt;
 
-    public static DBManager db;
+    private static DBManager db;
+    private static ConfigManager cache;
 
     public static void init(Orderium plugin) {
         db = plugin.getDbManager();
+        cache = plugin.getConfigs();
     }
 
     public Order(int id, UUID owner, ItemStack item, double moneyPer, int amount, int delivered, int inStorage, long expiresAt) {
@@ -49,9 +66,35 @@ public class Order {
 
     public boolean isActive() { return delivered < amount && expiresAt > System.currentTimeMillis(); }
 
-    public void updateInStorage(int val) { inStorage = val; }
+    public void deliver(Player deliverer, int a) {
+        db.deliverOrder(this, a);
+        final double earning = moneyPer * a;
+        EconUtils.addMoney(deliverer, earning);
+        deliverer.sendRichMessage(cache.getDelivered(), Placeholder.unparsed("money", ConvertUtils.formatNumber(earning)));
+        final Player ownerPlayer = Bukkit.getPlayer(owner);
+        if (ownerPlayer == null || !ownerPlayer.isOnline()) return;
+        final ItemMeta meta = item.getItemMeta();
+        final Component displayName = meta == null ? null : meta.displayName();
+        assert item.getType().getItemTranslationKey() != null;
+        ownerPlayer.sendRichMessage(
+                cache.getReceiveDelivery(),
+                Placeholder.unparsed("deliverer", deliverer.getName()),
+                Placeholder.unparsed("amount",  ConvertUtils.formatNumber(a)),
+                Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
+                );
+    }
 
-    public double deliver(int a) {
-        return db.deliverOrder(this, a);
+    public void cancel() {
+        this.expiresAt = System.currentTimeMillis() - 1;
+    }
+
+    public OrderStatus getStatus() {
+        if (delivered >= amount) return OrderStatus.COMPLETED;
+        if (expiresAt < System.currentTimeMillis()) return OrderStatus.EXPIRED;
+        return OrderStatus.AVAILABLE;
+    }
+
+    public boolean shouldBeDeleted() {
+        return !isActive() && inStorage == 0;
     }
 }

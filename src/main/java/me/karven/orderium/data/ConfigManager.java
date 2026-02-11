@@ -1,22 +1,28 @@
 package me.karven.orderium.data;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
+import io.papermc.paper.datacomponent.DataComponentType;
 import lombok.Getter;
 import me.karven.orderium.load.Orderium;
+import me.karven.orderium.obj.OrderStatus;
 import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.NMSUtils;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import org.bukkit.block.BlockType;
+import org.bukkit.inventory.ItemType;
 import org.intellij.lang.annotations.Subst;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
+@SuppressWarnings("UnstableApiUsage")
 public class ConfigManager {
 
     private final File configFile;
@@ -39,15 +45,6 @@ public class ConfigManager {
     private final SlotInfo
             newOrderButton = new SlotInfo(-1, null, null, null);
 
-    @Deprecated(forRemoval = true)
-    private String newOrderTitle = "Create A New Order";
-    @Deprecated(forRemoval = true)
-    private final SlotInfo
-            materialButton = new SlotInfo(12, List.of("Click to choose item", "<gray>(<item>)"), "<aqua>Item", Material.STONE),
-            amountButton = new SlotInfo(13, List.of("Click to type number of items", "<gray>(<amount>)"), "<aqua>Amount", Material.CHEST),
-            moneyButton = new SlotInfo(14, List.of("Click to type the money per item", "<gray>($<money-per>)"), "<aqua>Money", Material.EMERALD);
-
-
     private String chooseItemTitle;
     private List<SortTypes> chooseSortsOrder;
     private final SlotInfo
@@ -56,9 +53,8 @@ public class ConfigManager {
             chooseSearchButton = new SlotInfo(-1, null, null, null),
             chooseSortButton = new SlotInfo(-1, null, null, null);
 
-    private String signIdentifier;
     private int searchLine = -1;
-    private int signBlockId = -1;
+    private BlockType signBlock;
     private List<String> lines;
 
     private String deliverTitle;
@@ -84,35 +80,57 @@ public class ConfigManager {
     private String confirmDeliveryCancelLabel;
     private String confirmDeliveryCancelHover;
 
+    private String manageOrderTitle;
+    private String manageOrderBody;
+    private String collectItemsLabel;
+    private String collectItemsHover;
+    private String cancelOrderLabel;
+    private String cancelOrderHover;
+
+    private String collectItemsTitle;
+    private String collectItemsBody;
+    private String collectItemsAmountLabel;
+    private String collectItemsCancelLabel;
+    private String collectItemsCancelHover;
+    private String collectItemsConfirmLabel;
+    private String collectItemsConfirmHover;
+
+    private String cancelOrderTitle;
+    private String cancelOrderBody;
+    private String cancelOrderCancelLabel;
+    private String cancelOrderCancelHover;
+    private String cancelOrderConfirmLabel;
+    private String cancelOrderConfirmHover;
+
     private String invalidInput;
     private String orderCreationSuccessful;
+    private String delivered;
+    private String receiveDelivery;
 
+    private boolean logTransactions = true;
     private long expiresAfter = -1;
     private String sortPrefix;
     private TagResolver[] sortPlaceholders;
 
-    @Deprecated(forRemoval = true)
-    // DOES NOT WORK
-    public SlotInfo getMaterialButton(Material material) {
-//        final SlotInfo copy = materialButton.clone();
-//        copy.setType(material);
-        return null;
-    }
+    private final List<DataComponentType.Valued<?>> similarityCheck = new ArrayList<>();
 
     public ConfigManager(Orderium plugin) {
         this.plugin = plugin;
         this.configFile = new File(plugin.getDataFolder(), "config.yml");
-        reload(false);
+        if (!reload(false)) {
+            plugin.getLogger().severe("Failed to load config.");
+        }
     }
 
-    public void reload(boolean async) {
+    public boolean reload(boolean async) {
         if (!async) {
             try {
                 loadCfg();
             } catch (Exception e) {
                 plugin.getLogger().severe(e.toString());
+                return false;
             }
-            return;
+            return true;
         }
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
             try {
@@ -121,6 +139,7 @@ public class ConfigManager {
                 plugin.getLogger().severe(e.toString());
             }
         });
+        return true;
     }
 
     public void loadCfg() throws Exception {
@@ -132,17 +151,24 @@ public class ConfigManager {
             return;
         }
         // CONFIG
+        config.addDefault("log-transactions", true);
         config.addDefault("expires-after", 7L * 24L * 60L * 60L * 1000L);
         config.addDefault("sort-prefix", "<aqua>");
+        config.addDefault("similarity-check", List.of(
+                "minecraft:enchantments",
+                "minecraft:bundle_contents",
+                "minecraft:container",
+                "minecraft:fireworks",
+                "minecraft:instrument",
+                "minecraft:potion_contents",
+                "minecraft:stored_enchantments"
+        ));
 
         // MESSAGES
         config.addDefault("messages.create-order-success", "<gray>Your order has been created");
         config.addDefault("messages.invalid-input", "<red>Invalid number or format");
-
-//        // COMMON BUTTONS
-//        new SlotInfo(0, List.of("<white>Click to go to the previous page"), "<aqua>Back", Material.ARROW).addDefault(config, "common-buttons.back");
-//        new SlotInfo(8, List.of("<white>Click to go to the next page"), "<aqua>Next", Material.ARROW).addDefault(config, "common-buttons.next");
-//        new SlotInfo(5, List.of("<white>Click to search"), "<aqua>Search", Material.OAK_SIGN).addDefault(config, "common-buttons.search");
+        config.addDefault("messages.delivery", "<gray>You earned <green>$<money><gray> from delivering an order");
+        config.addDefault("messages.receive-delivery", "<aqua><deliverer> <gray>delivered you <aqua><amount> <item>");
 
         // SORT TYPES
         config.addDefault("sort-types." + SortTypes.MOST_MONEY_PER_ITEM.getIdentifier(), "Most Money Per Item");
@@ -151,6 +177,11 @@ public class ConfigManager {
         config.addDefault("sort-types." + SortTypes.MOST_PAID.getIdentifier(), "Most Paid");
         config.addDefault("sort-types." + SortTypes.A_Z.getIdentifier(), "A - Z");
         config.addDefault("sort-types." + SortTypes.Z_A.getIdentifier(), "Z - A");
+
+        // ORDER STATUS
+        config.addDefault("order-status." + OrderStatus.AVAILABLE.getIdentifier(), "Expires after <day>d <hour>h <minute>m <second>s");
+        config.addDefault("order-status." + OrderStatus.EXPIRED.getIdentifier(), "<red>Order Expired");
+        config.addDefault("order-status." + OrderStatus.COMPLETED.getIdentifier(), "<green>Order Completed");
 
         // MAIN GUI
         config.addDefault("gui.main.title", "Orders");
@@ -168,18 +199,18 @@ public class ConfigManager {
                 "most-delivered",
                 "most-paid"
         ));
-        new SlotInfo(4, List.of("<white>Click to refresh"), "<aqua>Refresh", Material.PAPER).addDefault(config, "gui.main.buttons.refresh");
-        new SlotInfo(6, List.of("<white>Click to view your orders"), "<aqua>Your Orders", Material.CHEST).addDefault(config, "gui.main.buttons.your-orders");
+        new SlotInfo(4, List.of("<white>Click to refresh"), "<aqua>Refresh", ItemType.PAPER).addDefault(config, "gui.main.buttons.refresh");
+        new SlotInfo(6, List.of("<white>Click to view your orders"), "<aqua>Your Orders", ItemType.CHEST).addDefault(config, "gui.main.buttons.your-orders");
         new SlotInfo(2, List.of(
                 "",
                 "<white> • <most-money-per-item>",
                 "<white> • <recently-listed>",
                 "<white> • <most-delivered>",
                 "<white> • <most-paid>"
-        ), "<aqua>Sort", Material.HOPPER).addDefault(config, "gui.main.buttons.sort");
-        new SlotInfo(0, List.of("<white>Click to go to the previous page"), "<aqua>Back", Material.ARROW).addDefault(config, "gui.main.buttons.back");
-        new SlotInfo(8, List.of("<white>Click to go to the next page"), "<aqua>Next", Material.ARROW).addDefault(config, "gui.main.buttons.next");
-        new SlotInfo(5, List.of("<white>Click to search"), "<aqua>Search", Material.OAK_SIGN).addDefault(config, "gui.main.buttons.search");
+        ), "<aqua>Sort", ItemType.HOPPER).addDefault(config, "gui.main.buttons.sort");
+        new SlotInfo(0, List.of("<white>Click to go to the previous page"), "<aqua>Back", ItemType.ARROW).addDefault(config, "gui.main.buttons.back");
+        new SlotInfo(8, List.of("<white>Click to go to the next page"), "<aqua>Next", ItemType.ARROW).addDefault(config, "gui.main.buttons.next");
+        new SlotInfo(5, List.of("<white>Click to search"), "<aqua>Search", ItemType.OAK_SIGN).addDefault(config, "gui.main.buttons.search");
 
         // YOUR ORDERS GUI
         config.addDefault("gui.your-orders.title", "Your Orders");
@@ -187,10 +218,11 @@ public class ConfigManager {
                 "",
                 "<#786500><paid><gray>/<#017800><total> <gray>Paid",
                 "<#786500><delivered><gray>/<#017800><amount> <gray>Delivered",
-                "<green>$<money-per> <white>each"
-                // TODO: Add when it expires and its status (available, completed, expired)
+                "<green>$<money-per> <white>each",
+                "",
+                "<order-status>"
         ));
-        new SlotInfo(-1, List.of("<white>Click to create a new order"), "<aqua>New Order", Material.MAP).addDefault(config, "gui.your-orders.buttons.new-order");
+        new SlotInfo(-1, List.of("<white>Click to create a new order"), "<aqua>New Order", ItemType.MAP).addDefault(config, "gui.your-orders.buttons.new-order");
 
         // CHOOSE ITEM GUI
         config.addDefault("gui.choose-item.title", "Choose Your Item");
@@ -198,14 +230,14 @@ public class ConfigManager {
                 "a-z",
                 "z-a"
         ));
-        new SlotInfo(0, List.of("<white>Click to go to the previous page"), "<aqua>Back", Material.ARROW).addDefault(config, "gui.choose-item.buttons.back");
-        new SlotInfo(8, List.of("<white>Click to go to the next page"), "<aqua>Next", Material.ARROW).addDefault(config, "gui.choose-item.buttons.next");
-        new SlotInfo(5, List.of("<white>Click to search"), "<aqua>Search", Material.OAK_SIGN).addDefault(config, "gui.choose-item.buttons.search");
+        new SlotInfo(0, List.of("<white>Click to go to the previous page"), "<aqua>Back", ItemType.ARROW).addDefault(config, "gui.choose-item.buttons.back");
+        new SlotInfo(8, List.of("<white>Click to go to the next page"), "<aqua>Next", ItemType.ARROW).addDefault(config, "gui.choose-item.buttons.next");
+        new SlotInfo(5, List.of("<white>Click to search"), "<aqua>Search", ItemType.OAK_SIGN).addDefault(config, "gui.choose-item.buttons.search");
         new SlotInfo(2, List.of(
                 "",
                 "<white> • <a-z>",
                 "<white> • <z-a>"
-        ), "<aqua>Sort", Material.HOPPER).addDefault(config, "gui.choose-item.buttons.sort");
+        ), "<aqua>Sort", ItemType.HOPPER).addDefault(config, "gui.choose-item.buttons.sort");
 
         // SEARCH SIGN GUI
         config.addDefault("gui.search-sign.type", "minecraft:oak_sign");
@@ -243,9 +275,35 @@ public class ConfigManager {
         config.addDefault("gui.confirm-delivery.cancel-button", "<red>Cancel");
         config.addDefault("gui.confirm-delivery.cancel-tooltip", "Click to cancel the delivery");
 
+        // MANAGE ORDER DIALOG
+        config.addDefault("gui.manage-order.title", "Manage Order");
+        config.addDefault("gui.manage-order.body", "You are managing this order");
+        config.addDefault("gui.manage-order.collect-items-button", "Collect Items");
+        config.addDefault("gui.manage-order.collect-items-tooltip", "Click to collect items from this order");
+        config.addDefault("gui.manage-order.cancel-order-button", "Cancel Order");
+        config.addDefault("gui.manage-order.cancel-order-tooltip", "Click to cancel the order");
+
+        // COLLECT ITEMS DIALOG
+        config.addDefault("gui.collect-items.title", "Collect Items");
+        config.addDefault("gui.collect-items.body", "You are collecting items from this order. You can collect up to <aqua><in-storage> <item>");
+        config.addDefault("gui.collect-items.amount-label", "Amount");
+        config.addDefault("gui.collect-items.cancel-button", "<red>Cancel");
+        config.addDefault("gui.collect-items.cancel-tooltip", "Click to cancel");
+        config.addDefault("gui.collect-items.confirm-button", "<green>Confirm");
+        config.addDefault("gui.collect-items.confirm-tooltip", "Click to confirm");
+
+        // CANCEL ORDER DIALOG
+        config.addDefault("gui.cancel-order.title", "Cancel Order");
+        config.addDefault("gui.cancel-order.body", "You are cancelling this order. It will be expired");
+        config.addDefault("gui.cancel-order.cancel-button", "<red>Cancel");
+        config.addDefault("gui.cancel-order.cancel-tooltip", "Click to cancel the cancellation of this order");
+        config.addDefault("gui.cancel-order.confirm-button", "<green>Confirm");
+        config.addDefault("gui.cancel-order.confirm-tooltip", "Click to confirm the cancellation of this order");
+
         config.save();
         config.reload();
 
+        logTransactions = config.getBoolean("log-transactions");
         expiresAfter = config.getLong("expires-after");
         sortPrefix = config.getString("sort-prefix");
         sortPlaceholders = new TagResolver[SortTypes.values().length];
@@ -258,8 +316,25 @@ public class ConfigManager {
             sortPlaceholders[i++] = Placeholder.parsed(identifier, sortType.getDisplay());
         }
 
+        for (OrderStatus status : OrderStatus.values()) {
+            status.setText(config.getString("order-status." + status.getIdentifier()));
+        }
+
+        final List<String> rawDataComponents = config.getStringList("similarity-check");
+        similarityCheck.clear();
+        for (final String s : rawDataComponents) {
+            final DataComponentType.Valued<?> dataComponentType = ConvertUtils.getDataComponentType(s);
+            if (dataComponentType == null) {
+                plugin.getLogger().severe("Failed to get data component type with identifier " + s);
+                continue;
+            }
+            similarityCheck.add(dataComponentType);
+        }
+
         orderCreationSuccessful = config.getString("messages.create-order-success");
         invalidInput = config.getString("messages.invalid-input");
+        delivered = config.getString("messages.delivery");
+        receiveDelivery = config.getString("messages.receive-delivery");
 
         mainGuiTitle = config.getString("gui.main.title");
         orderLore = config.getStringList("gui.main.order-lore");
@@ -282,10 +357,9 @@ public class ConfigManager {
         chooseSearchButton.deserialize(config.getConfigSection("gui.choose-item.buttons.search"));
         chooseSortButton.deserialize(config.getConfigSection("gui.choose-item.buttons.sort"));
 
-        signIdentifier = config.getString("gui.search-sign.type");
         searchLine = config.getInteger("gui.search-sign.search-line");
         lines = config.getStringList("gui.search-sign.lines");
-        signBlockId = NMSUtils.getBlockStateId(signIdentifier);
+        signBlock = NMSUtils.getBlockType(config.getString("gui.search-sign.type"));
 
         deliverTitle = config.getString("gui.delivery.title");
         deliverRows = config.getInteger("gui.delivery.rows");
@@ -309,6 +383,30 @@ public class ConfigManager {
         confirmDeliveryConfirmHover = config.getString("gui.confirm-delivery.confirm-tooltip");
         confirmDeliveryCancelLabel = config.getString("gui.confirm-delivery.cancel-button");
         confirmDeliveryCancelHover = config.getString("gui.confirm-delivery.cancel-tooltip");
+
+        manageOrderTitle = config.getString("gui.manage-order.title");
+        manageOrderBody = config.getString("gui.manage-order.body");
+        collectItemsLabel = config.getString("gui.manage-order.collect-items-button");
+        collectItemsHover = config.getString("gui.manage-order.collect-items-tooltip");
+        cancelOrderLabel = config.getString("gui.manage-order.cancel-order-button");
+        cancelOrderHover = config.getString("gui.manage-order.cancel-order-tooltip");
+
+        collectItemsTitle = config.getString("gui.collect-items.title");
+        collectItemsBody = config.getString("gui.collect-items.body");
+        collectItemsAmountLabel = config.getString("gui.collect-items.amount-label");
+        collectItemsCancelLabel = config.getString("gui.collect-items.cancel-button");
+        collectItemsCancelHover = config.getString("gui.collect-items.cancel-tooltip");
+        collectItemsConfirmLabel = config.getString("gui.collect-items.confirm-button");
+        collectItemsConfirmHover = config.getString("gui.collect-items.confirm-tooltip");
+
+
+        cancelOrderTitle = config.getString("gui.cancel-order.title");
+        cancelOrderBody = config.getString("gui.cancel-order.body");
+        cancelOrderCancelLabel = config.getString("gui.cancel-order.cancel-button");
+        cancelOrderCancelHover = config.getString("gui.cancel-order.cancel-tooltip");
+        cancelOrderConfirmLabel = config.getString("gui.cancel-order.confirm-button");
+        cancelOrderConfirmHover = config.getString("gui.cancel-order.confirm-tooltip");
+
     }
     private void checkFiles() {
         File parent = configFile.getParentFile();

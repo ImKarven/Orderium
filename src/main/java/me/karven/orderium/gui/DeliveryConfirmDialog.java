@@ -1,15 +1,12 @@
 package me.karven.orderium.gui;
 
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
-import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
-import lombok.RequiredArgsConstructor;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
@@ -19,10 +16,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -30,9 +24,6 @@ import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
 public class DeliveryConfirmDialog {
-    private final Player p;
-    private final Order order;
-    private final int amount;
     private static Orderium plugin;
     private static MiniMessage mm;
     private static ConfigManager cache;
@@ -43,18 +34,15 @@ public class DeliveryConfirmDialog {
         cache = plugin.getConfigs();
     }
 
-    public DeliveryConfirmDialog(Player p, Order order, int amount, ChestGui returnGUI, List<ItemStack> returnItems) {
-        this.p = p;
-        this.order = order;
-        this.amount = amount;
-        final Economy eco = plugin.getEcon();
-
+    public static void show(Player p, Order order, int amount, ChestGui returnGUI, List<ItemStack> returnItems) {
         final Dialog dialog = Dialog.create(builder -> {
+            final String amountText = ConvertUtils.formatNumber(amount);
+            final int amountWidth = amountText.length() * 10;
             builder.empty()
                     .base(DialogBase.builder(mm.deserialize(cache.getConfirmDeliveryTitle()))
                             .body(List.of(
                                     DialogBody.plainMessage(mm.deserialize(cache.getConfirmDeliveryBody())),
-                                    DialogBody.item(order.item()).description(DialogBody.plainMessage(Component.text(ConvertUtils.formatNumber(order.amount())))).build(),
+                                    DialogBody.item(ConvertUtils.parseOrder(order, cache.getOrderLore())).description(DialogBody.plainMessage(Component.text(amountText), amountWidth)).build(),
                                     DialogBody.plainMessage(mm.deserialize(cache.getConfirmDeliveryTransactionMessage(), Placeholder.unparsed("money", ConvertUtils.formatNumber(amount * order.moneyPer()))))
                             ))
                             .build())
@@ -67,31 +55,29 @@ public class DeliveryConfirmDialog {
                                         p.give(returnItems, true);
 
                                         if (amount <= maxDeliverAmount) {
-                                            EconUtils.addMoney(p, order.deliver(amount));
+                                            order.deliver(p, amount);
                                             return;
                                         }
-                                        EconUtils.addMoney(p, order.deliver(maxDeliverAmount));
+                                        order.deliver(p, maxDeliverAmount);
 
                                         int rem = amount - maxDeliverAmount;
-                                        final ItemStack item = order.item();
-                                        final int maxStackSize = order.item().getMaxStackSize();
-                                        if (rem >= maxStackSize) {
-                                            final ItemStack copy = item.clone();
-                                            copy.setAmount(maxStackSize);
-                                            final int fullStackAmount = rem / maxStackSize;
-                                            final List<ItemStack> items = new ArrayList<>();
-                                            for (int i = 0; i < fullStackAmount; i++) {
-                                                items.add(copy.clone());
-                                            }
-                                            p.give(items, true);
-                                            rem %= maxStackSize;
+                                        final ItemStack item = order.item().clone();
+                                        final int maxStackSize = item.getMaxStackSize();
+
+                                        final ItemStack copy = item.clone();
+                                        copy.setAmount(maxStackSize);
+                                        final int fullStackAmount = rem / maxStackSize;
+                                        final List<ItemStack> items = new ArrayList<>();
+                                        for (int i = 0; i < fullStackAmount; i++) {
+                                            items.add(copy.clone());
                                         }
+                                        rem %= maxStackSize;
 
                                         if (rem > 0) {
-                                            final ItemStack copy = item.clone();
                                             copy.setAmount(rem);
-                                            p.give(List.of(copy), true);
+                                            items.add(copy);
                                         }
+                                        p.give(items, true);
 
                                     }, ClickCallback.Options.builder().build()))
                                     .build(),
@@ -99,8 +85,7 @@ public class DeliveryConfirmDialog {
                                     .tooltip(mm.deserialize(cache.getConfirmDeliveryCancelHover()))
                                     .action(DialogAction.customClick(
                                             (view, player) -> {
-                                                returnGUI.setOnClose((ignored) -> {});
-                                                returnGUI.show(p);
+                                                MainGUI.cancelDelivery(returnGUI, p);
                                             },
                                             ClickCallback.Options.builder().build()))
                                     .build()

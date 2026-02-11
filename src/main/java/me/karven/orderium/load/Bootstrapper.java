@@ -1,5 +1,6 @@
 package me.karven.orderium.load;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -8,19 +9,13 @@ import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.karven.orderium.data.ConfigManager;
-import me.karven.orderium.gui.ChooseItemGUI;
 import me.karven.orderium.gui.MainGUI;
 import me.karven.orderium.gui.NewOrderDialog;
 import me.karven.orderium.gui.SignGUI;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.utils.NMSUtils;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.NonNull;
-
-import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
 public class Bootstrapper implements PluginBootstrap {
@@ -33,6 +28,13 @@ public class Bootstrapper implements PluginBootstrap {
 
                     return 1;
                 })
+                .then(Commands.argument("search", StringArgumentType.greedyString())
+                        .executes(ctx -> {
+                            final String search = StringArgumentType.getString(ctx, "search");
+                            new MainGUI(Orderium.getInst(), (Player) ctx.getSource().getExecutor(), 0, search);
+                            return 1;
+                        })
+                )
                 .build();
     }
 
@@ -53,7 +55,7 @@ public class Bootstrapper implements PluginBootstrap {
                         .executes(ctx -> {
                             if (!(ctx.getSource().getExecutor() instanceof Player p)) return 1;
                             final ConfigManager config = Orderium.getInst().getConfigs();
-                            SignGUI.newSession(p, s -> {}, config.getLines(), config.getSignBlockId(), config.getSearchLine());
+                            SignGUI.newSession(p, s -> {}, config.getLines(), config.getSignBlock(), config.getSearchLine());
                             return 1;
                         })
                 )
@@ -67,9 +69,7 @@ public class Bootstrapper implements PluginBootstrap {
                 .then(Commands.literal("test3")
                         .executes(ctx -> {
                             if (!(ctx.getSource().getExecutor() instanceof Player p)) return 1;
-                            for (final Order order : Orderium.getInst().getDbManager().getOrders()) {
-                                p.sendRichMessage("id=" + order.id() + " item=" + order.item().getType() + " money-per=" + order.moneyPer() + " amount=" + order.amount());
-                            }
+                            p.sendRichMessage("" + Orderium.getInst().getDbManager().getOrders(p.getUniqueId()).size());
                             return 1;
                         })
                 )

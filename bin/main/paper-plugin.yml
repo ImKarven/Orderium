@@ -1,0 +1,9 @@
+name: Orderium
+version: '1.0'
+main: me.karven.orderium.load.Orderium
+bootstrapper: me.karven.orderium.load.Bootstrapper
+api-version: '1.21'
+authors: [ Karven ]
+description: An order plugin
+libraries:
+  - com.zaxxer:HikariCP:7.0.2

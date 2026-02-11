@@ -1,43 +1,83 @@
 package me.karven.orderium.gui;
 
 import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHolder;
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
+import io.papermc.paper.datacomponent.DataComponentType;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.ConvertUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import static me.karven.orderium.utils.ConvertUtils.ceil_div;
 
+@SuppressWarnings("UnstableApiUsage")
 public class MainGUI {
     private final List<ChestGui> pages = new ArrayList<>();
-    private final Set<Order> orders;
-    private final Orderium plugin;
+    private final Collection<Order> orders;
     private final ConfigManager cache;
     private final MiniMessage mm;
     private final Player player;
     private final int amount;
     private final int sortIdx;
+    private final String search;
+
+    private static Orderium plugin;
+
+    public static void init(Orderium pl) { plugin = pl; }
+
+    public static void cancelDelivery(final ChestGui gui, final Player p) {
+
+        final Collection<ItemStack> items = new ArrayList<>();
+        for (final ItemStack item : gui.getInventory()) {
+            if (item == null) continue;
+            items.add(item);
+        }
+        p.give(items, true);
+    }
 
     public MainGUI(Orderium plugin, Player p, int sortIdx) {
+        this.search = "";
         this.sortIdx = sortIdx;
-        this.plugin = plugin;
         this.cache = plugin.getConfigs();
         this.mm = plugin.mm;
         this.player = p;
         final SortTypes sortType = cache.getOrdersSortsOrder().get(sortIdx);
         orders = plugin.getDbManager().getSortedOrders(sortType);
+        if (orders.isEmpty()) { // No active order but still create a page with buttons
+            this.amount = -1;
+            final ChestGui gui = new ChestGui(6, cache.getMainGuiTitle());
+            final StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
+            addButtons(buttonsPane, 0);
+            gui.addPane(buttonsPane);
+            pages.add(gui);
+        } else {
+            this.amount = ceil_div(orders.size(), 45);
+            setupPages();
+        }
+        open(p);
+    }
+
+
+    public MainGUI(Orderium plugin, Player p, int sortIdx, String search) {
+        this.search = search;
+        this.sortIdx = sortIdx;
+        this.cache = plugin.getConfigs();
+        this.mm = plugin.mm;
+        this.player = p;
+        final SortTypes sortType = cache.getOrdersSortsOrder().get(sortIdx);
+        orders = AlgoUtils.searchOrder(search, plugin.getDbManager().getSortedOrders(sortType));
         if (orders.isEmpty()) { // No active order but still create a page with buttons
             this.amount = -1;
             final ChestGui gui = new ChestGui(6, cache.getMainGuiTitle());
@@ -62,6 +102,7 @@ public class MainGUI {
         page.addPane(buttonsPane);
 
         for (final Order order : orders) {
+            if (!order.isActive()) continue;
             if (cnt == 45) {
                 cnt = 0;
                 pages.add(page);
@@ -72,28 +113,47 @@ public class MainGUI {
             }
             orderPane.addItem(ConvertUtils.parseOrder(order, cache.getOrderLore(), e -> {
                 e.setCancelled(true);
-                // TODO: handle order process
+
                 final ItemStack comparer = order.item();
                 final ChestGui deliverGUI = new ChestGui(cache.getDeliverRows(), ComponentHolder.of(mm.deserialize(cache.getMainGuiTitle())));
                 deliverGUI.setOnClose(e2 -> {
                     if (!(e2.getPlayer() instanceof Player p)) return;
+                    final Inventory inv = e2.getInventory();
                     final List<ItemStack> returns = new ArrayList<>();
                     int amount = 0;
-                    for (final ItemStack item : e2.getInventory()) {
-                        if (item.isSimilar(comparer)) {
+                    for (final ItemStack item : inv) {
+                        if (item == null || item.isEmpty()) continue;
+                        if (isSimilar(item, comparer)) {
                             amount += item.getAmount();
                             continue;
                         }
 
                         returns.add(item);
                     }
+                    if (amount == 0) {
+                        if (returns.isEmpty()) return;
+                        p.give(returns, true);
+                        return;
+                    }
 
-
+                    DeliveryConfirmDialog.show(p, order, amount, deliverGUI, returns);
                 });
+                deliverGUI.show(e.getWhoClicked());
             }));
             cnt++;
         }
         pages.add(page);
+    }
+
+    private boolean isSimilar(final ItemStack a, final ItemStack b) {
+        if (!a.getType().equals(b.getType())) return false;
+        for (final DataComponentType.Valued<?> component : cache.getSimilarityCheck()) {
+             final Object dataA = a.getData(component);
+             final Object dataB = b.getData(component);
+             if (dataA == null && dataB == null) continue;
+             if (dataA == null || !dataA.equals(dataB)) return false;
+        }
+        return true;
     }
 
     private void addButtons(StaticPane buttonsPane, int curr) {
@@ -109,17 +169,23 @@ public class MainGUI {
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getRefreshButton(), e -> {
             e.setCancelled(true);
-            new MainGUI(plugin, player, sortIdx);
+            if (search.isEmpty()) new MainGUI(plugin, player, sortIdx);
+            else new MainGUI(plugin, player, sortIdx, search);
         }), cache.getRefreshButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseSortButton(cache.getOrdersSortButton(), cache.getOrdersSortsOrder().get(sortIdx), e -> {
             e.setCancelled(true);
-            new MainGUI(plugin, player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1);
+            if (search.isEmpty()) new MainGUI(plugin, player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1);
+            else new MainGUI(plugin, player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1, search);
         }), cache.getOrdersSortButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersSearchButton(), e -> {
             e.setCancelled(true);
-            // TODO: Handle search
+            SignGUI.newSession(
+                    player,
+                    (s) -> player.getScheduler().run(plugin, t -> new MainGUI(plugin, player, sortIdx, s), null),
+                    cache.getLines(), cache.getSignBlock(), cache.getSearchLine()
+            );
         }), cache.getOrdersSearchButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getYoButton(), e -> {
