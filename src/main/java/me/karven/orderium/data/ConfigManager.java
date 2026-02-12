@@ -3,6 +3,7 @@ package me.karven.orderium.data;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import io.papermc.paper.datacomponent.DataComponentType;
 import lombok.Getter;
+import me.karven.orderium.gui.ChooseItemGUI;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.OrderStatus;
 import me.karven.orderium.obj.SlotInfo;
@@ -28,6 +29,8 @@ public class ConfigManager {
     private final File configFile;
     private ConfigFile config;
     private final Orderium plugin;
+
+    private boolean bStats = true;
 
     private String mainGuiTitle;
     private List<String> orderLore;
@@ -106,6 +109,7 @@ public class ConfigManager {
     private String orderCreationSuccessful;
     private String delivered;
     private String receiveDelivery;
+    private String notEnoughMoney;
 
     private boolean logTransactions = true;
     private long expiresAfter = -1;
@@ -135,6 +139,7 @@ public class ConfigManager {
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
             try {
                 loadCfg();
+                ChooseItemGUI.init(plugin);
             } catch (Exception e) {
                 plugin.getLogger().severe(e.toString());
             }
@@ -151,6 +156,7 @@ public class ConfigManager {
             return;
         }
         // CONFIG
+        config.addDefault("bstats", true);
         config.addDefault("log-transactions", true);
         config.addDefault("expires-after", 7L * 24L * 60L * 60L * 1000L);
         config.addDefault("sort-prefix", "<aqua>");
@@ -161,7 +167,8 @@ public class ConfigManager {
                 "minecraft:fireworks",
                 "minecraft:instrument",
                 "minecraft:potion_contents",
-                "minecraft:stored_enchantments"
+                "minecraft:stored_enchantments",
+                "minecraft:max_stack_size"
         ));
 
         // MESSAGES
@@ -169,6 +176,7 @@ public class ConfigManager {
         config.addDefault("messages.invalid-input", "<red>Invalid number or format");
         config.addDefault("messages.delivery", "<gray>You earned <green>$<money><gray> from delivering an order");
         config.addDefault("messages.receive-delivery", "<aqua><deliverer> <gray>delivered you <aqua><amount> <item>");
+        config.addDefault("messages.not-enough-money", "<red>You do not have enough money");
 
         // SORT TYPES
         config.addDefault("sort-types." + SortTypes.MOST_MONEY_PER_ITEM.getIdentifier(), "Most Money Per Item");
@@ -179,7 +187,7 @@ public class ConfigManager {
         config.addDefault("sort-types." + SortTypes.Z_A.getIdentifier(), "Z - A");
 
         // ORDER STATUS
-        config.addDefault("order-status." + OrderStatus.AVAILABLE.getIdentifier(), "Expires after <day>d <hour>h <minute>m <second>s");
+        config.addDefault("order-status." + OrderStatus.AVAILABLE.getIdentifier(), "<gray>Expires after <day>d <hour>h <minute>m <second>s");
         config.addDefault("order-status." + OrderStatus.EXPIRED.getIdentifier(), "<red>Order Expired");
         config.addDefault("order-status." + OrderStatus.COMPLETED.getIdentifier(), "<green>Order Completed");
 
@@ -303,6 +311,7 @@ public class ConfigManager {
         config.save();
         config.reload();
 
+        bStats = config.getBoolean("bstats");
         logTransactions = config.getBoolean("log-transactions");
         expiresAfter = config.getLong("expires-after");
         sortPrefix = config.getString("sort-prefix");
@@ -335,6 +344,7 @@ public class ConfigManager {
         invalidInput = config.getString("messages.invalid-input");
         delivered = config.getString("messages.delivery");
         receiveDelivery = config.getString("messages.receive-delivery");
+        notEnoughMoney = config.getString("messages.not-enough-money");
 
         mainGuiTitle = config.getString("gui.main.title");
         orderLore = config.getStringList("gui.main.order-lore");

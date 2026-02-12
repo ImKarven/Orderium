@@ -7,7 +7,6 @@ import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
-import io.papermc.paper.registry.set.RegistrySet;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
@@ -17,7 +16,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,7 +31,6 @@ public class ManageOrderDialog {
     }
 
     public static void show(Order order, Player player_) {
-        // TODO: Use `ConvertUtils.delOrder` for all deserialization with cached player name
         final String name = player_.getName();
         final ItemStack item = ConvertUtils.parseOrder(order, cache.getYoLore());
         final Dialog collectItemsDialog = Dialog.create(builder -> builder.empty()

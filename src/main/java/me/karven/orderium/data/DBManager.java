@@ -31,6 +31,8 @@ public class DBManager {
     private static final String ORDER_TABLE = PREFIX + "orders";
     private static final String TRANSACTION_TABLE = PREFIX + "transactions";
     private final MoneyTransaction moneyTransaction;
+    private final HikariConfig itemConfig = new HikariConfig();
+    private final HikariDataSource itemDataSource;
     private final boolean isExecuting = false;
     @Getter
     private List<Order> orders = new ArrayList<>();
@@ -55,6 +57,8 @@ public class DBManager {
         dbConfig.setJdbcUrl("jdbc:sqlite:" + dbFilePath);
         dataSource = new HikariDataSource(dbConfig);
 
+        itemConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "items.db");
+        itemDataSource = new HikariDataSource(itemConfig);
 
         exec("CREATE TABLE IF NOT EXISTS " + ORDER_TABLE + " (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)");
         exec("CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, before DOUBLE, amount DOUBLE, after DOUBLE)");
@@ -63,10 +67,7 @@ public class DBManager {
     }
 
     public CompletableFuture<List<ItemStack>> getItems() {
-        final HikariConfig itemConfig = new HikariConfig();
-        itemConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "items.db");
-        final HikariDataSource itemDataSource = new HikariDataSource(itemConfig);
-        final String TABLE_NAME = "items_v" + plugin.VERSION;
+        final String TABLE_NAME = "items_" + plugin.VERSION;
         final List<ItemStack> items = new ArrayList<>();
         final CompletableFuture<List<ItemStack>> res = new CompletableFuture<>();
         query(itemDataSource, "SELECT * FROM " + TABLE_NAME).thenAccept(raw -> {
@@ -128,6 +129,26 @@ public class DBManager {
         });
 
 
+    }
+
+    public CompletableFuture<List<Integer>> dataVersions() {
+        val ret = new CompletableFuture<List<Integer>>();
+        final List<Integer> ver = new ArrayList<>();
+        query(itemDataSource, "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").thenAccept(res -> {
+            try (res) {
+                while (res.next()) {
+                    final String sName = res.getString("name");
+                    if (!sName.startsWith("items_")) continue;
+                    try {
+                        ver.add(Integer.parseInt(sName.replace("items_", "")));
+                    } catch (Exception ignored) {}
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().severe(e.toString());
+            }
+            ret.complete(ver);
+        });
+        return ret;
     }
 
     public void collectOrder(int orderId, int amount) {
@@ -233,6 +254,10 @@ public class DBManager {
     }
 
     private CompletableFuture<PreparedStatement> exec(String stmt, Object... params) {
+        return exec(dataSource, stmt, params);
+    }
+
+    private CompletableFuture<PreparedStatement> exec(HikariDataSource dataSource, String stmt, Object... params) {
         final CompletableFuture<PreparedStatement> completableFuture = new CompletableFuture<>();
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
             try (
@@ -250,19 +275,7 @@ public class DBManager {
     }
 
     private CompletableFuture<ResultSet> query(String stmt, Object... params) {
-        final CompletableFuture<ResultSet> completableFuture = new CompletableFuture<>();
-        Bukkit.getAsyncScheduler().runNow(plugin, t -> {
-            try (
-                    final Connection connection = dataSource.getConnection();
-                    final PreparedStatement preparedStatement = connection.prepareStatement(stmt)
-            ) {
-                processStatement(preparedStatement, params);
-                completableFuture.complete(preparedStatement.executeQuery());
-            } catch (SQLException e) {
-                plugin.getLogger().severe(e.toString());
-            }
-        });
-        return completableFuture;
+        return query(dataSource, stmt, params);
     }
 
     private CompletableFuture<ResultSet> query(HikariDataSource dataSource, String stmt, Object... params) {

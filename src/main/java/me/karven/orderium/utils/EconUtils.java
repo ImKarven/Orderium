@@ -1,13 +1,11 @@
 package me.karven.orderium.utils;
 
 import lombok.Getter;
-import lombok.val;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.MoneyTransaction;
 import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.entity.Player;
 
 public class EconUtils {
@@ -29,10 +27,13 @@ public class EconUtils {
         logTransactionAfter(p);
     }
 
-    public static void removeMoney(Player p, double amount) {
+    /// Returns `true` if the player has enough money to remove, otherwise `false`
+    public static boolean removeMoney(Player p, double amount) {
+        if (eco.getBalance(p) < amount) return false;
         logTransactionBefore(p, amount);
         eco.withdrawPlayer(p, amount);
         logTransactionAfter(p);
+        return true;
     }
 
     private static void logTransactionBefore(Player p, double amount) {

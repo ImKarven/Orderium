@@ -3,18 +3,22 @@ package me.karven.orderium.load;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import lombok.Getter;
+import lombok.val;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.gui.*;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.EconUtils;
+import me.karven.orderium.utils.Metrics;
 import me.karven.orderium.utils.NMSUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.concurrent.CompletableFuture;
 
 @Getter
 public final class Orderium extends JavaPlugin {
@@ -23,22 +27,29 @@ public final class Orderium extends JavaPlugin {
     private DBManager dbManager;
     private Economy econ;
     public final MiniMessage mm = MiniMessage.miniMessage();
-    public final String VERSION = getVersion();
+    public int VERSION;
 
-    private String getVersion() {
-        final String mcVer = Bukkit.getMinecraftVersion();
-        switch (mcVer) {
-            case "1.21", "1.21.1" -> { return "1_21_1"; }
-            case "1.21.2", "1.21.3" ->  { return "1_21_3"; }
-            case "1.21.4" -> { return "1_21_4"; }
-            case "1.21.5" -> { return "1_21_5"; }
-            case "1.21.6" -> { return "1_21_6"; }
-            case  "1.21.7", "1.21.8" -> { return "1_21_8"; }
-            case "1.21.9", "1.21.10" -> { return "1_21_10"; }
-            case "1.21.11" -> { return "1_21_11"; }
-        }
-        getLogger().severe("You're using an unsupported server version!");
-        return null;
+    private CompletableFuture<Boolean> initVersion() {
+        val ret = new CompletableFuture<Boolean>();
+        // noinspection deprecation
+        final int dataVer = Bukkit.getUnsafe().getDataVersion();
+        dbManager.dataVersions().thenAccept(dataVersion -> {
+            if (dataVer < 4438) { // 1.21.7 in data version
+                ret.complete(false);
+                return;
+            }
+            int maxVer = -1;
+            for (int ver : dataVersion) {
+                if (ver > maxVer && ver <= dataVer) maxVer = ver;
+                if (dataVer == ver) {
+                    VERSION = ver;
+                    return;
+                }
+            }
+            VERSION = maxVer;
+            ret.complete(true);
+        });
+        return ret;
     }
 
     public static Orderium getInst() {
@@ -53,10 +64,6 @@ public final class Orderium extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
-        if (VERSION == null) {
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
         if (!setupEconomy()) {
             getLogger().severe("Orderium disabled due to no Vault dependency found!");
             getServer().getPluginManager().disablePlugin(this);
@@ -72,11 +79,23 @@ public final class Orderium extends JavaPlugin {
         Order.init(this);
         ConvertUtils.init(this);
 
-        NMSUtils.init(this).thenAccept(ignored -> ChooseItemGUI.init(this));
+        initVersion().thenAccept(success -> {
+            if (!success) {
+                this.getLogger().severe("You are using an unsupported server version (< 1.21.7). Please update to use the plugin");
+                Bukkit.getPluginManager().disablePlugin(this);
+                return;
+            }
+            NMSUtils.init(this).thenAccept(ignored -> ChooseItemGUI.init(this));
+        });
 
         NewOrderDialog.init(this);
         DeliveryConfirmDialog.init(this);
         ManageOrderDialog.init(this);
+
+        if (configs.isBStats()) {
+            final int pluginId = 27569;
+            final Metrics metrics = new Metrics(this, pluginId);
+        }
     }
 
     public void reloadConfig() {

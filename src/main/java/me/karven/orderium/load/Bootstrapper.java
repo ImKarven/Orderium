@@ -12,7 +12,6 @@ import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.gui.MainGUI;
 import me.karven.orderium.gui.NewOrderDialog;
 import me.karven.orderium.gui.SignGUI;
-import me.karven.orderium.obj.Order;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.NonNull;
@@ -24,14 +23,14 @@ public class Bootstrapper implements PluginBootstrap {
         return Commands.literal(alias)
                 .requires(predicate -> predicate.getExecutor() instanceof Player)
                 .executes(ctx -> {
-                    new MainGUI(Orderium.getInst(), (Player) ctx.getSource().getExecutor(), 0);
+                    new MainGUI((Player) ctx.getSource().getExecutor(), 0);
 
                     return 1;
                 })
                 .then(Commands.argument("search", StringArgumentType.greedyString())
                         .executes(ctx -> {
                             final String search = StringArgumentType.getString(ctx, "search");
-                            new MainGUI(Orderium.getInst(), (Player) ctx.getSource().getExecutor(), 0, search);
+                            new MainGUI((Player) ctx.getSource().getExecutor(), 0, search);
                             return 1;
                         })
                 )

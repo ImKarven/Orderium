@@ -121,6 +121,8 @@ public class ChooseItemGUI {
         StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
         addButtons(buttonsPane, sortType, 0, pagesAmount);
         ChestGui currPage = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
+        currPage.setOnGlobalClick(e -> e.setCancelled(true));
+        currPage.setOnGlobalDrag(e -> e.setCancelled(true));
         int idx = 0, cnt = 0;
         for (final ItemStack item : items) {
             if (cnt == 45) {
@@ -134,11 +136,13 @@ public class ChooseItemGUI {
                 buttonsPane = new StaticPane(0, 5, 9, 1);
                 addButtons(buttonsPane, sortType, idx, pagesAmount);
                 currPage = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
+                currPage.setOnGlobalClick(e -> e.setCancelled(true));
+                currPage.setOnGlobalDrag(e -> e.setCancelled(true));
             }
-            itemsPane.addItem(new GuiItem(item, e -> {
+            itemsPane.addItem(new GuiItem(item.clone(), e -> {
                 e.setCancelled(true);
                 if (!(e.getWhoClicked() instanceof Player p)) return;
-                NewOrderDialog.newSession(p, item);
+                NewOrderDialog.newSession(p, item.clone());
             }));
 
             cnt++;

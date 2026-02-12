@@ -10,6 +10,7 @@ import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.EconUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -102,6 +103,10 @@ public class NewOrderDialog {
                                         final double moneyPer = ConvertUtils.formatNumber(rawMoneyPer);
                                         if (dAmount == -1 || moneyPer == -1 || dAmount != amount) {
                                             p.sendRichMessage(cache.getInvalidInput());
+                                            return;
+                                        }
+                                        if (!EconUtils.removeMoney(p, moneyPer * amount)) {
+                                            p.sendRichMessage(cache.getNotEnoughMoney());
                                             return;
                                         }
                                         plugin.getDbManager().createOrder(p.getUniqueId(), display, moneyPer, amount);

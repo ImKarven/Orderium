@@ -1,21 +1,14 @@
 package me.karven.orderium.utils;
 
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.ItemEnchantments;
 import lombok.Getter;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SortTypes;
 import net.kyori.adventure.key.Key;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.block.BlockType;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Comparator;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;

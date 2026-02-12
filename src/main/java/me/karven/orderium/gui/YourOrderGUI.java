@@ -22,6 +22,8 @@ public class YourOrderGUI {
         final ConfigManager cache = plugin.getConfigs();
         final MiniMessage mm = plugin.mm;
         final ChestGui gui = new ChestGui(3, ComponentHolder.of(mm.deserialize(cache.getYoGuiTitle())));
+        gui.setOnGlobalClick(e -> e.setCancelled(true));
+        gui.setOnGlobalDrag(e -> e.setCancelled(true));
         final OutlinePane ordersPane = new OutlinePane(0, 0, 9, 3);
         final List<String> rawLore = cache.getYoLore();
         for (Order order : orders) {
