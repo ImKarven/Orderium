@@ -156,10 +156,10 @@ public class ConfigManager {
             return;
         }
         // CONFIG
-        config.addDefault("bstats", true);
-        config.addDefault("log-transactions", true);
-        config.addDefault("expires-after", 7L * 24L * 60L * 60L * 1000L);
-        config.addDefault("sort-prefix", "<aqua>");
+        config.addDefault("bstats", true, "Whether to let bStats collect data anonymously or not");
+        config.addDefault("log-transactions", true, "Whether to log money changes of players");
+        config.addDefault("expires-after", 7L * 24L * 60L * 60L * 1000L, "After this amount of millisecond(s), the order will be expired");
+        config.addDefault("sort-prefix", "<aqua>", "This will be put at the beginning of the sort type that is being selected");
         config.addDefault("similarity-check", List.of(
                 "minecraft:enchantments",
                 "minecraft:bundle_contents",
@@ -169,7 +169,7 @@ public class ConfigManager {
                 "minecraft:potion_contents",
                 "minecraft:stored_enchantments",
                 "minecraft:max_stack_size"
-        ));
+        ), "This define how should two items to be similar.\nIf all of the following data types are equal on both items, they are similar.\nThis similarity check happens when a player deliver an order, It accepts items in the delivery inventory that are similar to the one in the order");
 
         // MESSAGES
         config.addDefault("messages.create-order-success", "<gray>Your order has been created");
@@ -179,6 +179,7 @@ public class ConfigManager {
         config.addDefault("messages.not-enough-money", "<red>You do not have enough money");
 
         // SORT TYPES
+        config.addComment("sort-types", "How should different types of sorting appear");
         config.addDefault("sort-types." + SortTypes.MOST_MONEY_PER_ITEM.getIdentifier(), "Most Money Per Item");
         config.addDefault("sort-types." + SortTypes.RECENTLY_LISTED.getIdentifier(), "Recently Listed");
         config.addDefault("sort-types." + SortTypes.MOST_DELIVERED.getIdentifier(), "Most Delivered");
@@ -187,6 +188,7 @@ public class ConfigManager {
         config.addDefault("sort-types." + SortTypes.Z_A.getIdentifier(), "Z - A");
 
         // ORDER STATUS
+        config.addComment("order-status", "How should different types of order status appear\nThey will be used with <order-status> placeholder");
         config.addDefault("order-status." + OrderStatus.AVAILABLE.getIdentifier(), "<gray>Expires after <day>d <hour>h <minute>m <second>s");
         config.addDefault("order-status." + OrderStatus.EXPIRED.getIdentifier(), "<red>Order Expired");
         config.addDefault("order-status." + OrderStatus.COMPLETED.getIdentifier(), "<green>Order Completed");
@@ -206,7 +208,7 @@ public class ConfigManager {
                 "recently-listed",
                 "most-delivered",
                 "most-paid"
-        ));
+        ), "This indicates the next sort type to select when switching to another one");
         new SlotInfo(4, List.of("<white>Click to refresh"), "<aqua>Refresh", ItemType.PAPER).addDefault(config, "gui.main.buttons.refresh");
         new SlotInfo(6, List.of("<white>Click to view your orders"), "<aqua>Your Orders", ItemType.CHEST).addDefault(config, "gui.main.buttons.your-orders");
         new SlotInfo(2, List.of(
@@ -249,7 +251,7 @@ public class ConfigManager {
 
         // SEARCH SIGN GUI
         config.addDefault("gui.search-sign.type", "minecraft:oak_sign");
-        config.addDefault("gui.search-sign.search-line", 1);
+        config.addDefault("gui.search-sign.search-line", 1, "This indicates what line to take as the search query.\nBy default, it's 1, so whatever the player puts in the first line of the sign will be used as the search query");
         config.addDefault("gui.search-sign.lines", List.of(
                 "",
                 "↑↑↑↑↑↑↑↑↑↑↑↑",

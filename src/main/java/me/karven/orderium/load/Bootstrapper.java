@@ -8,10 +8,7 @@ import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.gui.MainGUI;
-import me.karven.orderium.gui.NewOrderDialog;
-import me.karven.orderium.gui.SignGUI;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.NonNull;
@@ -40,35 +37,10 @@ public class Bootstrapper implements PluginBootstrap {
     private static LiteralCommandNode<CommandSourceStack> getOrderiumCmd(String alias) {
         return Commands.literal(alias)
                 .requires(predicate -> predicate.getExecutor() != null && predicate.getExecutor().hasPermission("orderium.admin"))
-                .executes(ctx -> {
-                    return 1;
-                })
                 .then(Commands.literal("reload")
                         .executes(ctx -> {
                             Orderium.getInst().reloadConfig();
 
-                            return 1;
-                        })
-                )
-                .then(Commands.literal("test")
-                        .executes(ctx -> {
-                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 1;
-                            final ConfigManager config = Orderium.getInst().getConfigs();
-                            SignGUI.newSession(p, s -> {}, config.getLines(), config.getSignBlock(), config.getSearchLine());
-                            return 1;
-                        })
-                )
-                .then(Commands.literal("test2")
-                        .executes(ctx -> {
-                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 1;
-                            NewOrderDialog.newSession(p, p.getInventory().getItemInMainHand());
-                            return 1;
-                        })
-                )
-                .then(Commands.literal("test3")
-                        .executes(ctx -> {
-                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 1;
-                            p.sendRichMessage("" + Orderium.getInst().getDbManager().getOrders(p.getUniqueId()).size());
                             return 1;
                         })
                 )
