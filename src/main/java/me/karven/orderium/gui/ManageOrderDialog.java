@@ -80,7 +80,7 @@ public class ManageOrderDialog {
                                         toGive.add(copy);
                                     }
                                     p.give(toGive, true);
-
+                                    YourOrderGUI.open(p);
                                 }, ClickCallback.Options.builder().build()))
                                 .build(),
                         ActionButton.builder(mm.deserialize(cache.getCollectItemsCancelLabel()))
@@ -104,15 +104,13 @@ public class ManageOrderDialog {
                         ActionButton.builder(mm.deserialize(cache.getCancelOrderConfirmLabel()))
                                 .tooltip(mm.deserialize(cache.getCancelOrderConfirmHover()))
                                 .action(DialogAction.customClick((v, player) -> {
-                                    if (!(player instanceof Player)) return;
+                                    if (!(player instanceof Player p)) return;
                                     order.cancel();
+                                    YourOrderGUI.open(p);
                                 }, ClickCallback.Options.builder().build()))
                                 .build(),
                         ActionButton.builder(mm.deserialize(cache.getCancelOrderCancelLabel()))
                                 .tooltip(mm.deserialize(cache.getCancelOrderCancelHover()))
-//                                .action(DialogAction.customClick((v, player) -> {
-//
-//                                }, ClickCallback.Options.builder().build()))
                                 .build()
                 ))
         );

@@ -4,7 +4,6 @@ import lombok.Getter;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SortTypes;
 import net.kyori.adventure.key.Key;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import org.bukkit.Registry;
 import org.bukkit.block.BlockType;
 import org.bukkit.inventory.ItemStack;
@@ -22,7 +21,6 @@ public class NMSUtils {
             AZ = new TreeSet<>(AlgoUtils.getComparator(SortTypes.A_Z)),
             ZA = new TreeSet<>(AlgoUtils.getComparator(SortTypes.Z_A));
     @Getter
-    private static final BlockEntityType<?> signEntity = BlockEntityType.SIGN;
     private static Orderium plugin;
     public static CompletableFuture<Void> init(Orderium pl) {
         plugin = pl;

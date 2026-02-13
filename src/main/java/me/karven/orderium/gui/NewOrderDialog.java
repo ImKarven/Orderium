@@ -116,9 +116,6 @@ public class NewOrderDialog {
                             ActionButton.builder(changeItemLabel)
                                     .tooltip(changeItemHover)
                                     .width(cache.getButtonWidth())
-                                    .action(DialogAction.customClick((view, player) -> {
-                                        player.closeDialog();
-                                    },  ClickCallback.Options.builder().uses(1).build()))
                                     .build()
                     ));
         });

@@ -117,7 +117,7 @@ public class MainGUI {
 
                         returns.add(item);
                     }
-                    System.out.println("GUI closed " + amount + " " +returns.size());
+                    // TODO: fix this part idk why it doesnt work like ????? im so done fixing this
                     if (amount == 0) {
                         p.give(returns, true);
                         p.updateInventory(); // The inventory doesn't update for some reason
@@ -180,7 +180,7 @@ public class MainGUI {
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getYoButton(), e -> {
             e.setCancelled(true);
-            new YourOrderGUI(plugin, player);
+            YourOrderGUI.open(player);
         }), cache.getYoButton().getSlot(), 0);
     }
 

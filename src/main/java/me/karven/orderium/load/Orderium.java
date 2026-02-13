@@ -8,10 +8,7 @@ import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.gui.*;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.utils.ConvertUtils;
-import me.karven.orderium.utils.EconUtils;
-import me.karven.orderium.utils.Metrics;
-import me.karven.orderium.utils.NMSUtils;
+import me.karven.orderium.utils.*;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -43,6 +40,7 @@ public final class Orderium extends JavaPlugin {
                 if (ver > maxVer && ver <= dataVer) maxVer = ver;
                 if (dataVer == ver) {
                     VERSION = ver;
+                    ret.complete(true);
                     return;
                 }
             }
@@ -69,12 +67,15 @@ public final class Orderium extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-
-        saveResource("items.db", true);
+        UpdateUtils.init(this);
+        if (!UpdateUtils.downloadItems()) {
+            saveResource("items.db", false);
+        }
 
         configs = new ConfigManager(this);
         dbManager = new DBManager(this);
         MainGUI.init(this);
+        YourOrderGUI.init(this);
         EconUtils.init(this);
         Order.init(this);
         ConvertUtils.init(this);

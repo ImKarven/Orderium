@@ -15,7 +15,12 @@ import java.util.List;
 import java.util.UUID;
 
 public class YourOrderGUI {
-    public YourOrderGUI(Orderium plugin, Player p) {
+    private static Orderium plugin;
+
+    public static void init(Orderium plugin) {
+        YourOrderGUI.plugin = plugin;
+    }
+    public static void open(Player p) {
         final DBManager db = plugin.getDbManager();
         final UUID pUUID = p.getUniqueId();
         final List<Order> orders = db.getOrders(pUUID);
@@ -29,6 +34,7 @@ public class YourOrderGUI {
         for (Order order : orders) {
             ordersPane.addItem(ConvertUtils.parseOrder(order, rawLore, e -> {
                 e.setCancelled(true);
+                p.closeInventory();
                 ManageOrderDialog.show(order, p);
             }));
         }

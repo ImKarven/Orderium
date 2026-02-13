@@ -60,10 +60,9 @@ public class DBManager {
         itemConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "items.db");
         itemDataSource = new HikariDataSource(itemConfig);
 
-        exec("CREATE TABLE IF NOT EXISTS " + ORDER_TABLE + " (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)");
+        exec("CREATE TABLE IF NOT EXISTS " + ORDER_TABLE + " (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)")
+                .thenAccept(stmt -> reloadOrders());
         exec("CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, before DOUBLE, amount DOUBLE, after DOUBLE)");
-
-        reloadOrders();
     }
 
     public CompletableFuture<List<ItemStack>> getItems() {
