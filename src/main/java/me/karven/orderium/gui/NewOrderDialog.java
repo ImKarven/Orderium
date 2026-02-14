@@ -11,6 +11,7 @@ import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.EconUtils;
+import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -38,7 +39,7 @@ public class NewOrderDialog {
     public static void newSession(Player p, ItemStack displayItem) {
 
         try {
-            p.showDialog(createDialog(
+            PlayerUtils.openDialog(p, createDialog(
                     mm.deserialize(cache.getNewOrderDialogTitle()),
                     mm.deserialize(cache.getItemDescription()),
                     displayItem,
@@ -56,7 +57,7 @@ public class NewOrderDialog {
     }
 
     private static Dialog createDialog(Component title,  Component bodyText, ItemStack display, Component amountLabel, Component moneyPerLabel, Component changeItemLabel, Component changeItemHover, Component confirmLabel, Component confirmHover) {
-        return Dialog.create(builder -> {
+        return Dialog.create(builder ->
             builder.empty()
                     .base(
                             DialogBase.builder(title)
@@ -93,7 +94,7 @@ public class NewOrderDialog {
                                         // Create new order
                                         final String rawAmount = view.getText("amount");
                                         final String rawMoneyPer = view.getText("money_per");
-                                        p.closeInventory();
+                                        PlayerUtils.closeInv(p);
                                         if (rawAmount == null || rawMoneyPer == null) {
                                             p.sendRichMessage(cache.getInvalidInput());
                                             return;
@@ -117,7 +118,7 @@ public class NewOrderDialog {
                                     .tooltip(changeItemHover)
                                     .width(cache.getButtonWidth())
                                     .build()
-                    ));
-        });
+                    ))
+        );
     }
 }

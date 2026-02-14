@@ -3,6 +3,7 @@ version: ${version}
 main: me.karven.orderium.load.Orderium
 bootstrapper: me.karven.orderium.load.Bootstrapper
 api-version: '1.21'
+folia-supported: false
 authors: [ Karven ]
 description: An order plugin
 permissions:

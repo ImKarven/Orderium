@@ -11,6 +11,8 @@ import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.EconUtils;
+import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
@@ -79,7 +81,7 @@ public class ManageOrderDialog {
                                         copy.setAmount(rem);
                                         toGive.add(copy);
                                     }
-                                    p.give(toGive, true);
+                                    PlayerUtils.give(p, toGive, true);
                                     YourOrderGUI.open(p);
                                 }, ClickCallback.Options.builder().build()))
                                 .build(),
@@ -105,7 +107,7 @@ public class ManageOrderDialog {
                                 .tooltip(mm.deserialize(cache.getCancelOrderConfirmHover()))
                                 .action(DialogAction.customClick((v, player) -> {
                                     if (!(player instanceof Player p)) return;
-                                    order.cancel();
+                                    EconUtils.addMoney(p, order.cancel());
                                     YourOrderGUI.open(p);
                                 }, ClickCallback.Options.builder().build()))
                                 .build(),
@@ -129,14 +131,16 @@ public class ManageOrderDialog {
                         List.of(
                                 ActionButton.builder(mm.deserialize(cache.getCollectItemsLabel()))
                                         .tooltip(mm.deserialize(cache.getCollectItemsHover()))
-                                        .action(DialogAction.customClick((v, p) -> {
-                                            p.showDialog(collectItemsDialog);
+                                        .action(DialogAction.customClick((v, player) -> {
+                                            if (!(player instanceof Player p)) return;
+                                            PlayerUtils.openDialog(p, collectItemsDialog);
                                         }, ClickCallback.Options.builder().build()))
                                         .build(),
                                 ActionButton.builder(mm.deserialize(cache.getCancelOrderLabel()))
                                         .tooltip(mm.deserialize(cache.getCancelOrderHover()))
-                                        .action(DialogAction.customClick((v, p) -> {
-                                            p.showDialog(cancelOrderDialog);
+                                        .action(DialogAction.customClick((v, player) -> {
+                                            if (!(player instanceof Player p)) return;
+                                            PlayerUtils.openDialog(p, cancelOrderDialog);
                                         }, ClickCallback.Options.builder().build()))
                                         .build()
                         )
@@ -144,6 +148,6 @@ public class ManageOrderDialog {
                                 .build()
                 )
         );
-        player_.showDialog(dialog);
+        PlayerUtils.openDialog(player_, dialog);
     }
 }

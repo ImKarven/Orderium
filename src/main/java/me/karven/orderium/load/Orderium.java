@@ -79,6 +79,7 @@ public final class Orderium extends JavaPlugin {
         EconUtils.init(this);
         Order.init(this);
         ConvertUtils.init(this);
+        PlayerUtils.init(this);
 
         initVersion().thenAccept(success -> {
             if (!success) {

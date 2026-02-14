@@ -11,6 +11,7 @@ import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -23,12 +24,10 @@ import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
 public class DeliveryConfirmDialog {
-    private static Orderium plugin;
     private static MiniMessage mm;
     private static ConfigManager cache;
 
     public static void init(Orderium plugin) {
-        DeliveryConfirmDialog.plugin = plugin;
         mm = plugin.mm;
         cache = plugin.getConfigs();
     }
@@ -51,7 +50,7 @@ public class DeliveryConfirmDialog {
                                     .action(DialogAction.customClick((view, player) -> {
                                         final int maxDeliverAmount = order.amount() - order.delivered();
 
-                                        p.give(returnItems, true);
+                                        PlayerUtils.give(p, returnItems, true);
 
                                         if (amount <= maxDeliverAmount) {
                                             order.deliver(p, amount);
@@ -76,16 +75,14 @@ public class DeliveryConfirmDialog {
                                             copy.setAmount(rem);
                                             items.add(copy);
                                         }
-                                        p.give(items, true);
+                                        PlayerUtils.give(p, items, true);
 
                                     }, ClickCallback.Options.builder().build()))
                                     .build(),
                             ActionButton.builder(mm.deserialize(cache.getConfirmDeliveryCancelLabel()))
                                     .tooltip(mm.deserialize(cache.getConfirmDeliveryCancelHover()))
                                     .action(DialogAction.customClick(
-                                            (view, player) -> {
-                                                MainGUI.cancelDelivery(returnGUI, p);
-                                            },
+                                            (view, player) -> MainGUI.cancelDelivery(returnGUI, p),
                                             ClickCallback.Options.builder().build()))
                                     .build()
                     ))
@@ -93,6 +90,6 @@ public class DeliveryConfirmDialog {
             ;
         });
 
-        p.showDialog(dialog);
+        PlayerUtils.openDialog(p, dialog);
     }
 }

@@ -12,6 +12,7 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.world.blockentity.BlockEntityTypes;
 import com.github.retrooper.packetevents.protocol.world.states.WrappedBlockState;
 import com.github.retrooper.packetevents.util.Vector3i;
+import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientUpdateSign;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBlockChange;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBlockEntityData;
@@ -29,6 +30,7 @@ import java.util.function.Consumer;
 
 public class SignGUI implements PacketListener {
     private static final HashMap<Player, SignInfo> sessionsList = new HashMap<>();
+    private static final HashMap<Player, WrapperPlayServerBlockEntityData> dataChanges = new HashMap<>();
 
     public static void newSession(Player p, Consumer<String> action, List<String> lines, BlockType blockType, int line) {
         if (blockType == null) {
@@ -55,9 +57,9 @@ public class SignGUI implements PacketListener {
         final WrapperPlayServerBlockEntityData changeTextPacket = new WrapperPlayServerBlockEntityData(pos, BlockEntityTypes.SIGN, nbt);
         final WrapperPlayServerOpenSignEditor openSignPacket = new WrapperPlayServerOpenSignEditor(pos, true);
 
-        PacketEvents.getAPI().getPlayerManager().sendPacket(p, blockUpdatePacket);
-        PacketEvents.getAPI().getPlayerManager().sendPacket(p, changeTextPacket);
-        PacketEvents.getAPI().getPlayerManager().sendPacket(p, openSignPacket);
+        send(p, blockUpdatePacket);
+        send(p, changeTextPacket);
+        send(p, openSignPacket);
         sessionsList.put(p, new SignInfo(action, blockType, line, pos));
     }
 
@@ -72,21 +74,46 @@ public class SignGUI implements PacketListener {
 
         info.action().accept(lines[info.line() - 1]);
         final Vector3i pos = info.pos();
-        player.getWorld().refreshChunk(pos.getX() / 16, pos.getZ() / 16);
+
+        final WrappedBlockState blockState = SpigotConversionUtil.fromBukkitBlockData(player.getWorld().getBlockData(pos.getX(), pos.getY(), pos.getZ()));
+        final WrapperPlayServerBlockChange blockChangePacket = new WrapperPlayServerBlockChange(pos, blockState);
+        final WrapperPlayServerBlockEntityData blockEntityDataPacket = dataChanges.get(player);
+
+        send(player, blockChangePacket);
+        if (blockEntityDataPacket != null) send(player, blockEntityDataPacket);
 
         sessionsList.remove(player);
+        dataChanges.remove(player);
     }
 
     @Override
     public void onPacketSend(@NonNull PacketSendEvent e) {
-        if (e.getPacketType() != PacketType.Play.Server.BLOCK_CHANGE) return;
-        final Player player = e.getPlayer();
-        if (!sessionsList.containsKey(player)) return;
-        final WrapperPlayServerBlockChange wrapper = new WrapperPlayServerBlockChange(e);
-        final SignInfo info = sessionsList.get(player);
-        if (wrapper.getBlockPosition().equals(info.pos())) {
-            e.setCancelled(true);
+        switch (e.getPacketType()) {
+            case PacketType.Play.Server.BLOCK_CHANGE -> {
+                final Player player = e.getPlayer();
+                if (!sessionsList.containsKey(player)) return;
+                final WrapperPlayServerBlockChange wrapper = new WrapperPlayServerBlockChange(e);
+                final SignInfo info = sessionsList.get(player);
+                if (!wrapper.getBlockPosition().equals(info.pos())) return;
+                e.setCancelled(true);
+            }
+
+            case PacketType.Play.Server.BLOCK_ENTITY_DATA -> {
+                final Player player = e.getPlayer();
+                final SignInfo info = sessionsList.get(player);
+                if (info == null) return;
+                final WrapperPlayServerBlockEntityData wrapper = new WrapperPlayServerBlockEntityData(e);
+                if (!wrapper.getPosition().equals(info.pos())) return;
+                dataChanges.remove(player);
+                dataChanges.put(player, wrapper);
+                e.setCancelled(true);
+            }
+
+            default -> {}
         }
     }
 
+    private static void send(Player p, PacketWrapper<?> wrapper) {
+        PacketEvents.getAPI().getPlayerManager().sendPacket(p, wrapper);
+    }
 }

@@ -11,6 +11,7 @@ import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -48,7 +49,7 @@ public class MainGUI {
             if (item == null) continue;
             items.add(item);
         }
-        p.give(items, true);
+        PlayerUtils.give(p, items, true);
     }
 
     public MainGUI(Player p, int sortIdx) {
@@ -117,10 +118,8 @@ public class MainGUI {
 
                         returns.add(item);
                     }
-                    // TODO: fix this part idk why it doesnt work like ????? im so done fixing this
                     if (amount == 0) {
-                        p.give(returns, true);
-                        p.updateInventory(); // The inventory doesn't update for some reason
+                        PlayerUtils.give(p, returns, true);
                         return;
                     }
 
@@ -186,6 +185,6 @@ public class MainGUI {
 
 
     private void open(Player p) {
-        pages.getFirst().show(p);
+        PlayerUtils.openGui(p, pages.getFirst());
     }
 }

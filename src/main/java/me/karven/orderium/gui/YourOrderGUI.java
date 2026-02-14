@@ -8,6 +8,7 @@ import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 
@@ -34,7 +35,7 @@ public class YourOrderGUI {
         for (Order order : orders) {
             ordersPane.addItem(ConvertUtils.parseOrder(order, rawLore, e -> {
                 e.setCancelled(true);
-                p.closeInventory();
+                PlayerUtils.closeInv(p);
                 ManageOrderDialog.show(order, p);
             }));
         }
@@ -47,6 +48,6 @@ public class YourOrderGUI {
         }
 
         gui.addPane(ordersPane);
-        gui.show(p);
+        PlayerUtils.openGui(p, gui);
     }
 }

@@ -11,6 +11,7 @@ import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.NMSUtils;
+import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -51,17 +52,13 @@ public class ChooseItemGUI {
     }
 
     public static void choose(Player p, int sortIdx, int pageIdx) {
-        getPages(cache.getChooseSortsOrder().get(sortIdx)).get(pageIdx).show(p);
+        PlayerUtils.openGui(p, getPages(cache.getChooseSortsOrder().get(sortIdx)).get(pageIdx));
     }
 
     public static void choose(Player p, int sortIdx, String search) {
         final List<ChestGui> pages = new ArrayList<>();
         createPages(pages, cache.getChooseSortsOrder().get(sortIdx), search);
-        pages.getFirst().show(p);
-    }
-
-    private static void addButtons(StaticPane buttons, SortTypes sortType, final int idx) {
-        addButtons(buttons, sortType, idx, pagesAmount);
+        PlayerUtils.openGui(p, pages.getFirst());
     }
 
     private static void addButtons(StaticPane buttons, SortTypes sortType, final int idx, final int pagesAmount) {
@@ -70,13 +67,13 @@ public class ChooseItemGUI {
         if (idx > 0) buttons.addItem(ConvertUtils.parseButton(cache.getChooseBackButton(), e -> {
             e.setCancelled(true);
             if (!(e.getWhoClicked() instanceof Player p)) return;
-            getPages(sortType).get(idx - 1).show(p);
+            PlayerUtils.openGui(p, getPages(sortType).get(idx - 1));
         }), cache.getChooseBackButton().getSlot(), 0);
 
         if (idx + 1 < pagesAmount) buttons.addItem(ConvertUtils.parseButton(cache.getChooseNextButton(), e -> {
             e.setCancelled(true);
             if (!(e.getWhoClicked() instanceof Player p)) return;
-            getPages(sortType).get(idx + 1).show(p);
+            PlayerUtils.openGui(p, getPages(sortType).get(idx + 1));
         }), cache.getChooseNextButton().getSlot(), 0);
 
         buttons.addItem(ConvertUtils.parseSortButton(cache.getChooseSortButton(), sortType, e -> {

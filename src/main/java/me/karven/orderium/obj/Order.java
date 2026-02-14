@@ -77,8 +77,10 @@ public class Order {
                 );
     }
 
-    public void cancel() {
+    /// Returns the amount of money the player should get in return
+    public double cancel() {
         this.expiresAt = System.currentTimeMillis() - 1;
+        return (amount - delivered) * moneyPer;
     }
 
     public OrderStatus getStatus() {
