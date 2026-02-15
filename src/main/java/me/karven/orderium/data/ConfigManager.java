@@ -169,8 +169,14 @@ public class ConfigManager {
                 "minecraft:instrument",
                 "minecraft:potion_contents",
                 "minecraft:stored_enchantments",
-                "minecraft:max_stack_size"
-        ), "This define how should two items to be similar.\nIf all of the following data types are equal on both items, they are similar.\nThis similarity check happens when a player deliver an order, It accepts items in the delivery inventory that are similar to the one in the order");
+                "minecraft:max_stack_size",
+                "minecraft:custom_data",
+                "minecraft:custom_model_data",
+                "minecraft:ominous_bottle_amplifier"
+        ), "This define how should two items to be similar.\n" +
+                "If all of the following data component types are equal on both items beside their item types, they are similar.\n" +
+                "This similarity check happens when a player deliver an order, It accepts items in the delivery inventory that are similar to the one in the order\n" +
+                "See a list of data components here, note that only use ones that exist on your server version: https://minecraft.wiki/w/Data_component_format#List_of_components");
 
         // MESSAGES
         config.addDefault("messages.create-order-success", "<gray>Your order has been created");
