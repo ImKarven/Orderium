@@ -205,7 +205,7 @@ public class ConfigManager {
         config.addDefault("gui.main.title", "Orders");
         config.addDefault("gui.main.order-lore", List.of(
                 "",
-                "<#786500><paid><gray>/<#017800><total> <gray>Paid",
+                "<#786500>$<paid><gray>/<#017800>$<total> <gray>Paid",
                 "<#786500><delivered><gray>/<#017800><amount> <gray>Delivered",
                 "<green>$<money-per> <white>each",
                 "",
@@ -235,7 +235,7 @@ public class ConfigManager {
         config.addDefault("gui.your-orders.title", "Your Orders");
         config.addDefault("gui.your-orders.order-lore", List.of(
                 "",
-                "<#786500><paid><gray>/<#017800><total> <gray>Paid",
+                "<#786500>$<paid><gray>/<#017800>$<total> <gray>Paid",
                 "<#786500><delivered><gray>/<#017800><amount> <gray>Delivered",
                 "<green>$<money-per> <white>each",
                 "",
@@ -260,7 +260,8 @@ public class ConfigManager {
 
         // SEARCH SIGN GUI
         config.addDefault("gui.search-sign.type", "minecraft:oak_sign");
-        config.addDefault("gui.search-sign.search-line", 1, "This indicates what line to take as the search query.\nBy default, it's 1, so whatever the player puts in the first line of the sign will be used as the search query");
+        config.addDefault("gui.search-sign.search-line", 1, "This indicates what line to take as the search query.\n" +
+                "By default, it's 1, so whatever the player puts in the first line of the sign will be used as the search query");
         config.addDefault("gui.search-sign.lines", List.of(
                 "",
                 "↑↑↑↑↑↑↑↑↑↑↑↑",
