@@ -216,10 +216,11 @@ public class ConfigManager {
                 "recently-listed",
                 "most-delivered",
                 "most-paid"
-        ), "This indicates the next sort type to select when switching to another one");
+        ), "This indicates the next sort type to select when switching to another one\n" +
+                "A_Z and Z_A sorts are not supported.");
         new SlotInfo(4, List.of("<white>Click to refresh"), "<aqua>Refresh", ItemType.PAPER).addDefault(config, "gui.main.buttons.refresh");
         new SlotInfo(6, List.of("<white>Click to view your orders"), "<aqua>Your Orders", ItemType.CHEST).addDefault(config, "gui.main.buttons.your-orders");
-        new SlotInfo(2, List.of(
+        new SlotInfo(3, List.of(
                 "",
                 "<white> • <most-money-per-item>",
                 "<white> • <recently-listed>",
@@ -247,11 +248,11 @@ public class ConfigManager {
         config.addDefault("gui.choose-item.sorts-order", List.of(
                 "a-z",
                 "z-a"
-        ));
+        ), "Only A_Z and Z_A sorts are supported, don't put other sort types in here");
         new SlotInfo(0, List.of("<white>Click to go to the previous page"), "<aqua>Back", ItemType.ARROW).addDefault(config, "gui.choose-item.buttons.back");
         new SlotInfo(8, List.of("<white>Click to go to the next page"), "<aqua>Next", ItemType.ARROW).addDefault(config, "gui.choose-item.buttons.next");
         new SlotInfo(5, List.of("<white>Click to search"), "<aqua>Search", ItemType.OAK_SIGN).addDefault(config, "gui.choose-item.buttons.search");
-        new SlotInfo(2, List.of(
+        new SlotInfo(3, List.of(
                 "",
                 "<white> • <a-z>",
                 "<white> • <z-a>"
