@@ -99,6 +99,10 @@ public class MainGUI {
                 addButtons(buttonsPane, ++curr);
             }
             orderPane.addItem(ConvertUtils.parseOrder(order, cache.getOrderLore(), e -> {
+                if (player.getUniqueId().equals(order.owner())) {
+                    player.sendRichMessage(cache.getDeliverSelf());
+                    return;
+                }
                 final ItemStack comparer = order.item();
                 final ChestGui deliverGUI = new ChestGui(cache.getDeliverRows(), ComponentHolder.of(mm.deserialize(cache.getMainGuiTitle())));
                 deliverGUI.setOnClose(e2 -> {
