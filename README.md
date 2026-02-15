@@ -4,7 +4,7 @@ Orderium is a plugin that allows players on your server to create and deliver or
 ## Features
 - Create orders for a specific item
 - Deliver orders and earn money
-- Use modern APIs including MiniMessage, Dialog API, Brigadier, Registry and DataComponent
+- Use modern APIs from Paper
 - Highly configurable settings
 
 ## Requirements
@@ -15,7 +15,8 @@ Orderium needs these dependencies to operate:
 
 ## Supported Versions and Softwares
 Orderium supports version **1.21.7 and above** and **Paper or its fork**.
-<br>Folia and MultiPaper or any other multi-servers setups are not supported.
+<br>MultiPaper or any other multi-servers setups are not supported if you want to sync the orders between quadrons.
+<br>Folia is not supported.
 
 ## Informations
 If you have trouble using the plugin, take a look at [the Wiki](https://github.com/ImKarven/Orderium/wiki).
