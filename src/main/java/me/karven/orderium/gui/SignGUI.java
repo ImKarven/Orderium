@@ -35,6 +35,7 @@ public class SignGUI implements PacketListener {
     public static void newSession(Player p, Consumer<String> action, List<String> lines, BlockType blockType, int line) {
         if (blockType == null) {
             Orderium.getInst().getLogger().severe("Failed to show sign GUI because of invalid sign block");
+            action.accept("");
             return;
         }
         final int x = (int) Math.floor(p.getX());
@@ -75,7 +76,7 @@ public class SignGUI implements PacketListener {
         info.action().accept(lines[info.line() - 1]);
         final Vector3i pos = info.pos();
 
-        final WrappedBlockState blockState = SpigotConversionUtil.fromBukkitBlockData(player.getWorld().getBlockData(pos.getX(), pos.getY(), pos.getZ()));
+        final WrappedBlockState blockState = SpigotConversionUtil.fromBukkitBlockData(player.getWorld().getBlockData(pos.getX(), pos.getY(), pos.getZ())); // Might have to use region scheduler here for folia support
         final WrapperPlayServerBlockChange blockChangePacket = new WrapperPlayServerBlockChange(pos, blockState);
         final WrapperPlayServerBlockEntityData blockEntityDataPacket = dataChanges.get(player);
 
