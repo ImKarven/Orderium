@@ -34,7 +34,6 @@ public class YourOrderGUI {
         final List<String> rawLore = cache.getYoLore();
         for (Order order : orders) {
             ordersPane.addItem(ConvertUtils.parseOrder(order, rawLore, e -> {
-                e.setCancelled(true);
                 PlayerUtils.closeInv(p);
                 ManageOrderDialog.show(order, p);
             }));
@@ -42,7 +41,6 @@ public class YourOrderGUI {
 
         if (orders.size() < 27) {
             ordersPane.addItem(ConvertUtils.parseButton(cache.getNewOrderButton(), e -> {
-                e.setCancelled(true);
                 NewOrderDialog.start(p);
             }));
         }

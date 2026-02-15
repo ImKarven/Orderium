@@ -110,6 +110,7 @@ public class ConfigManager {
     private String delivered;
     private String receiveDelivery;
     private String notEnoughMoney;
+    private String deliverSelf;
 
     private boolean logTransactions = true;
     private long expiresAfter = -1;
@@ -177,6 +178,7 @@ public class ConfigManager {
         config.addDefault("messages.delivery", "<gray>You earned <green>$<money><gray> from delivering an order");
         config.addDefault("messages.receive-delivery", "<aqua><deliverer> <gray>delivered you <aqua><amount> <item>");
         config.addDefault("messages.not-enough-money", "<red>You do not have enough money");
+        config.addDefault("messages.deliver-self", "<red>You cannot deliver your own order");
 
         // SORT TYPES
         config.addComment("sort-types", "How should different types of sorting appear");
@@ -347,6 +349,7 @@ public class ConfigManager {
         delivered = config.getString("messages.delivery");
         receiveDelivery = config.getString("messages.receive-delivery");
         notEnoughMoney = config.getString("messages.not-enough-money");
+        deliverSelf = config.getString("messages.deliver-self");
 
         mainGuiTitle = config.getString("gui.main.title");
         orderLore = config.getStringList("gui.main.order-lore");

@@ -63,7 +63,6 @@ public class MainGUI {
         open(p);
     }
 
-
     public MainGUI(Player p, int sortIdx, String search) {
         this.search = search;
         this.sortIdx = sortIdx;
@@ -100,8 +99,6 @@ public class MainGUI {
                 addButtons(buttonsPane, ++curr);
             }
             orderPane.addItem(ConvertUtils.parseOrder(order, cache.getOrderLore(), e -> {
-                e.setCancelled(true);
-
                 final ItemStack comparer = order.item();
                 final ChestGui deliverGUI = new ChestGui(cache.getDeliverRows(), ComponentHolder.of(mm.deserialize(cache.getMainGuiTitle())));
                 deliverGUI.setOnClose(e2 -> {
@@ -147,29 +144,24 @@ public class MainGUI {
 
     private void addButtons(StaticPane buttonsPane, int curr) {
         if (curr > 0) buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersBackButton(), e -> {
-            e.setCancelled(true);
-            pages.get(curr - 1).show(player);
+            PlayerUtils.openGui(player, pages.get(curr - 1));
         }), cache.getOrdersBackButton().getSlot(), 0);
 
         if (curr + 1 < amount) buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersNextButton(), e -> {
-            e.setCancelled(true);
-            pages.get(curr + 1).show(player);
+            PlayerUtils.openGui(player, pages.get(curr + 1));
         }), cache.getOrdersNextButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getRefreshButton(), e -> {
-            e.setCancelled(true);
             if (search.isEmpty()) new MainGUI(player, sortIdx);
             else new MainGUI(player, sortIdx, search);
         }), cache.getRefreshButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseSortButton(cache.getOrdersSortButton(), cache.getOrdersSortsOrder().get(sortIdx), e -> {
-            e.setCancelled(true);
             if (search.isEmpty()) new MainGUI(player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1);
             else new MainGUI(player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1, search);
         }), cache.getOrdersSortButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersSearchButton(), e -> {
-            e.setCancelled(true);
             SignGUI.newSession(
                     player,
                     (s) -> player.getScheduler().run(plugin, t -> new MainGUI(player, sortIdx, s), null),
@@ -178,7 +170,6 @@ public class MainGUI {
         }), cache.getOrdersSearchButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getYoButton(), e -> {
-            e.setCancelled(true);
             YourOrderGUI.open(player);
         }), cache.getYoButton().getSlot(), 0);
     }

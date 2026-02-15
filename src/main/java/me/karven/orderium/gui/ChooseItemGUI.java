@@ -65,26 +65,22 @@ public class ChooseItemGUI {
         final List<SortTypes> sortOrder = cache.getChooseSortsOrder();
         final int sortIdx = sortOrder.indexOf(sortType);
         if (idx > 0) buttons.addItem(ConvertUtils.parseButton(cache.getChooseBackButton(), e -> {
-            e.setCancelled(true);
             if (!(e.getWhoClicked() instanceof Player p)) return;
             PlayerUtils.openGui(p, getPages(sortType).get(idx - 1));
         }), cache.getChooseBackButton().getSlot(), 0);
 
         if (idx + 1 < pagesAmount) buttons.addItem(ConvertUtils.parseButton(cache.getChooseNextButton(), e -> {
-            e.setCancelled(true);
             if (!(e.getWhoClicked() instanceof Player p)) return;
             PlayerUtils.openGui(p, getPages(sortType).get(idx + 1));
         }), cache.getChooseNextButton().getSlot(), 0);
 
         buttons.addItem(ConvertUtils.parseSortButton(cache.getChooseSortButton(), sortType, e -> {
-            e.setCancelled(true);
             if (!(e.getWhoClicked() instanceof Player p)) return;
             final int nextIdx = sortIdx == sortOrder.size() - 1 ? 0 : sortIdx + 1;
             choose(p, nextIdx, idx);
         }), cache.getChooseSortButton().getSlot(), 0);
 
         buttons.addItem(ConvertUtils.parseButton(cache.getChooseSearchButton(), e -> {
-            e.setCancelled(true);
             if (!(e.getWhoClicked() instanceof Player p)) return;
             SignGUI.newSession(
                     p,
@@ -137,7 +133,6 @@ public class ChooseItemGUI {
                 currPage.setOnGlobalDrag(e -> e.setCancelled(true));
             }
             itemsPane.addItem(new GuiItem(item.clone(), e -> {
-                e.setCancelled(true);
                 if (!(e.getWhoClicked() instanceof Player p)) return;
                 NewOrderDialog.newSession(p, item.clone());
             }));
