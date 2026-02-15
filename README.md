@@ -19,5 +19,5 @@ Orderium supports version **1.21.7 and above** and **Paper or its fork**.
 
 ## Informations
 If you have trouble using the plugin, take a look at [the Wiki](https://github.com/ImKarven/Orderium/wiki).
-<br>If you have any issues or found any bugs, create an issue on the [Github repository](https://github.com/ImKarven/Orderium/issues)
+<br>If you have any issues or found any bugs, create an issue on the [Issue Tracker](https://github.com/ImKarven/Orderium/issues)
 <br>If you found any exploits or dupe glitches, formerly report the vulnerability by opening a ModMail in [my Discord Server](https://discord.gg/SeQHszR6Z5).
