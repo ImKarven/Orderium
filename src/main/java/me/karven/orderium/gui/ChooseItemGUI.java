@@ -149,25 +149,10 @@ public class ChooseItemGUI {
                     return;
                 }
                 final ItemStack i = guiItem.getItem();
-                i.editMeta(meta -> {
-                    if (PDCUtils.isBlacklist(meta)) return;
+                if (PDCUtils.isBlacklist(i.getItemMeta())) return;
 
-                    db.addBlacklist(item.clone());
-
-                    final List<Component> lore = meta.lore();
-                    final List<Component> toAdd = List.of(
-                            Component.empty(),
-                            Component.text("Item added to blacklist", NamedTextColor.GREEN));
-                    
-                    if (lore == null) {
-                        meta.lore(toAdd);
-                        return;
-                    }
-                    lore.addAll(toAdd);
-                    meta.lore(lore);
-
-                });
-
+                db.addBlacklist(item.clone());
+                p.sendRichMessage("<green>Item added to blacklist. Reload to take effects");
             });
             itemsPane.addItem(guiItem);
 

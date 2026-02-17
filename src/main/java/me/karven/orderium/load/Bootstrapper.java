@@ -8,6 +8,7 @@ import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -41,6 +42,32 @@ public class Bootstrapper implements PluginBootstrap {
                         .requires(predicate -> predicate.getExecutor() != null && predicate.getExecutor().hasPermission("orderium.admin.reload"))
                         .executes(ctx -> {
                             Orderium.getInst().reloadConfig();
+
+                            return 1;
+                        })
+                )
+                .then(Commands.literal("blacklist")
+                        .requires(predicate ->
+                                predicate.getExecutor() != null &&
+                                predicate.getExecutor().hasPermission("orderium.admin.blacklist") &&
+                                predicate.getExecutor() instanceof Player)
+                        .executes(ctx -> {
+                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 0;
+
+                            AdminToolGUI.openBlacklist(p);
+
+                            return 1;
+                        })
+                )
+                .then(Commands.literal("custom_items")
+                        .requires(predicate ->
+                                predicate.getExecutor() != null &&
+                                        predicate.getExecutor().hasPermission("orderium.admin.custom-items") &&
+                                        predicate.getExecutor() instanceof Player)
+                        .executes(ctx -> {
+                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 0;
+
+                            AdminToolGUI.openCustomItems(p);
 
                             return 1;
                         })
