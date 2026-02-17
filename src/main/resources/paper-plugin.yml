@@ -9,6 +9,26 @@ description: An order plugin
 permissions:
   orderium.admin:
     default: op
+    description: Access to /orderium command, this is required for any of its subcommands
+  orderium.admin.blacklist:
+    default: op
+    description: Access to modify the blacklist
+
+  orderium.admin.custom-items:
+    default: op
+    description: Access to modify the custom items
+
+  orderium.admin.reload:
+    default: op
+    description: Access to /orderium reload
+
+  orderium.bypass.max-collect:
+    default: op
+    description: Bypass max-collect value
+
+  orderium.bypass.max-collect-per-minute:
+    default: op
+    description: Bypass max-collect-per-minute value
 
 dependencies:
   server:

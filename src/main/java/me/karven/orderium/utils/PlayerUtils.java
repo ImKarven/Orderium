@@ -6,7 +6,9 @@ import me.karven.orderium.load.Orderium;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class PlayerUtils {
     private static Orderium plugin;
@@ -16,6 +18,25 @@ public class PlayerUtils {
 
     public static void give(Player p, Collection<ItemStack> items, boolean dropIfFull) {
         p.getScheduler().run(plugin, t -> p.give(items, dropIfFull), null);
+    }
+
+    public static void give(Player p, ItemStack item, int amount) {
+        final int maxStackSize = item.getMaxStackSize();
+
+        final ItemStack copy = item.clone();
+        copy.setAmount(maxStackSize);
+        final int fullStackAmount = amount / maxStackSize;
+        final List<ItemStack> items = new ArrayList<>();
+        for (int i = 0; i < fullStackAmount; i++) {
+            items.add(copy.clone());
+        }
+        final int rem = amount % maxStackSize;
+
+        if (rem > 0) {
+            copy.setAmount(rem);
+            items.add(copy);
+        }
+        PlayerUtils.give(p, items, true);
     }
 
     public static void openGui(Player p, ChestGui gui) {

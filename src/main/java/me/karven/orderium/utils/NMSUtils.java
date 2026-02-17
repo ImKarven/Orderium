@@ -30,8 +30,15 @@ public class NMSUtils {
     private static CompletableFuture<Void> generateItemsList() {
         final CompletableFuture<Void> res = new CompletableFuture<>();
         plugin.getDbManager().getItems().thenAccept(bukkitItems -> {
+
+            AZ.clear();
+            ZA.clear();
+
             AZ.addAll(bukkitItems);
             ZA.addAll(bukkitItems);
+
+            AZ.addAll(plugin.getDbManager().getCustomItems());
+            ZA.addAll(plugin.getDbManager().getCustomItems());
 
             plugin.getLogger().info("Loaded " + AZ.size() + " items.");
             res.complete(null);

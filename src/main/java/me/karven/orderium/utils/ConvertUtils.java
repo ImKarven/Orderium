@@ -68,7 +68,7 @@ public class ConvertUtils {
     public static List<Order> convertOrders(ResultSet raw) {
         final List<Order> orders = new ArrayList<>();
         if (raw == null) return orders;
-        try {
+        try (raw) {
             while (raw.next()) {
                 orders.add(
                         new Order(raw.getInt(1),
@@ -81,12 +81,42 @@ public class ConvertUtils {
                                 raw.getLong(9)
                         ));
             }
-            raw.close();
         } catch (SQLException e) {
             plugin.getLogger().severe(e.toString());
         }
 
         return orders;
+    }
+
+    public static List<ItemStack> convertItems(ResultSet raw) {
+        final List<ItemStack> items = new ArrayList<>();
+        if (raw == null) return items;
+        try (raw) {
+
+            while (raw.next()) {
+                items.add(ItemStack.deserializeBytes(raw.getBytes(1)));
+            }
+
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.toString());
+        }
+
+        return items;
+    }
+
+    public static ItemStack addLore(ItemStack item, List<String> toAdd) {
+        item.editMeta(meta -> {
+            if (!meta.hasLore()) {
+                item.lore(toAdd.stream().map(mm::deserialize).toList());
+                return;
+            }
+            final List<Component> lore = meta.lore();
+            assert lore != null;
+            lore.addAll(toAdd.stream().map(mm::deserialize).toList());
+            meta.lore(lore);
+        }
+        );
+        return item;
     }
 
     public static GuiItem parseOrder(Order order, List<String> rawLore, Consumer<InventoryClickEvent> action) {

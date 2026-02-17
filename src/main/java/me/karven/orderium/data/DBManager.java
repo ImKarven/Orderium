@@ -12,6 +12,7 @@ import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.EconUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.sql.Connection;
@@ -30,12 +31,20 @@ public class DBManager {
     private static final String PREFIX = "orderium_";
     private static final String ORDER_TABLE = PREFIX + "orders";
     private static final String TRANSACTION_TABLE = PREFIX + "transactions";
+    private static final String BLACKLIST_TABLE = PREFIX + "blacklist";
+    private static final String CUSTOM_ITEMS_TABLE = PREFIX + "custom_items";
+
     private final MoneyTransaction moneyTransaction;
+
     private final HikariConfig itemConfig = new HikariConfig();
     private final HikariDataSource itemDataSource;
+
+    private final HikariConfig modifiedItemsConfig = new HikariConfig();
+    private final HikariDataSource modifiedItemDataSource;
+
     private final boolean isExecuting = false;
     @Getter
-    private List<Order> orders = new ArrayList<>();
+    private final List<Order> orders = new ArrayList<>();
     private final Set<Order> mostMoneyPerItem = new TreeSet<>(
             Comparator.comparingDouble(Order::moneyPer).reversed().thenComparing(Order::id)
     );
@@ -49,6 +58,11 @@ public class DBManager {
             Comparator.comparingDouble(Order::paid).reversed().thenComparing(Order::id)
     );
 
+    @Getter
+    private final List<ItemStack> customItems = new ArrayList<>();
+    @Getter
+    private final List<ItemStack> blacklistedItems = new ArrayList<>();
+
     public DBManager(Orderium plugin) {
         this.plugin = plugin;
         this.configs = plugin.getConfigs();
@@ -60,9 +74,17 @@ public class DBManager {
         itemConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "items.db");
         itemDataSource = new HikariDataSource(itemConfig);
 
+        modifiedItemsConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "modified_items.db");
+        modifiedItemDataSource = new HikariDataSource(modifiedItemsConfig);
+
         exec("CREATE TABLE IF NOT EXISTS " + ORDER_TABLE + " (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)")
                 .thenAccept(stmt -> reloadOrders());
         exec("CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, before DOUBLE, amount DOUBLE, after DOUBLE)");
+
+        exec(modifiedItemDataSource, "CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB)")
+                .thenAccept(stmt -> reloadCustomItems());
+        exec(modifiedItemDataSource, "CREATE TABLE iF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)")
+                .thenAccept(stmt -> reloadBlacklist());
     }
 
     public CompletableFuture<List<ItemStack>> getItems() {
@@ -82,18 +104,48 @@ public class DBManager {
         return res;
     }
 
+    public void addBlacklist(ItemStack item) {
+        exec(modifiedItemDataSource, "INSERT INTO " + BLACKLIST_TABLE + " (item) VALUES (?)", (Object) item.serializeAsBytes());
+        blacklistedItems.add(item);
+    }
+
+    public void removeBlacklist(ItemStack item) {
+        exec(modifiedItemDataSource, "DELETE FROM " + BLACKLIST_TABLE + " WHERE item = (?)", (Object) item.serializeAsBytes());
+        blacklistedItems.remove(item);
+    }
+
+    public void addCustomItem(ItemStack item) {
+        exec(modifiedItemDataSource, "INSERT INTO " + CUSTOM_ITEMS_TABLE + " (item) VALUES (?)", (Object) item.serializeAsBytes());
+        customItems.add(item);
+    }
+
+    public  void removeCustomItem(ItemStack item) {
+        exec(modifiedItemDataSource, "DELETE FROM " + CUSTOM_ITEMS_TABLE + " WHERE item = (?)", (Object) item.serializeAsBytes());
+        customItems.remove(item);
+    }
+
     private void reloadOrders() {
         query("SELECT * FROM " + ORDER_TABLE).thenAccept(rawOrders -> {
-            try (rawOrders) {
-                orders = ConvertUtils.convertOrders(rawOrders);
-            } catch (SQLException e) {
-                plugin.getLogger().severe(e.toString());
-                return;
-            }
+            orders.clear();
+            orders.addAll(ConvertUtils.convertOrders(rawOrders));
             mostMoneyPerItem.addAll(orders);
             recentlyListed.addAll(orders);
             mostDelivered.addAll(orders);
             mostPaid.addAll(orders);
+        });
+    }
+
+    private void reloadCustomItems() {
+        query(modifiedItemDataSource, "SELECT * FROM " + CUSTOM_ITEMS_TABLE).thenAccept(rawItems -> {
+            customItems.clear();
+            customItems.addAll(ConvertUtils.convertItems(rawItems));
+        });
+    }
+
+    private void reloadBlacklist() {
+        query(modifiedItemDataSource, "SELECT * FROM " + BLACKLIST_TABLE).thenAccept(rawItems -> {
+            blacklistedItems.clear();
+            blacklistedItems.addAll(ConvertUtils.convertItems(rawItems));
         });
     }
     

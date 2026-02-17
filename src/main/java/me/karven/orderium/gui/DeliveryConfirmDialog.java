@@ -58,25 +58,8 @@ public class DeliveryConfirmDialog {
                                         }
                                         order.deliver(p, maxDeliverAmount);
 
-                                        int rem = amount - maxDeliverAmount;
-                                        final ItemStack item = order.item().clone();
-                                        final int maxStackSize = item.getMaxStackSize();
-
-                                        final ItemStack copy = item.clone();
-                                        copy.setAmount(maxStackSize);
-                                        final int fullStackAmount = rem / maxStackSize;
-                                        final List<ItemStack> items = new ArrayList<>();
-                                        for (int i = 0; i < fullStackAmount; i++) {
-                                            items.add(copy.clone());
-                                        }
-                                        rem %= maxStackSize;
-
-                                        if (rem > 0) {
-                                            copy.setAmount(rem);
-                                            items.add(copy);
-                                        }
-                                        PlayerUtils.give(p, items, true);
-
+                                        final int rem = amount - maxDeliverAmount;
+                                        PlayerUtils.give(p, order.item().clone(), rem);
                                     }, ClickCallback.Options.builder().build()))
                                     .build(),
                             ActionButton.builder(mm.deserialize(cache.getConfirmDeliveryCancelLabel()))

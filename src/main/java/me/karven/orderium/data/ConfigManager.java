@@ -25,7 +25,6 @@ import java.util.List;
 @Getter
 @SuppressWarnings("UnstableApiUsage")
 public class ConfigManager {
-
     private final File configFile;
     private ConfigFile config;
     private final Orderium plugin;
@@ -111,10 +110,14 @@ public class ConfigManager {
     private String receiveDelivery;
     private String notEnoughMoney;
     private String deliverSelf;
+    private String collectingTooFast;
+    private String exceedMaxCollect;
 
     private boolean logTransactions = true;
     private long expiresAfter = -1;
     private String sortPrefix;
+    private int maxCollectPerMinute = 1000;
+    private int maxCollect = 1000;
     private TagResolver[] sortPlaceholders;
 
     private final List<DataComponentType.Valued<?>> similarityCheck = new ArrayList<>();
@@ -161,6 +164,11 @@ public class ConfigManager {
         config.addDefault("log-transactions", true, "Whether to log money changes of players");
         config.addDefault("expires-after", 7L * 24L * 60L * 60L * 1000L, "After this amount of millisecond(s), the order will be expired");
         config.addDefault("sort-prefix", "<aqua>", "This will be put at the beginning of the sort type that is being selected");
+        config.addDefault("max-collect", 1000, "Maximum amount of items to collect, this shouldn't be confused with max-collect-per-minute");
+        config.addDefault("max-collect-per-minute", 1000,
+                "The maximum amount of items a player can collect every minute\n" +
+                "Setting this too high might allow players to lag the server with large orders\n" +
+                "The 1-minute timer is global, not per-player.");
         config.addDefault("similarity-check", List.of(
                 "minecraft:enchantments",
                 "minecraft:bundle_contents",
@@ -175,7 +183,7 @@ public class ConfigManager {
                 "minecraft:ominous_bottle_amplifier"
         ), "This define how should two items to be similar.\n" +
                 "If all of the following data component types are equal on both items beside their item types, they are similar.\n" +
-                "This similarity check happens when a player deliver an order, It accepts items in the delivery inventory that are similar to the one in the order\n" +
+                "This similarity check happens when a player deliver an order, it accepts items in the delivery inventory that are similar to the one in the order\n" +
                 "See a list of data components here, note that only use ones that exist on your server version: https://minecraft.wiki/w/Data_component_format#List_of_components");
 
         // MESSAGES
@@ -185,6 +193,8 @@ public class ConfigManager {
         config.addDefault("messages.receive-delivery", "<aqua><deliverer> <gray>delivered you <aqua><amount> <item>");
         config.addDefault("messages.not-enough-money", "<red>You do not have enough money");
         config.addDefault("messages.deliver-self", "<red>You cannot deliver your own order");
+        config.addDefault("messages.exceeded-max-collect", "<red>You are collecting too many items", "Message for max-collect");
+        config.addDefault("messages.collecting-too-fast", "<red>You are collecting items too fast. Wait a minute...", "Message for max-collect-per-minute");
 
         // SORT TYPES
         config.addComment("sort-types", "How should different types of sorting appear");
@@ -327,6 +337,8 @@ public class ConfigManager {
         logTransactions = config.getBoolean("log-transactions");
         expiresAfter = config.getLong("expires-after");
         sortPrefix = config.getString("sort-prefix");
+        maxCollect = config.getInteger("max-collect");
+        maxCollectPerMinute = config.getInteger(("max-collect-per-minute"));
         sortPlaceholders = new TagResolver[SortTypes.values().length];
         int i = 0;
         for (SortTypes sortType : SortTypes.values()) {
@@ -358,6 +370,8 @@ public class ConfigManager {
         receiveDelivery = config.getString("messages.receive-delivery");
         notEnoughMoney = config.getString("messages.not-enough-money");
         deliverSelf = config.getString("messages.deliver-self");
+        exceedMaxCollect = config.getString("messages.exceeded-max-collect");
+        collectingTooFast = config.getString("messages.collecting-too-fast");
 
         mainGuiTitle = config.getString("gui.main.title");
         orderLore = config.getStringList("gui.main.order-lore");
@@ -422,14 +436,12 @@ public class ConfigManager {
         collectItemsConfirmLabel = config.getString("gui.collect-items.confirm-button");
         collectItemsConfirmHover = config.getString("gui.collect-items.confirm-tooltip");
 
-
         cancelOrderTitle = config.getString("gui.cancel-order.title");
         cancelOrderBody = config.getString("gui.cancel-order.body");
         cancelOrderCancelLabel = config.getString("gui.cancel-order.cancel-button");
         cancelOrderCancelHover = config.getString("gui.cancel-order.cancel-tooltip");
         cancelOrderConfirmLabel = config.getString("gui.cancel-order.confirm-button");
         cancelOrderConfirmHover = config.getString("gui.cancel-order.confirm-tooltip");
-
     }
     private void checkFiles() {
         File parent = configFile.getParentFile();

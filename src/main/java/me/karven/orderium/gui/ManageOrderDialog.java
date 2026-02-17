@@ -1,6 +1,7 @@
 package me.karven.orderium.gui;
 
 import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.event.player.PlayerCustomClickEvent;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
@@ -12,6 +13,7 @@ import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.EconUtils;
+import me.karven.orderium.utils.PDCUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -67,21 +69,22 @@ public class ManageOrderDialog {
                                         p.sendRichMessage(cache.getInvalidInput());
                                         return;
                                     }
+
+                                    if (amount > cache.getMaxCollect() && !p.hasPermission("orderium.bypass.max-collect")) {
+                                        p.sendRichMessage(cache.getExceedMaxCollect());
+                                        return;
+                                    }
+
+                                    // Don't have to use getCollectedSafe because we're in PlayerCustomClickEvent
+                                    final int collectedInMinute = PDCUtils.getCollected(p);
+                                    if (collectedInMinute > cache.getMaxCollectPerMinute() && !p.hasPermission("orderium.bypass.max-collect-per-minute")) {
+                                        p.sendRichMessage(cache.getCollectingTooFast());
+                                        return;
+                                    }
+                                    PDCUtils.setCollected(p, collectedInMinute + amount);
+
                                     order.setInStorage(order.inStorage() - amount);
-                                    final ItemStack copy = order.item().clone();
-                                    final int maxSize = copy.getMaxStackSize();
-                                    copy.setAmount(maxSize);
-                                    final int maxStacks = amount / maxSize;
-                                    final int rem = amount % maxSize;
-                                    final Collection<ItemStack> toGive = new ArrayList<>();
-                                    for (int i = 0; i < maxStacks; i++) {
-                                        toGive.add(copy.clone());
-                                    }
-                                    if (rem > 0) {
-                                        copy.setAmount(rem);
-                                        toGive.add(copy);
-                                    }
-                                    PlayerUtils.give(p, toGive, true);
+                                    PlayerUtils.give(p, order.item().clone(), amount);
                                     YourOrderGUI.open(p);
                                 }, ClickCallback.Options.builder().build()))
                                 .build(),

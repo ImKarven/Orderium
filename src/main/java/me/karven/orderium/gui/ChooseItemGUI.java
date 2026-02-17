@@ -6,14 +6,18 @@ import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import me.karven.orderium.data.ConfigManager;
+import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SortTypes;
-import me.karven.orderium.utils.AlgoUtils;
-import me.karven.orderium.utils.ConvertUtils;
-import me.karven.orderium.utils.NMSUtils;
-import me.karven.orderium.utils.PlayerUtils;
+import me.karven.orderium.utils.*;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.format.TextDecorationAndState;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -24,12 +28,14 @@ public class ChooseItemGUI {
     private static final List<ChestGui> AZ = new ArrayList<>();
     private static final List<ChestGui> ZA = new ArrayList<>();
     private static Orderium plugin;
+    private static DBManager db;
     private static MiniMessage mm;
     private static ConfigManager cache;
     private static int pagesAmount;
 
     public static void init(Orderium plugin) {
         ChooseItemGUI.plugin = plugin;
+        db = plugin.getDbManager();
         mm = plugin.mm;
         cache = plugin.getConfigs();
         final int itemsAmount = NMSUtils.getItems(SortTypes.A_Z).size();
@@ -118,6 +124,9 @@ public class ChooseItemGUI {
         currPage.setOnGlobalDrag(e -> e.setCancelled(true));
         int idx = 0, cnt = 0;
         for (final ItemStack item : items) {
+            if (db.getBlacklistedItems().contains(item)) {
+                continue;
+            }
             if (cnt == 45) {
                 cnt = 0;
                 idx++;
@@ -132,10 +141,35 @@ public class ChooseItemGUI {
                 currPage.setOnGlobalClick(e -> e.setCancelled(true));
                 currPage.setOnGlobalDrag(e -> e.setCancelled(true));
             }
-            itemsPane.addItem(new GuiItem(item.clone(), e -> {
+            final GuiItem guiItem = new GuiItem(item.clone());
+            guiItem.setAction(e -> {
                 if (!(e.getWhoClicked() instanceof Player p)) return;
-                NewOrderDialog.newSession(p, item.clone());
-            }));
+                if (e.getClick() != ClickType.RIGHT || !p.hasPermission("orderium.admin.blacklist")) {
+                    NewOrderDialog.newSession(p, item.clone());
+                    return;
+                }
+                final ItemStack i = guiItem.getItem();
+                i.editMeta(meta -> {
+                    if (PDCUtils.isBlacklist(meta)) return;
+
+                    db.addBlacklist(item.clone());
+
+                    final List<Component> lore = meta.lore();
+                    final List<Component> toAdd = List.of(
+                            Component.empty(),
+                            Component.text("Item added to blacklist", NamedTextColor.GREEN));
+                    
+                    if (lore == null) {
+                        meta.lore(toAdd);
+                        return;
+                    }
+                    lore.addAll(toAdd);
+                    meta.lore(lore);
+
+                });
+
+            });
+            itemsPane.addItem(guiItem);
 
             cnt++;
         }

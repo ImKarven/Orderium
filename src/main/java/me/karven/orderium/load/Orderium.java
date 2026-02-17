@@ -12,10 +12,12 @@ import me.karven.orderium.utils.*;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 public final class Orderium extends JavaPlugin {
@@ -80,6 +82,7 @@ public final class Orderium extends JavaPlugin {
         Order.init(this);
         ConvertUtils.init(this);
         PlayerUtils.init(this);
+        PDCUtils.init(this);
 
         initVersion().thenAccept(success -> {
             if (!success) {
@@ -98,6 +101,14 @@ public final class Orderium extends JavaPlugin {
             final int pluginId = 27569;
             final Metrics metrics = new Metrics(this, pluginId);
         }
+
+        Bukkit.getAsyncScheduler().runAtFixedRate(this, t -> {
+
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.getScheduler().run(this, t2 -> PDCUtils.removeCollected(p), null);
+            }
+
+        }, 1, 1, TimeUnit.MINUTES);
     }
 
     public void reloadConfig() {

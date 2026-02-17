@@ -36,8 +36,9 @@ public class Bootstrapper implements PluginBootstrap {
 
     private static LiteralCommandNode<CommandSourceStack> getOrderiumCmd(String alias) {
         return Commands.literal(alias)
-                .requires(predicate -> predicate.getExecutor() != null && predicate.getExecutor().hasPermission("orderium.admin"))
+                .requires(predicate -> predicate.getExecutor() != null && (predicate.getExecutor().hasPermission("orderium.admin")))
                 .then(Commands.literal("reload")
+                        .requires(predicate -> predicate.getExecutor() != null && predicate.getExecutor().hasPermission("orderium.admin.reload"))
                         .executes(ctx -> {
                             Orderium.getInst().reloadConfig();
 
