@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 public class SignGUI implements PacketListener {
     private static final HashMap<Player, SignInfo> sessionsList = new HashMap<>();
     private static final HashMap<Player, WrapperPlayServerBlockEntityData> dataChanges = new HashMap<>();
+    private final Orderium plugin;
 
     public static void newSession(Player p, Consumer<String> action, List<String> lines, BlockType blockType, int line) {
         if (blockType == null) {
@@ -64,6 +65,10 @@ public class SignGUI implements PacketListener {
         sessionsList.put(p, new SignInfo(action, blockType, line, pos));
     }
 
+    public SignGUI(Orderium plugin) {
+        this.plugin = plugin;
+    }
+
     @Override
     public void onPacketReceive(@NonNull PacketReceiveEvent e) {
         if (e.getPacketType() != PacketType.Play.Client.UPDATE_SIGN) return;
@@ -73,15 +78,18 @@ public class SignGUI implements PacketListener {
         final String[] lines = wrapper.getTextLines();
         final SignInfo info = sessionsList.get(player);
 
-        info.action().accept(lines[info.line() - 1]);
         final Vector3i pos = info.pos();
-
         final WrappedBlockState blockState = SpigotConversionUtil.fromBukkitBlockData(player.getWorld().getBlockData(pos.getX(), pos.getY(), pos.getZ())); // Might have to use region scheduler here for folia support
         final WrapperPlayServerBlockChange blockChangePacket = new WrapperPlayServerBlockChange(pos, blockState);
         final WrapperPlayServerBlockEntityData blockEntityDataPacket = dataChanges.get(player);
 
-        send(player, blockChangePacket);
-        if (blockEntityDataPacket != null) send(player, blockEntityDataPacket);
+        // Sending the packets immediately doesn't work for some reason
+        player.getScheduler().runDelayed(plugin, t -> {
+            send(player, blockChangePacket);
+            if (blockEntityDataPacket != null) send(player, blockEntityDataPacket);
+        }, null, 2);
+
+        info.action().accept(lines[info.line() - 1]);
 
         sessionsList.remove(player);
         dataChanges.remove(player);

@@ -36,6 +36,7 @@ public class UpdateUtils {
             while ((readBytes = in.read(buffer, 0, 1024)) != -1) {
                 out.write(buffer, 0, readBytes);
             }
+            logger.info("Successfully downloaded items list");
             return true;
         } catch (Exception e) {
             logger.severe("Failed to download items list");

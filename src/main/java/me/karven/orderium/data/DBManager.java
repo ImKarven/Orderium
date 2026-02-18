@@ -12,7 +12,6 @@ import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.EconUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.sql.Connection;
@@ -21,6 +20,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public class DBManager {
     private final Orderium plugin;
@@ -59,9 +59,9 @@ public class DBManager {
     );
 
     @Getter
-    private final List<ItemStack> customItems = new ArrayList<>();
+    private final Set<ItemStack> customItems = new HashSet<>();
     @Getter
-    private final List<ItemStack> blacklistedItems = new ArrayList<>();
+    private final Set<ItemStack> blacklistedItems = new HashSet<>();
 
     public DBManager(Orderium plugin) {
         this.plugin = plugin;
@@ -77,21 +77,23 @@ public class DBManager {
         modifiedItemsConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "modified_items.db");
         modifiedItemDataSource = new HikariDataSource(modifiedItemsConfig);
 
-        exec("CREATE TABLE IF NOT EXISTS " + ORDER_TABLE + " (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)")
-                .thenAccept(stmt -> reloadOrders());
-        exec("CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, before DOUBLE, amount DOUBLE, after DOUBLE)");
+        execSync("CREATE TABLE IF NOT EXISTS " + ORDER_TABLE + " (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)");
+        reloadOrders();
 
-        exec(modifiedItemDataSource, "CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB)")
-                .thenAccept(stmt -> reloadCustomItems());
-        exec(modifiedItemDataSource, "CREATE TABLE iF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)")
-                .thenAccept(stmt -> reloadBlacklist());
+        execSync("CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, before DOUBLE, amount DOUBLE, after DOUBLE)");
+
+        execSync(modifiedItemDataSource, "CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB)");
+        reloadCustomItems();
+
+        execSync(modifiedItemDataSource, "CREATE TABLE iF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)");
+        reloadBlacklist();
     }
 
     public CompletableFuture<List<ItemStack>> getItems() {
         final String TABLE_NAME = "items_" + plugin.VERSION;
         final List<ItemStack> items = new ArrayList<>();
         final CompletableFuture<List<ItemStack>> res = new CompletableFuture<>();
-        query(itemDataSource, "SELECT * FROM " + TABLE_NAME).thenAccept(raw -> {
+        query(itemDataSource, raw -> {
             try (raw) {
                 while (raw.next()) {
                     items.add(ItemStack.deserializeBytes(raw.getBytes(1)));
@@ -100,7 +102,7 @@ public class DBManager {
                 plugin.getLogger().severe(e.toString());
             }
             res.complete(items);
-        });
+        }, "SELECT * FROM " + TABLE_NAME);
         return res;
     }
 
@@ -125,28 +127,28 @@ public class DBManager {
     }
 
     private void reloadOrders() {
-        query("SELECT * FROM " + ORDER_TABLE).thenAccept(rawOrders -> {
+        query(rawOrders -> {
             orders.clear();
             orders.addAll(ConvertUtils.convertOrders(rawOrders));
             mostMoneyPerItem.addAll(orders);
             recentlyListed.addAll(orders);
             mostDelivered.addAll(orders);
             mostPaid.addAll(orders);
-        });
+        }, "SELECT * FROM " + ORDER_TABLE);
     }
 
     private void reloadCustomItems() {
-        query(modifiedItemDataSource, "SELECT * FROM " + CUSTOM_ITEMS_TABLE).thenAccept(rawItems -> {
+        query(modifiedItemDataSource, rawItems -> {
             customItems.clear();
             customItems.addAll(ConvertUtils.convertItems(rawItems));
-        });
+        }, "SELECT * FROM " + CUSTOM_ITEMS_TABLE);
     }
 
     private void reloadBlacklist() {
-        query(modifiedItemDataSource, "SELECT * FROM " + BLACKLIST_TABLE).thenAccept(rawItems -> {
+        query(modifiedItemDataSource,rawItems -> {
             blacklistedItems.clear();
             blacklistedItems.addAll(ConvertUtils.convertItems(rawItems));
-        });
+        },  "SELECT * FROM " + BLACKLIST_TABLE);
     }
     
     public void createOrder(UUID owner, ItemStack item, double moneyPer, int amount) {
@@ -185,7 +187,7 @@ public class DBManager {
     public CompletableFuture<List<Integer>> dataVersions() {
         val ret = new CompletableFuture<List<Integer>>();
         final List<Integer> ver = new ArrayList<>();
-        query(itemDataSource, "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").thenAccept(res -> {
+        query(itemDataSource, res -> {
             try (res) {
                 while (res.next()) {
                     final String sName = res.getString("name");
@@ -198,7 +200,7 @@ public class DBManager {
                 plugin.getLogger().severe(e.toString());
             }
             ret.complete(ver);
-        });
+        }, "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
         return ret;
     }
 
@@ -308,6 +310,10 @@ public class DBManager {
         return exec(dataSource, stmt, params);
     }
 
+    private void execSync(String stmt, Object... params) {
+        execSync(dataSource, stmt, params);
+    }
+
     private CompletableFuture<PreparedStatement> exec(HikariDataSource dataSource, String stmt, Object... params) {
         final CompletableFuture<PreparedStatement> completableFuture = new CompletableFuture<>();
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
@@ -325,24 +331,35 @@ public class DBManager {
         return completableFuture;
     }
 
-    private CompletableFuture<ResultSet> query(String stmt, Object... params) {
-        return query(dataSource, stmt, params);
+
+    private void execSync(HikariDataSource dataSource, String stmt, Object... params) {
+        try (
+                final Connection connection = dataSource.getConnection();
+                final PreparedStatement preparedStatement = connection.prepareStatement(stmt)
+        ) {
+            processStatement(preparedStatement, params);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.toString());
+        }
     }
 
-    private CompletableFuture<ResultSet> query(HikariDataSource dataSource, String stmt, Object... params) {
-        final CompletableFuture<ResultSet> completableFuture = new CompletableFuture<>();
+    private void query(Consumer<ResultSet> cb, String stmt, Object... params) {
+        query(dataSource, cb, stmt, params);
+    }
+
+    private void query(HikariDataSource dataSource, Consumer<ResultSet> cb, String stmt, Object... params) {
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
             try (
                     final Connection connection = dataSource.getConnection();
                     final PreparedStatement preparedStatement = connection.prepareStatement(stmt)
             ) {
                 processStatement(preparedStatement, params);
-                completableFuture.complete(preparedStatement.executeQuery());
+                cb.accept(preparedStatement.executeQuery());
             } catch (SQLException e) {
                 plugin.getLogger().severe(e.toString());
             }
         });
-        return completableFuture;
     }
 
     private void processStatement(PreparedStatement statement, Object... vals) throws SQLException {

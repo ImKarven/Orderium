@@ -27,7 +27,7 @@ public class NMSUtils {
         return generateItemsList();
     }
 
-    private static CompletableFuture<Void> generateItemsList() {
+    public static CompletableFuture<Void> generateItemsList() {
         final CompletableFuture<Void> res = new CompletableFuture<>();
         plugin.getDbManager().getItems().thenAccept(bukkitItems -> {
 
@@ -39,6 +39,11 @@ public class NMSUtils {
 
             AZ.addAll(plugin.getDbManager().getCustomItems());
             ZA.addAll(plugin.getDbManager().getCustomItems());
+
+            plugin.getDbManager().getBlacklistedItems().forEach(e -> {
+                AZ.remove(e);
+                ZA.remove(e);
+            });
 
             plugin.getLogger().info("Loaded " + AZ.size() + " items.");
             res.complete(null);

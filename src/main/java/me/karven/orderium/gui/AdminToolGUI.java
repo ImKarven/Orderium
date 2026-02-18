@@ -8,12 +8,16 @@ import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.utils.ConvertUtils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.format.TextDecorationAndState;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class AdminToolGUI {
 
@@ -50,27 +54,18 @@ public class AdminToolGUI {
         });
 
         readmeBlacklist.editMeta(meta -> {
-            meta.displayName(Component.text("Blacklist Items"));
+            meta.displayName(Component.text("Blacklist Items", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));
             meta.lore(List.of(
-                    Component.text(""),
-                    Component.text("This saves all the items you have blacklisted"),
-                    Component.text("Click to the desired item to remove them from the list"),
-                    Component.text("To add an item to the list, right-click the item in the choose item GUI"),
-                    Component.text("You can access the choose item GUI by creating a new order, it will open up a GUI to choose item"),
-                    Component.text("Adding/Removing items only apply after /orderium reload or server restart")
+                    Component.empty(),
+                    Component.text("View the wiki for usage", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)
             ));
         });
 
         readmeCustomItems.editMeta(meta -> {
-            meta.displayName(Component.text("Custom Items"));
+            meta.displayName(Component.text("Custom Items", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));
             meta.lore(List.of(
                     Component.empty(),
-                    Component.text("This saves all the items you have added"),
-                    Component.text("Click to the desired item above to remove from the list"),
-                    Component.text("Click an item in your inventory below to add it to the list"),
-                    Component.text("Note that custom items do not always work especially when delivering items"),
-                    Component.text("It depends on your similarity-check configuration"),
-                    Component.text("Adding/Removing items only apply after /orderium reload or server restart")
+                    Component.text("View the wiki for usage", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)
             ));
         });
 
@@ -78,8 +73,12 @@ public class AdminToolGUI {
         createCustomItems();
     }
 
-    private static void createBlacklist() {
+    public static void createBlacklist() {
         blacklist.clear();
+
+        final Set<ItemStack> items = db.getBlacklistedItems();
+        pageAmount = ConvertUtils.ceil_div(items.size(), 45);
+
         ChestGui page = new ChestGui(6, "Blacklisted Items");
         OutlinePane itemsPane = new OutlinePane(0, 0, 9, 5);
         StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
@@ -89,8 +88,6 @@ public class AdminToolGUI {
         page.setOnGlobalClick(e -> e.setCancelled(true));
         int cnt = 0, i = 0;
 
-        final List<ItemStack> items = db.getBlacklistedItems();
-        pageAmount = ConvertUtils.ceil_div(items.size(), 45);
         for (ItemStack item : items) {
             if (cnt == 45) {
                 i++;
@@ -124,8 +121,12 @@ public class AdminToolGUI {
         blacklist.add(page);
     }
 
-    private static void createCustomItems() {
+    public static void createCustomItems() {
         customItems.clear();
+
+        final Set<ItemStack> items = db.getCustomItems();
+        pageAmount = ConvertUtils.ceil_div(items.size(), 45);
+
         ChestGui page = new ChestGui(6, "Custom Items");
         OutlinePane itemsPane = new OutlinePane(0, 0, 9, 5);
         StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
@@ -135,8 +136,15 @@ public class AdminToolGUI {
         page.setOnGlobalClick(e -> e.setCancelled(true));
         int cnt = 0, i = 0;
 
-        final List<ItemStack> items = db.getCustomItems();
-        pageAmount = ConvertUtils.ceil_div(items.size(), 45);
+        page.setOnBottomClick(e -> {
+            ItemStack clicked = e.getCurrentItem();
+            if (clicked == null) return;
+
+            db.addCustomItem(clicked);
+            createCustomItems();
+            customItems.get(Math.min(0, customItems.size() - 1)).show(e.getWhoClicked());
+        });
+
         for (ItemStack item : items) {
             if (cnt == 45) {
                 i++;
@@ -189,17 +197,15 @@ public class AdminToolGUI {
     }
 
     private static void addBlacklistButtons(int i, final StaticPane pane) {
-        final int maxPage = blacklist.size() - 1;
-        if (i > 0) pane.addItem(new GuiItem(previous, e -> blacklist.get(Math.min(i - 1, maxPage)).show(e.getWhoClicked())), 0, 0);
-        if (i < pageAmount - 1) pane.addItem(new GuiItem(next, e -> blacklist.get(Math.min(i + 1, maxPage)).show(e.getWhoClicked())), 8, 0);
+        if (i > 0) pane.addItem(new GuiItem(previous, e -> blacklist.get(Math.min(i - 1, blacklist.size() - 1)).show(e.getWhoClicked())), 0, 0);
+        if (i < pageAmount - 1) pane.addItem(new GuiItem(next, e -> blacklist.get(Math.min(i + 1, blacklist.size() - 1)).show(e.getWhoClicked())), 8, 0);
 
         pane.addItem(new GuiItem(readmeBlacklist), 4, 0);
     }
 
     private static void addCustomItemsButtons(int i, final StaticPane pane) {
-        final int maxPage = customItems.size() - 1;
-        if (i > 0) pane.addItem(new GuiItem(previous, e -> customItems.get(Math.min(i - 1, maxPage)).show(e.getWhoClicked())), 0, 0);
-        if (i < pageAmount - 1) pane.addItem(new GuiItem(next, e -> customItems.get(Math.min(i + 1, maxPage)).show(e.getWhoClicked())), 8, 0);
+        if (i > 0) pane.addItem(new GuiItem(previous, e -> customItems.get(Math.min(i - 1, customItems.size() - 1)).show(e.getWhoClicked())), 0, 0);
+        if (i < pageAmount - 1) pane.addItem(new GuiItem(next, e -> customItems.get(Math.min(i + 1, customItems.size() - 1)).show(e.getWhoClicked())), 8, 0);
 
         pane.addItem(new GuiItem(readmeCustomItems), 4, 0);
     }

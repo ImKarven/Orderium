@@ -107,7 +107,7 @@ public class ConvertUtils {
     public static ItemStack addLore(ItemStack item, List<String> toAdd) {
         item.editMeta(meta -> {
             if (!meta.hasLore()) {
-                item.lore(toAdd.stream().map(mm::deserialize).toList());
+                meta.lore(toAdd.stream().map(s -> mm.deserialize(s).decoration(TextDecoration.ITALIC, false)).toList());
                 return;
             }
             final List<Component> lore = meta.lore();

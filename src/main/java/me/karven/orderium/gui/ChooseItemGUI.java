@@ -67,17 +67,17 @@ public class ChooseItemGUI {
         PlayerUtils.openGui(p, pages.getFirst());
     }
 
-    private static void addButtons(StaticPane buttons, SortTypes sortType, final int idx, final int pagesAmount) {
+    private static void addButtons(StaticPane buttons, List<ChestGui> pages, SortTypes sortType, final int idx, final int pagesAmount) {
         final List<SortTypes> sortOrder = cache.getChooseSortsOrder();
         final int sortIdx = sortOrder.indexOf(sortType);
         if (idx > 0) buttons.addItem(ConvertUtils.parseButton(cache.getChooseBackButton(), e -> {
             if (!(e.getWhoClicked() instanceof Player p)) return;
-            PlayerUtils.openGui(p, getPages(sortType).get(idx - 1));
+            PlayerUtils.openGui(p, pages.get(idx - 1));
         }), cache.getChooseBackButton().getSlot(), 0);
 
         if (idx + 1 < pagesAmount) buttons.addItem(ConvertUtils.parseButton(cache.getChooseNextButton(), e -> {
             if (!(e.getWhoClicked() instanceof Player p)) return;
-            PlayerUtils.openGui(p, getPages(sortType).get(idx + 1));
+            PlayerUtils.openGui(p, pages.get(idx + 1));
         }), cache.getChooseNextButton().getSlot(), 0);
 
         buttons.addItem(ConvertUtils.parseSortButton(cache.getChooseSortButton(), sortType, e -> {
@@ -118,15 +118,12 @@ public class ChooseItemGUI {
 
         OutlinePane itemsPane = new OutlinePane(0, 0, 9, 5);
         StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
-        addButtons(buttonsPane, sortType, 0, pagesAmount);
+        addButtons(buttonsPane, pages, sortType, 0, pagesAmount);
         ChestGui currPage = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
         currPage.setOnGlobalClick(e -> e.setCancelled(true));
         currPage.setOnGlobalDrag(e -> e.setCancelled(true));
         int idx = 0, cnt = 0;
         for (final ItemStack item : items) {
-            if (db.getBlacklistedItems().contains(item)) {
-                continue;
-            }
             if (cnt == 45) {
                 cnt = 0;
                 idx++;
@@ -136,7 +133,7 @@ public class ChooseItemGUI {
 
                 itemsPane = new OutlinePane(0, 0, 9, 5);
                 buttonsPane = new StaticPane(0, 5, 9, 1);
-                addButtons(buttonsPane, sortType, idx, pagesAmount);
+                addButtons(buttonsPane, pages, sortType, idx, pagesAmount);
                 currPage = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
                 currPage.setOnGlobalClick(e -> e.setCancelled(true));
                 currPage.setOnGlobalDrag(e -> e.setCancelled(true));
@@ -151,8 +148,9 @@ public class ChooseItemGUI {
                 final ItemStack i = guiItem.getItem();
                 if (PDCUtils.isBlacklist(i.getItemMeta())) return;
 
-                db.addBlacklist(item.clone());
+                db.addBlacklist(item);
                 p.sendRichMessage("<green>Item added to blacklist. Reload to take effects");
+                i.editMeta(PDCUtils::setBlacklist);
             });
             itemsPane.addItem(guiItem);
 

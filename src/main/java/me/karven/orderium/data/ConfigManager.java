@@ -3,6 +3,7 @@ package me.karven.orderium.data;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import io.papermc.paper.datacomponent.DataComponentType;
 import lombok.Getter;
+import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.ChooseItemGUI;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.OrderStatus;
@@ -143,12 +144,30 @@ public class ConfigManager {
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
             try {
                 loadCfg();
-                ChooseItemGUI.init(plugin);
+                NMSUtils.init(plugin).thenAccept(ignored -> ChooseItemGUI.init(plugin));
+
+                AdminToolGUI.createBlacklist();
+                AdminToolGUI.createCustomItems();
             } catch (Exception e) {
                 plugin.getLogger().severe(e.toString());
             }
         });
         return true;
+    }
+
+    public void reload(Runnable cb) {
+        Bukkit.getAsyncScheduler().runNow(plugin, t -> {
+            try {
+                loadCfg();
+                NMSUtils.init(plugin).thenAccept(ignored -> ChooseItemGUI.init(plugin));
+
+                AdminToolGUI.createBlacklist();
+                AdminToolGUI.createCustomItems();
+            } catch (Exception e) {
+                plugin.getLogger().severe(e.toString());
+            }
+            cb.run();
+        });
     }
 
     public void loadCfg() throws Exception {
@@ -178,7 +197,7 @@ public class ConfigManager {
                 "minecraft:potion_contents",
                 "minecraft:stored_enchantments",
                 "minecraft:max_stack_size",
-                "minecraft:custom_data",
+//                "minecraft:custom_data", // Custom data doesn't exist in the registry for some reason?
                 "minecraft:custom_model_data",
                 "minecraft:ominous_bottle_amplifier"
         ), "This define how should two items to be similar.\n" +

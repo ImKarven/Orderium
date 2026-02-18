@@ -37,12 +37,14 @@ public class Bootstrapper implements PluginBootstrap {
 
     private static LiteralCommandNode<CommandSourceStack> getOrderiumCmd(String alias) {
         return Commands.literal(alias)
-                .requires(predicate -> predicate.getExecutor() != null && (predicate.getExecutor().hasPermission("orderium.admin")))
+                .requires(predicate -> (predicate.getSender().hasPermission("orderium.admin")))
                 .then(Commands.literal("reload")
-                        .requires(predicate -> predicate.getExecutor() != null && predicate.getExecutor().hasPermission("orderium.admin.reload"))
+                        .requires(predicate -> predicate.getSender().hasPermission("orderium.admin.reload"))
                         .executes(ctx -> {
-                            Orderium.getInst().reloadConfig();
+                            Orderium.getInst().getConfigs().reload(() -> {
 
+                                ctx.getSource().getSender().sendRichMessage("<green>Orderium reloaded");
+                            });
                             return 1;
                         })
                 )
@@ -59,19 +61,19 @@ public class Bootstrapper implements PluginBootstrap {
                             return 1;
                         })
                 )
-                .then(Commands.literal("custom_items")
-                        .requires(predicate ->
-                                predicate.getExecutor() != null &&
-                                        predicate.getExecutor().hasPermission("orderium.admin.custom-items") &&
-                                        predicate.getExecutor() instanceof Player)
-                        .executes(ctx -> {
-                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 0;
-
-                            AdminToolGUI.openCustomItems(p);
-
-                            return 1;
-                        })
-                )
+//                .then(Commands.literal("custom_items")
+//                        .requires(predicate ->
+//                                predicate.getExecutor() != null &&
+//                                        predicate.getExecutor().hasPermission("orderium.admin.custom-items") &&
+//                                        predicate.getExecutor() instanceof Player)
+//                        .executes(ctx -> {
+//                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 0;
+//
+//                            AdminToolGUI.openCustomItems(p);
+//
+//                            return 1;
+//                        })
+//                )
                 .build();
     }
 

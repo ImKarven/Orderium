@@ -58,7 +58,7 @@ public final class Orderium extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(), PacketListenerPriority.NORMAL);
+        PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(this), PacketListenerPriority.NORMAL);
     }
 
     @Override
@@ -76,7 +76,6 @@ public final class Orderium extends JavaPlugin {
 
         configs = new ConfigManager(this);
         dbManager = new DBManager(this);
-        AdminToolGUI.init(this);
         MainGUI.init(this);
         YourOrderGUI.init(this);
         EconUtils.init(this);
@@ -84,6 +83,7 @@ public final class Orderium extends JavaPlugin {
         ConvertUtils.init(this);
         PlayerUtils.init(this);
         PDCUtils.init(this);
+        AdminToolGUI.init(this);
 
         initVersion().thenAccept(success -> {
             if (!success) {
@@ -111,11 +111,6 @@ public final class Orderium extends JavaPlugin {
 
         }, 1, 1, TimeUnit.MINUTES);
     }
-
-    public void reloadConfig() {
-        configs.reload(true);
-    }
-
 
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
