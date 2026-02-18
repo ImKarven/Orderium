@@ -3,6 +3,7 @@ Orderium is a plugin that allows players on your server to create and deliver or
 <br>It is inspired by [DonutSMP](https://store.donutsmp.net/).
 ## Features
 - Create orders for a specific item
+- Blacklist certain items you don't like
 - Deliver orders and earn money
 - Use modern APIs from Paper
 - Highly configurable settings
