@@ -1,7 +1,6 @@
 package me.karven.orderium.gui;
 
 import io.papermc.paper.dialog.Dialog;
-import io.papermc.paper.event.player.PlayerCustomClickEvent;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
@@ -20,8 +19,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
