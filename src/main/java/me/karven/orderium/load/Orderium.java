@@ -73,6 +73,7 @@ public final class Orderium extends JavaPlugin {
         if (!UpdateUtils.downloadItems()) {
             saveResource("items.db", false);
         }
+        saveResource("modified_items.db", false);
 
         configs = new ConfigManager(this);
         dbManager = new DBManager(this);

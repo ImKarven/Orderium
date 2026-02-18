@@ -25,7 +25,7 @@ public class AlgoUtils {
     private static final Registry<PotionEffectType> potionEffectRegistry = Registry.MOB_EFFECT;
 
     public static List<ItemStack> searchItem(String query, Collection<ItemStack> items) {
-        final String q = query.toLowerCase();
+        final String q = query.toLowerCase().trim().replaceAll(" ", "_");
         final List<ItemStack> result = new ArrayList<>();
         for (ItemStack item : items) {
             if (search(item, q)) result.add(item);
