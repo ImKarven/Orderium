@@ -231,18 +231,10 @@ public class ConvertUtils {
     public static String formatNumber(double a) {
         if (a < 0) return "";
         int cnt = (int) Math.log10(a);
-        if (cnt >= 12) {
-            return fancy(a / unit.get("T")) + "T";
-        }
-        if (cnt >= 9) {
-            return fancy(a / unit.get("B")) + "B";
-        }
-        if (cnt >= 6) {
-            return fancy(a / unit.get("M")) + "M";
-        }
-        if (cnt >= 3) {
-            return fancy(a / unit.get("K")) + "K";
-        }
+        if (cnt >= 12) return fancy(a / unit.get("T")) + "T";
+        if (cnt >= 9) return fancy(a / unit.get("B")) + "B";
+        if (cnt >= 6) return fancy(a / unit.get("M")) + "M";
+        if (cnt >= 3) return fancy(a / unit.get("K")) + "K";
         return fancy(a);
     }
 

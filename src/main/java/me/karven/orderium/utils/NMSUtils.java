@@ -30,38 +30,37 @@ public class NMSUtils {
 
     public static CompletableFuture<Void> generateItemsList() {
         final CompletableFuture<Void> res = new CompletableFuture<>();
-        plugin.getDbManager().getItems().thenAccept(bukkitItems -> {
-
-            AZ.clear();
-            ZA.clear();
-
-            AZ.addAll(bukkitItems);
-            ZA.addAll(bukkitItems);
-
-            final List<ItemStack> customItems = plugin.getDbManager().getCustomItems().stream().map(item -> {
-                final ItemStack stack = item.first.clone();
-                stack.editMeta(meta -> PDCUtils.setSearch(meta, item.second)); // Should avoid adding PDC data to the items
-                return stack;
-            }).toList();
-
-            AZ.addAll(customItems);
-            ZA.addAll(customItems);
-
-            plugin.getDbManager().getBlacklistedItems().forEach(e -> {
-                AZ.remove(e);
-                ZA.remove(e);
-            });
-
-            plugin.getLogger().info("Loaded " + AZ.size() + " items.");
-            res.complete(null);
-        });
+        plugin.getDbManager().getItems().thenAccept(NMSUtils::addItems).thenAccept(res::complete);
         return res;
     }
 
-    public static Set<ItemStack> getItems(SortTypes sortType) {
-        if (sortType == SortTypes.Z_A) {
-            return ZA;
+    private static void addItems(List<ItemStack> bukkitItems) {
+        AZ.clear();
+        ZA.clear();
+
+        AZ.addAll(bukkitItems);
+        ZA.addAll(bukkitItems);
+
+        final List<ItemStack> customItems = plugin.getDbManager().getCustomItems().stream().map(item -> {
+            final ItemStack stack = item.first.clone();
+            stack.editMeta(meta -> PDCUtils.setSearch(meta, item.second)); // Should avoid adding PDC data to the items
+            return stack;
+        }).toList();
+
+        AZ.addAll(customItems);
+        ZA.addAll(customItems);
+
+        for (ItemStack e : plugin.getDbManager().getBlacklistedItems()) {
+            AZ.remove(e);
+            ZA.remove(e);
         }
+
+        plugin.getLogger().info("Loaded " + AZ.size() + " items.");
+    }
+
+    public static Set<ItemStack> getItems(SortTypes sortType) {
+        if (sortType == SortTypes.Z_A) return ZA;
+
         return AZ;
     }
     public static BlockType getBlockType(String identifier) {

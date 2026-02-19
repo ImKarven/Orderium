@@ -163,33 +163,32 @@ public class DBManager {
         byte[] itemData = item.serializeAsBytes();
         long expiresAt = System.currentTimeMillis() + configs.getExpiresAfter();
 
+        final Consumer<PreparedStatement> cb = stmt -> {
+            try (final ResultSet rs = stmt.getGeneratedKeys()) {
+                if (!rs.next()) return;
+                final int id = rs.getInt(1);
+                final Order order = new Order(
+                        id,
+                        owner,
+                        item,
+                        moneyPer,
+                        amount,
+                        0,
+                        0,
+                        expiresAt
+                );
+                orders.add(order);
+                mostMoneyPerItem.add(order);
+                recentlyListed.add(order);
+                mostDelivered.add(order);
+                mostPaid.add(order);
+            } catch (SQLException e) {
+                plugin.getLogger().severe(e.toString());
+            }
+        };
+
         exec("INSERT INTO " + ORDER_TABLE + " (owner_most, owner_least, item, money_per, amount, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
-                owner.getMostSignificantBits(), owner.getLeastSignificantBits(), itemData, moneyPer, amount, expiresAt).thenAccept(stmt -> {
-                    try (final ResultSet rs = stmt.getGeneratedKeys()) {
-                        if (rs.next()) {
-                            final int id = rs.getInt(1);
-                            final Order order = new Order(
-                                    id,
-                                    owner,
-                                    item,
-                                    moneyPer,
-                                    amount,
-                                    0,
-                                    0,
-                                    expiresAt
-                            );
-                            orders.add(order);
-                            mostMoneyPerItem.add(order);
-                            recentlyListed.add(order);
-                            mostDelivered.add(order);
-                            mostPaid.add(order);
-                        }
-                    } catch (SQLException e) {
-                        plugin.getLogger().severe(e.toString());
-                    }
-        });
-
-
+                owner.getMostSignificantBits(), owner.getLeastSignificantBits(), itemData, moneyPer, amount, expiresAt).thenAccept(cb);
     }
 
     public CompletableFuture<List<Integer>> dataVersions() {

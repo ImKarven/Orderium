@@ -25,7 +25,7 @@ public class AlgoUtils {
     private static final Registry<PotionEffectType> potionEffectRegistry = Registry.MOB_EFFECT;
 
     public static List<ItemStack> searchItem(String query, Collection<ItemStack> items) {
-        final String q = query.toLowerCase().trim().replaceAll(" ", "_");
+        final String q = fixQuery(query);
         final List<ItemStack> result = new ArrayList<>();
         for (ItemStack item : items) {
             if (search(item, q)) result.add(item);
@@ -34,7 +34,7 @@ public class AlgoUtils {
     }
 
     public static List<Order> searchOrder(String query, Collection<Order> orders) {
-        final String q = query.toLowerCase().trim().replaceAll(" ", "_");
+        final String q = fixQuery(query);
         final List<Order> result = new ArrayList<>();
         for (Order order : orders) {
             if (search(order.item(), q)) result.add(order);
@@ -42,19 +42,24 @@ public class AlgoUtils {
         return result;
     }
 
-    private static boolean search(final ItemStack item, String q) {
+    private static String fixQuery(String query) {
+        return query.toLowerCase().trim().replaceAll(" ", "_");
+    }
 
+    private static boolean search(final ItemStack item, String q) {
         if (PDCUtils.hasCustomSearch(item.getItemMeta())) {
             final String customSearch = PDCUtils.getSearch(item.getItemMeta());
             final int len = customSearch.length();
             StringBuilder curr = new StringBuilder();
             for (int i = 0; i < len; i++) {
-                final char c =  customSearch.charAt(i);
+                final char c = customSearch.charAt(i);
                 if (c == ',') {
                     if (curr.toString().contains(q)) return true;
                     curr = new StringBuilder();
+                    continue;
                 }
-                curr.append(c);
+                if (c == ' ') curr.append('_');
+                else curr.append(c);
             }
             return curr.toString().contains(q);
         }
@@ -121,53 +126,70 @@ public class AlgoUtils {
                 case ENCHANTED_BOOK -> {
                     final ItemEnchantments enchantmentsA = a.getData(DataComponentTypes.STORED_ENCHANTMENTS);
                     final ItemEnchantments enchantmentsB = b.getData(DataComponentTypes.STORED_ENCHANTMENTS);
-                    if (enchantmentsA == null || enchantmentsB == null) break;
-                    if (enchantmentsA.enchantments().isEmpty() || enchantmentsB.enchantments().isEmpty()) break;
-                    final Enchantment enchantmentA = enchantmentsA.enchantments().keySet().iterator().next();
-                    final Enchantment enchantmentB = enchantmentsB.enchantments().keySet().iterator().next();
-                    final String nameA = enchantmentA.getKey().toString();
-                    final String nameB = enchantmentB.getKey().toString();
-                    final int compared = nameA.compareTo(nameB);
+                    final int compared = compareEnchantments(enchantmentsA, enchantmentsB);
                     if (compared != 0) return compared;
-                    final int levelA = enchantmentsA.enchantments().values().iterator().next();
-                    final int levelB = enchantmentsB.enchantments().values().iterator().next();
-                    if (levelA != levelB) return levelA - levelB;
                 }
 
                 case GOAT_HORN -> {
                     final MusicInstrument instrumentA = a.getData(DataComponentTypes.INSTRUMENT);
                     final MusicInstrument instrumentB = b.getData(DataComponentTypes.INSTRUMENT);
-                    if (instrumentA == null || instrumentB == null) break;
-                    final NamespacedKey keyA = instrumentRegistry.getKey(instrumentA);
-                    final NamespacedKey keyB = instrumentRegistry.getKey(instrumentB);
-                    if (keyA == null || keyB == null) break;
-                    final String nameA = keyA.toString();
-                    final String nameB = keyB.toString();
-                    final int compared = nameA.compareTo(nameB);
+                    final int compared = compareInstruments(instrumentA, instrumentB);
                     if (compared != 0) return compared;
                 }
 
                 case POTION, LINGERING_POTION, SPLASH_POTION -> {
                     final PotionContents potionsA = a.getData(DataComponentTypes.POTION_CONTENTS);
                     final PotionContents potionsB = b.getData(DataComponentTypes.POTION_CONTENTS);
-                    if (potionsA == null || potionsB == null) break;
-                    if (potionsA.allEffects().isEmpty() || potionsB.allEffects().isEmpty()) break;
-                    final String nameA = potionsA.allEffects().getFirst().getType().toString();
-                    final String nameB = potionsB.allEffects().getFirst().getType().toString();
-                    final int compared = nameA.compareTo(nameB);
+                    final int compared = comparePotionEffects(potionsA, potionsB);
                     if (compared != 0) return compared;
                 }
             }
 
             final byte[] b1 = a.serializeAsBytes();
             final byte[] b2 = b.serializeAsBytes();
-            final int l1 = b1.length;
-            final int l2 = b2.length;
-            if (l1 != l2) return l1 - l2;
-            for (int i = 0; i < l1; i++) {
-                if (b1[i] != b2[i]) return b1[i] - b2[i];
-            }
-            return 0;
+            return compareBytes(b1, b2);
         };
+    }
+
+    private static int compareEnchantments(ItemEnchantments a, ItemEnchantments b) {
+        if (a == null || b == null) return 0;
+        if (a.enchantments().isEmpty() || b.enchantments().isEmpty()) return 0;
+        final Enchantment enchantmentA = a.enchantments().keySet().iterator().next();
+        final Enchantment enchantmentB = b.enchantments().keySet().iterator().next();
+        final String nameA = enchantmentA.getKey().toString();
+        final String nameB = enchantmentB.getKey().toString();
+        final int compared = nameA.compareTo(nameB);
+        if (compared != 0) return compared;
+        final int levelA = a.enchantments().values().iterator().next();
+        final int levelB = b.enchantments().values().iterator().next();
+        return levelA - levelB;
+    }
+
+    private static int compareInstruments(MusicInstrument a, MusicInstrument b) {
+        if (a == null || b == null) return 0;
+        final NamespacedKey keyA = instrumentRegistry.getKey(a);
+        final NamespacedKey keyB = instrumentRegistry.getKey(b);
+        if (keyA == null || keyB == null) return 0;
+        final String nameA = keyA.toString();
+        final String nameB = keyB.toString();
+        return nameA.compareTo(nameB);
+    }
+
+    private static int comparePotionEffects(PotionContents a, PotionContents b) {
+        if (a == null || b == null) return 0;
+        if (a.allEffects().isEmpty() || b.allEffects().isEmpty()) return 0;
+        final String nameA = a.allEffects().getFirst().getType().toString();
+        final String nameB = b.allEffects().getFirst().getType().toString();
+        return nameA.compareTo(nameB);
+    }
+
+    private static int compareBytes(byte[] a, byte[] b) {
+        final int l1 = a.length;
+        final int l2 = b.length;
+        if (l1 != l2) return l1 - l2;
+        for (int i = 0; i < l1; i++) {
+            if (a[i] != b[i]) return a[i] - b[i];
+        }
+        return 0;
     }
 }

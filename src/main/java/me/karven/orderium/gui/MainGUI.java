@@ -77,9 +77,7 @@ public class MainGUI {
 
     private void setupPages() {
         int curr = 0, cnt = 0;
-        ChestGui page = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getMainGuiTitle())));
-        page.setOnGlobalClick(e -> e.setCancelled(true));
-        page.setOnGlobalDrag(e -> e.setCancelled(true));
+        ChestGui page = initPage();
         OutlinePane orderPane = new OutlinePane(0, 0, 9, 5);
         StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
         addButtons(buttonsPane, curr);
@@ -91,9 +89,7 @@ public class MainGUI {
                 page.addPane(orderPane);
                 page.addPane(buttonsPane);
                 pages.add(page);
-                page = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getMainGuiTitle())));
-                page.setOnGlobalClick(e -> e.setCancelled(true));
-                page.setOnGlobalDrag(e -> e.setCancelled(true));
+                page = initPage();
                 orderPane = new OutlinePane(0, 0, 9, 5);
                 buttonsPane = new StaticPane(0, 5, 9, 1);
                 addButtons(buttonsPane, ++curr);
@@ -103,36 +99,48 @@ public class MainGUI {
                     player.sendRichMessage(cache.getDeliverSelf());
                     return;
                 }
-                final ItemStack comparer = order.item();
-                final ChestGui deliverGUI = new ChestGui(cache.getDeliverRows(), ComponentHolder.of(mm.deserialize(cache.getMainGuiTitle())));
-                deliverGUI.setOnClose(e2 -> {
-                    if (!(e2.getPlayer() instanceof Player p)) return;
-                    final Inventory inv = e2.getInventory();
-                    final List<ItemStack> returns = new ArrayList<>();
-                    int amount = 0;
-                    for (final ItemStack item : inv) {
-                        if (item == null || item.isEmpty()) continue;
-                        if (isSimilar(item, comparer)) {
-                            amount += item.getAmount();
-                            continue;
-                        }
-
-                        returns.add(item);
-                    }
-                    if (amount == 0) {
-                        PlayerUtils.give(p, returns, true);
-                        return;
-                    }
-
-                    DeliveryConfirmDialog.show(p, order, amount, deliverGUI, returns);
-                });
-                deliverGUI.show(e.getWhoClicked());
+                setupDeliverGUI(order).show(e.getWhoClicked());
             }));
             cnt++;
         }
         page.addPane(orderPane);
         page.addPane(buttonsPane);
         pages.add(page);
+    }
+
+    private ChestGui initPage() {
+        ChestGui page = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getMainGuiTitle())));
+        page.setOnGlobalClick(e -> e.setCancelled(true));
+        page.setOnGlobalDrag(e -> e.setCancelled(true));
+        return page;
+    }
+
+    private ChestGui setupDeliverGUI(Order order) {
+        final ItemStack comparer = order.item();
+        final ChestGui deliverGUI = new ChestGui(cache.getDeliverRows(), ComponentHolder.of(mm.deserialize(cache.getMainGuiTitle())));
+
+        deliverGUI.setOnClose(e -> {
+            if (!(e.getPlayer() instanceof Player p)) return;
+            final Inventory inv = e.getInventory();
+            final List<ItemStack> returns = new ArrayList<>();
+            int amount = 0;
+            for (final ItemStack item : inv) {
+                if (item == null || item.isEmpty()) continue;
+                if (isSimilar(item, comparer)) {
+                    amount += item.getAmount();
+                    continue;
+                }
+
+                returns.add(item);
+            }
+            if (amount == 0) {
+                PlayerUtils.give(p, returns, true);
+                return;
+            }
+
+            DeliveryConfirmDialog.show(p, order, amount, deliverGUI, returns);
+        });
+        return deliverGUI;
     }
 
     private boolean isSimilar(final ItemStack a, final ItemStack b) {
@@ -147,13 +155,15 @@ public class MainGUI {
     }
 
     private void addButtons(StaticPane buttonsPane, int curr) {
-        if (curr > 0) buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersBackButton(), e -> {
-            PlayerUtils.openGui(player, pages.get(curr - 1));
-        }), cache.getOrdersBackButton().getSlot(), 0);
+        if (curr > 0)
+            buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersBackButton(),
+                e -> PlayerUtils.openGui(player, pages.get(curr - 1))
+        ), cache.getOrdersBackButton().getSlot(), 0);
 
-        if (curr + 1 < amount) buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersNextButton(), e -> {
-            PlayerUtils.openGui(player, pages.get(curr + 1));
-        }), cache.getOrdersNextButton().getSlot(), 0);
+        if (curr + 1 < amount)
+            buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersNextButton(),
+                e -> PlayerUtils.openGui(player, pages.get(curr + 1))
+        ), cache.getOrdersNextButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getRefreshButton(), e -> {
             if (search.isEmpty()) new MainGUI(player, sortIdx);
