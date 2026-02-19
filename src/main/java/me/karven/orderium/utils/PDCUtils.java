@@ -4,8 +4,12 @@ import me.karven.orderium.load.Orderium;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataAdapterContext;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class PDCUtils {
@@ -13,6 +17,7 @@ public class PDCUtils {
 
     private static final NamespacedKey collectedKey = new NamespacedKey("orderium", "collected"); // String namespace isn't perfect but it works
     private static final NamespacedKey blacklistKey = new NamespacedKey("orderium", "blacklist");
+    private static final NamespacedKey searchKey = new NamespacedKey("orderium", "search");
 
     public static void init(Orderium plugin) {
         PDCUtils.plugin = plugin;
@@ -39,9 +44,22 @@ public class PDCUtils {
         return meta.getPersistentDataContainer().has(blacklistKey);
     }
 
+    public static void setSearch(ItemMeta meta, String search) {
+        meta.getPersistentDataContainer().set(searchKey, PersistentDataType.STRING, search);
+    }
+
+    public static String getSearch(ItemMeta meta) {
+        return meta.getPersistentDataContainer().get(searchKey, PersistentDataType.STRING);
+    }
+
+    public static boolean hasCustomSearch(ItemMeta meta) {
+        return meta.getPersistentDataContainer().has(searchKey);
+    }
+
     public static CompletableFuture<Integer> getCollectedSafe(Player p) {
         final CompletableFuture<Integer> future = new CompletableFuture<>();
         p.getScheduler().run(plugin, t -> future.complete(getCollected(p)), null);
+
         return future;
     }
 }

@@ -7,6 +7,7 @@ import lombok.val;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.MoneyTransaction;
 import me.karven.orderium.obj.Order;
+import me.karven.orderium.obj.Pair;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.EconUtils;
@@ -32,7 +33,9 @@ public class DBManager {
     private static final String ORDER_TABLE = PREFIX + "orders";
     private static final String TRANSACTION_TABLE = PREFIX + "transactions";
     private static final String BLACKLIST_TABLE = PREFIX + "blacklist";
-    private static final String CUSTOM_ITEMS_TABLE = PREFIX + "custom_items";
+    /// pre-1.1.0: PREFIX + "custom_items"
+    /// > 1.1.0: PREFIX + "custom_items_v2"
+    private static final String CUSTOM_ITEMS_TABLE = PREFIX + "custom_items_v2";
 
     private final MoneyTransaction moneyTransaction;
 
@@ -59,7 +62,7 @@ public class DBManager {
     );
 
     @Getter
-    private final Set<ItemStack> customItems = new HashSet<>();
+    private final Set<Pair<ItemStack, String>> customItems = new HashSet<>();
     @Getter
     private final Set<ItemStack> blacklistedItems = new HashSet<>();
 
@@ -82,7 +85,7 @@ public class DBManager {
 
         execSync("CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, before DOUBLE, amount DOUBLE, after DOUBLE)");
 
-        execSync(modifiedItemDataSource, "CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB)");
+        execSync(modifiedItemDataSource, "CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB, search VARCHAR(65535))");
         reloadCustomItems();
 
         execSync(modifiedItemDataSource, "CREATE TABLE iF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)");
@@ -117,13 +120,18 @@ public class DBManager {
     }
 
     public void addCustomItem(ItemStack item) {
-        exec(modifiedItemDataSource, "INSERT INTO " + CUSTOM_ITEMS_TABLE + " (item) VALUES (?)", (Object) item.serializeAsBytes());
-        customItems.add(item);
+        exec(modifiedItemDataSource, "INSERT INTO " + CUSTOM_ITEMS_TABLE + " (item) VALUES (?, ?)", item.serializeAsBytes(), "");
+        customItems.add(new Pair<>(item, ""));
     }
 
-    public  void removeCustomItem(ItemStack item) {
+    public void removeCustomItem(ItemStack item) {
         exec(modifiedItemDataSource, "DELETE FROM " + CUSTOM_ITEMS_TABLE + " WHERE item = (?)", (Object) item.serializeAsBytes());
-        customItems.remove(item);
+        customItems.removeIf(e -> e.first().equals(item));
+    }
+
+    public void updateCustomItemSearch(Pair<ItemStack, String> item) {
+        exec(modifiedItemDataSource, "UPDATE " + CUSTOM_ITEMS_TABLE + " SET search = ? WHERE item = ?", item.second, item.first.serializeAsBytes());
+
     }
 
     private void reloadOrders() {
@@ -140,7 +148,7 @@ public class DBManager {
     private void reloadCustomItems() {
         query(modifiedItemDataSource, rawItems -> {
             customItems.clear();
-            customItems.addAll(ConvertUtils.convertItems(rawItems));
+            customItems.addAll(ConvertUtils.convertSearchableItems(rawItems));
         }, "SELECT * FROM " + CUSTOM_ITEMS_TABLE);
     }
 

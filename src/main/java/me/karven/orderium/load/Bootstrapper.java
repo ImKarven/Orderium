@@ -61,19 +61,19 @@ public class Bootstrapper implements PluginBootstrap {
                             return 1;
                         })
                 )
-//                .then(Commands.literal("custom_items")
-//                        .requires(predicate ->
-//                                predicate.getExecutor() != null &&
-//                                        predicate.getExecutor().hasPermission("orderium.admin.custom-items") &&
-//                                        predicate.getExecutor() instanceof Player)
-//                        .executes(ctx -> {
-//                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 0;
-//
-//                            AdminToolGUI.openCustomItems(p);
-//
-//                            return 1;
-//                        })
-//                )
+                .then(Commands.literal("custom_items")
+                        .requires(predicate ->
+                                predicate.getExecutor() != null &&
+                                        predicate.getExecutor().hasPermission("orderium.admin.custom-items") &&
+                                        predicate.getExecutor() instanceof Player)
+                        .executes(ctx -> {
+                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 0;
+
+                            AdminToolGUI.openCustomItems(p);
+
+                            return 1;
+                        })
+                )
                 .build();
     }
 

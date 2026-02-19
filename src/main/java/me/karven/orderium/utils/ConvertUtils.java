@@ -8,6 +8,7 @@ import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
+import me.karven.orderium.obj.Pair;
 import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
 import net.kyori.adventure.key.Key;
@@ -94,7 +95,8 @@ public class ConvertUtils {
         try (raw) {
 
             while (raw.next()) {
-                items.add(ItemStack.deserializeBytes(raw.getBytes(1)));
+                final ItemStack item = ItemStack.deserializeBytes(raw.getBytes(1));
+                items.add(item);
             }
 
         } catch (SQLException e) {
@@ -102,6 +104,25 @@ public class ConvertUtils {
         }
 
         return items;
+    }
+
+    public static List<Pair<ItemStack, String>> convertSearchableItems(ResultSet raw) {
+        final List<Pair<ItemStack, String>> items = new ArrayList<>();
+        if (raw == null) return items;
+        try (raw) {
+
+            while (raw.next()) {
+                final ItemStack item = ItemStack.deserializeBytes(raw.getBytes(1));
+                final String search = raw.getString(2);
+                items.add(new Pair<>(item, search));
+            }
+
+        } catch (SQLException e) {
+            plugin.getLogger().severe(e.toString());
+        }
+
+        return items;
+
     }
 
     public static ItemStack addLore(ItemStack item, List<String> toAdd) {
@@ -112,7 +133,7 @@ public class ConvertUtils {
             }
             final List<Component> lore = meta.lore();
             assert lore != null;
-            lore.addAll(toAdd.stream().map(mm::deserialize).toList());
+            lore.addAll(toAdd.stream().map(s -> mm.deserialize(s).decoration(TextDecoration.ITALIC, false)).toList());
             meta.lore(lore);
         }
         );

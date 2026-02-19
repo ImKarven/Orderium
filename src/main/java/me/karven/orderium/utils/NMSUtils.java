@@ -8,6 +8,7 @@ import org.bukkit.Registry;
 import org.bukkit.block.BlockType;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
@@ -37,8 +38,14 @@ public class NMSUtils {
             AZ.addAll(bukkitItems);
             ZA.addAll(bukkitItems);
 
-            AZ.addAll(plugin.getDbManager().getCustomItems());
-            ZA.addAll(plugin.getDbManager().getCustomItems());
+            final List<ItemStack> customItems = plugin.getDbManager().getCustomItems().stream().map(item -> {
+                final ItemStack stack = item.first.clone();
+                stack.editMeta(meta -> PDCUtils.setSearch(meta, item.second)); // Should avoid adding PDC data to the items
+                return stack;
+            }).toList();
+
+            AZ.addAll(customItems);
+            ZA.addAll(customItems);
 
             plugin.getDbManager().getBlacklistedItems().forEach(e -> {
                 AZ.remove(e);

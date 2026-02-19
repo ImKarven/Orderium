@@ -31,6 +31,7 @@ public class ConfigManager {
     private final Orderium plugin;
 
     private boolean bStats = true;
+    private boolean checkForUpdates = true;
 
     private String mainGuiTitle;
     private List<String> orderLore;
@@ -180,6 +181,7 @@ public class ConfigManager {
         }
         // CONFIG
         config.addDefault("bstats", true, "Whether to let bStats collect data anonymously or not");
+        config.addDefault("check-for-updates", true);
         config.addDefault("log-transactions", true, "Whether to log money changes of players");
         config.addDefault("expires-after", 7L * 24L * 60L * 60L * 1000L, "After this amount of millisecond(s), the order will be expired");
         config.addDefault("sort-prefix", "<aqua>", "This will be put at the beginning of the sort type that is being selected");
@@ -353,6 +355,7 @@ public class ConfigManager {
         config.reload();
 
         bStats = config.getBoolean("bstats");
+        checkForUpdates = config.getBoolean("check-for-updates");
         logTransactions = config.getBoolean("log-transactions");
         expiresAfter = config.getLong("expires-after");
         sortPrefix = config.getString("sort-prefix");

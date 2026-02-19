@@ -104,6 +104,14 @@ public final class Orderium extends JavaPlugin {
             final Metrics metrics = new Metrics(this, pluginId);
         }
 
+        if (configs.isCheckForUpdates()) {
+            Bukkit.getAsyncScheduler().runNow(this, t -> {
+               final String newVer = UpdateUtils.checkForUpdates();
+               if (newVer == null) return;
+               getLogger().info("A new version of Orderium (" + newVer + ") is available!");
+            });
+        }
+
         Bukkit.getAsyncScheduler().runAtFixedRate(this, t -> {
 
             for (Player p : Bukkit.getOnlinePlayers()) {
