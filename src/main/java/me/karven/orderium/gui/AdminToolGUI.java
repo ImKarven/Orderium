@@ -25,7 +25,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class AdminToolGUI {
@@ -212,7 +215,7 @@ public class AdminToolGUI {
                                         .body(bodies)
                                         .inputs(
                                                 List.of(
-                                                        DialogInput.singleOption("choice", Component.empty(), List.of(
+                                                        DialogInput.singleOption("choice", Component.text("Action"), List.of(
                                                                 SingleOptionDialogInput.OptionEntry.create("add", Component.text("Add Search"), true),
                                                                 SingleOptionDialogInput.OptionEntry.create("remove", Component.text("Remove Search"), false)
                                                         )).build(),
@@ -228,10 +231,10 @@ public class AdminToolGUI {
                                                     final String text = v.getText("text");
                                                     if (text == null) return;
                                                     switch (choice) {
-                                                        case "add" -> item.second += "," + text;
+                                                        case "add" -> item.second += "," + text.trim();
 
                                                         case "remove" -> {
-                                                            final String[] indices = text.split(",");
+                                                            final String[] indices = text.trim().split(",");
                                                             final List<String> toRev = new ArrayList<>();
                                                             for (String index : indices) {
                                                                 try {

@@ -4,12 +4,8 @@ import me.karven.orderium.load.Orderium;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataAdapterContext;
 import org.bukkit.persistence.PersistentDataType;
-import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class PDCUtils {
