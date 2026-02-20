@@ -231,7 +231,7 @@ public class AdminToolGUI {
                                                     final String text = v.getText("text");
                                                     if (text == null) return;
                                                     switch (choice) {
-                                                        case "add" -> item.second += "," + text.trim();
+                                                        case "add" -> item.second += "," + text.trim().toLowerCase().replaceAll(" ", "_");
 
                                                         case "remove" -> {
                                                             final String[] indices = text.trim().split(",");
@@ -248,7 +248,7 @@ public class AdminToolGUI {
 
                                                         case null, default -> {}
                                                     }
-                                                    db.updateCustomItemSearch(item);
+                                                    db.updateCustomItemSearch(  item);
                                                 }, ClickCallback.Options.builder().build()))
                                                 .build(),
                                         ActionButton.builder(Component.text("Cancel", NamedTextColor.RED)).build()

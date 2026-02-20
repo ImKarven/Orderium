@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 @Getter
 @SuppressWarnings("UnstableApiUsage")
@@ -137,7 +138,7 @@ public class ConfigManager {
             try {
                 loadCfg();
             } catch (Exception e) {
-                plugin.getLogger().severe(e.toString());
+                plugin.getLogger().log(Level.SEVERE, "Failed to fetch item from database", e);
                 return false;
             }
             return true;
@@ -150,7 +151,7 @@ public class ConfigManager {
                 AdminToolGUI.createBlacklist();
                 AdminToolGUI.createCustomItems();
             } catch (Exception e) {
-                plugin.getLogger().severe(e.toString());
+                plugin.getLogger().log(Level.SEVERE, "Failed to reload", e);
             }
         });
         return true;
@@ -165,7 +166,7 @@ public class ConfigManager {
                 AdminToolGUI.createBlacklist();
                 AdminToolGUI.createCustomItems();
             } catch (Exception e) {
-                plugin.getLogger().severe(e.toString());
+                plugin.getLogger().log(Level.SEVERE, "Failed to reload", e);
             }
             cb.run();
         });
@@ -176,7 +177,7 @@ public class ConfigManager {
         try {
             this.config = ConfigFile.loadConfig(configFile);
         } catch (Exception e) {
-            plugin.getLogger().severe(e.toString());
+            plugin.getLogger().log(Level.SEVERE, "Failed to load config file", e);
             return;
         }
         // CONFIG
@@ -473,7 +474,7 @@ public class ConfigManager {
         try {
             configFile.createNewFile();
         } catch (IOException e) {
-            plugin.getLogger().severe(e.toString());
+            plugin.getLogger().log(Level.SEVERE, "Failed to create plugin files", e);
         }
     }
 }

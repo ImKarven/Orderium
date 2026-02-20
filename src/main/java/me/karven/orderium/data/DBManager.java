@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 
 public class DBManager {
     private final Orderium plugin;
@@ -102,7 +103,7 @@ public class DBManager {
                     items.add(ItemStack.deserializeBytes(raw.getBytes(1)));
                 }
             } catch (SQLException e) {
-                plugin.getLogger().severe(e.toString());
+                plugin.getLogger().log(Level.SEVERE, "Failed to fetch items", e);
             }
             res.complete(items);
         }, "SELECT * FROM " + TABLE_NAME);
@@ -120,7 +121,7 @@ public class DBManager {
     }
 
     public void addCustomItem(ItemStack item) {
-        exec(modifiedItemDataSource, "INSERT INTO " + CUSTOM_ITEMS_TABLE + " (item) VALUES (?, ?)", item.serializeAsBytes(), "");
+        exec(modifiedItemDataSource, "INSERT INTO " + CUSTOM_ITEMS_TABLE + " (item, search) VALUES (?, ?)", item.serializeAsBytes(), "");
         customItems.add(new Pair<>(item, ""));
     }
 
@@ -183,7 +184,7 @@ public class DBManager {
                 mostDelivered.add(order);
                 mostPaid.add(order);
             } catch (SQLException e) {
-                plugin.getLogger().severe(e.toString());
+                plugin.getLogger().log(Level.SEVERE, "Failed to create order", e);
             }
         };
 
@@ -204,7 +205,7 @@ public class DBManager {
                     } catch (Exception ignored) {}
                 }
             } catch (SQLException e) {
-                plugin.getLogger().severe(e.toString());
+                plugin.getLogger().log(Level.SEVERE, "Failed to fetch data versions list", e);
             }
             ret.complete(ver);
         }, "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
@@ -332,7 +333,7 @@ public class DBManager {
                 preparedStatement.executeUpdate();
                 completableFuture.complete(preparedStatement);
             } catch (SQLException e) {
-                plugin.getLogger().severe(e.toString());
+                plugin.getLogger().log(Level.SEVERE, "Failed to execute database statement", e);
             }
         });
         return completableFuture;
@@ -347,7 +348,7 @@ public class DBManager {
             processStatement(preparedStatement, params);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe(e.toString());
+            plugin.getLogger().log(Level.SEVERE, "Failed to execute database statement", e);
         }
     }
 
@@ -364,7 +365,7 @@ public class DBManager {
                 processStatement(preparedStatement, params);
                 cb.accept(preparedStatement.executeQuery());
             } catch (SQLException e) {
-                plugin.getLogger().severe(e.toString());
+                plugin.getLogger().log(Level.SEVERE, "Failed to execute query database statement", e);
             }
         });
     }

@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Slf4j
@@ -33,7 +34,7 @@ public class UpdateUtils {
             plugin.getDataFolder().mkdirs();
             itemsFile.createNewFile();
         } catch (IOException e) {
-            logger.severe(e.toString());
+            logger.log(Level.SEVERE, "An error occured while creating plugin's directory", e);
         }
     }
 
@@ -49,8 +50,7 @@ public class UpdateUtils {
             logger.info("Successfully downloaded items list");
             return true;
         } catch (Exception e) {
-            logger.severe("Failed to download items list");
-            logger.severe(e.toString());
+            logger.log(Level.SEVERE, "Failed to download items list", e);
             return false;
         }
     }
@@ -80,7 +80,7 @@ public class UpdateUtils {
             final JsonObject latest = jRes.get(0).getAsJsonObject();
             return latest.get("version_number").getAsString();
         } catch (IOException e) {
-            logger.severe(e.toString());
+            logger.log(Level.SEVERE, "Failed to check for updates", e);
         }
         return null;
     }

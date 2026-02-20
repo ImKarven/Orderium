@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ConvertUtils {
@@ -83,7 +84,7 @@ public class ConvertUtils {
                         ));
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe(e.toString());
+            plugin.getLogger().log(Level.SEVERE, "Failed to fetch order from database", e);
         }
 
         return orders;
@@ -100,7 +101,7 @@ public class ConvertUtils {
             }
 
         } catch (SQLException e) {
-            plugin.getLogger().severe(e.toString());
+            plugin.getLogger().log(Level.SEVERE, "Failed to fetch item from database", e);
         }
 
         return items;
@@ -118,7 +119,7 @@ public class ConvertUtils {
             }
 
         } catch (SQLException e) {
-            plugin.getLogger().severe(e.toString());
+            plugin.getLogger().log(Level.SEVERE, "Failed to fetch searchable item from database", e);
         }
 
         return items;

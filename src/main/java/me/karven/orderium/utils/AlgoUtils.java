@@ -49,19 +49,20 @@ public class AlgoUtils {
     private static boolean search(final ItemStack item, String q) {
         if (PDCUtils.hasCustomSearch(item.getItemMeta())) {
             final String customSearch = PDCUtils.getSearch(item.getItemMeta());
-            final int len = customSearch.length();
-            StringBuilder curr = new StringBuilder();
-            for (int i = 0; i < len; i++) {
-                final char c = customSearch.charAt(i);
-                if (c == ',') {
-                    if (curr.toString().contains(q)) return true;
-                    curr = new StringBuilder();
-                    continue;
-                }
-                if (c == ' ') curr.append('_');
-                else curr.append(c);
-            }
-            return curr.toString().contains(q);
+            return customSearch.contains(q); // Not perfect with searches contain commas, but it is fast and simply works
+//            final int len = customSearch.length();
+//            StringBuilder curr = new StringBuilder();
+//            for (int i = 0; i < len; i++) {
+//                final char c = customSearch.charAt(i);
+//                if (c == ',') {
+//                    if (curr.toString().contains(q)) return true;
+//                    curr = new StringBuilder();
+//                    continue;
+//                }
+//                if (c == ' ') curr.append('_');
+//                else curr.append(c);
+//            }
+//            return curr.toString().contains(q);
         }
 
         final Material type = item.getType();
