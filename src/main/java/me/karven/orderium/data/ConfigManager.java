@@ -11,6 +11,8 @@ import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.NMSUtils;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
@@ -116,6 +118,13 @@ public class ConfigManager {
     private String collectingTooFast;
     private String exceedMaxCollect;
 
+    private Sound nextPageSound;
+    private Sound previousPageSound;
+    private Sound refreshSound;
+    private Sound sortSound;
+    private Sound newOrderSound;
+    private Sound deliverSound;
+
     private boolean logTransactions = true;
     private long expiresAfter = -1;
     private String sortPrefix;
@@ -182,8 +191,8 @@ public class ConfigManager {
         }
         // CONFIG
         config.addDefault("bstats", true, "Whether to let bStats collect data anonymously or not");
-        config.addDefault("check-for-updates", true);
-        config.addDefault("log-transactions", true, "Whether to log money changes of players");
+        config.addDefault("check-for-updates", true, "Whether to check for updates or not");
+        config.addDefault("log-transactions", true, "Whether to log money changes of players or not");
         config.addDefault("expires-after", 7L * 24L * 60L * 60L * 1000L, "After this amount of millisecond(s), the order will be expired");
         config.addDefault("sort-prefix", "<aqua>", "This will be put at the beginning of the sort type that is being selected");
         config.addDefault("max-collect", 1000, "Maximum amount of items to collect, this shouldn't be confused with max-collect-per-minute");
@@ -217,6 +226,31 @@ public class ConfigManager {
         config.addDefault("messages.deliver-self", "<red>You cannot deliver your own order");
         config.addDefault("messages.exceeded-max-collect", "<red>You are collecting too many items", "Message for max-collect");
         config.addDefault("messages.collecting-too-fast", "<red>You are collecting items too fast. Wait a minute...", "Message for max-collect-per-minute");
+
+        // SOUNDS
+        config.addDefault("sounds.next-page.sound", "minecraft:ui.button.click");
+        config.addDefault("sounds.next-page.volume", 1.0);
+        config.addDefault("sounds.next-page.pitch", 1.0);
+
+        config.addDefault("sounds.previous-page.sound", "minecraft:ui.button.click");
+        config.addDefault("sounds.previous-page.volume", 1.0);
+        config.addDefault("sounds.previous-page.pitch", 1.0);
+
+        config.addDefault("sounds.refresh.sound", "minecraft:ui.button.click");
+        config.addDefault("sounds.refresh.volume", 1.0);
+        config.addDefault("sounds.refresh.pitch", 1.0);
+
+        config.addDefault("sounds.sort.sound", "minecraft:ui.button.click");
+        config.addDefault("sounds.sort.volume", 1.0);
+        config.addDefault("sounds.sort.pitch", 1.0);
+
+        config.addDefault("sounds.new-order.sound", "minecraft:entity.villager.work_cartographer");
+        config.addDefault("sounds.new-order.volume", 1.0);
+        config.addDefault("sounds.new-order.pitch", 1.0);
+
+        config.addDefault("sounds.deliver.sound", "minecraft:entity.player.levelup");
+        config.addDefault("sounds.deliver.volume", 1.0);
+        config.addDefault("sounds.deliver.pitch", 2.0);
 
         // SORT TYPES
         config.addComment("sort-types", "How should different types of sorting appear");
@@ -396,6 +430,13 @@ public class ConfigManager {
         exceedMaxCollect = config.getString("messages.exceeded-max-collect");
         collectingTooFast = config.getString("messages.collecting-too-fast");
 
+        nextPageSound = getSound("next-page");
+        previousPageSound = getSound("previous-page");
+        refreshSound = getSound("refresh");
+        sortSound = getSound("sort");
+        newOrderSound = getSound("new-order");
+        deliverSound = getSound("deliver");
+
         mainGuiTitle = config.getString("gui.main.title");
         orderLore = config.getStringList("gui.main.order-lore");
         ordersSortsOrder = config.getStringList("gui.main.sorts-order").stream().map(SortTypes::fromIdentifier).toList();
@@ -466,6 +507,11 @@ public class ConfigManager {
         cancelOrderConfirmLabel = config.getString("gui.cancel-order.confirm-button");
         cancelOrderConfirmHover = config.getString("gui.cancel-order.confirm-tooltip");
     }
+
+    private Sound getSound(String name) {
+        return Sound.sound(Key.key(config.getString("sounds." + name + ".sound")), Sound.Source.UI, config.getFloat("sounds." + name + ".volume"), config.getFloat("sounds." + name + ".pitch"));
+    }
+
     private void checkFiles() {
         File parent = configFile.getParentFile();
         if (!parent.exists()) {

@@ -1,8 +1,11 @@
 package me.karven.orderium.utils;
 
+import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
+import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -17,6 +20,7 @@ public class PDCUtils {
 
     public static void init(Orderium plugin) {
         PDCUtils.plugin = plugin;
+
     }
 
     public static void setCollected(Player p, int amount) {

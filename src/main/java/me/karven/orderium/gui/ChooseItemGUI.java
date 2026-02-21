@@ -66,19 +66,18 @@ public class ChooseItemGUI {
         final List<SortTypes> sortOrder = cache.getChooseSortsOrder();
         final int sortIdx = sortOrder.indexOf(sortType);
         if (idx > 0) buttons.addItem(ConvertUtils.parseButton(cache.getChooseBackButton(), e -> {
-            if (!(e.getWhoClicked() instanceof Player p)) return;
-            PlayerUtils.openGui(p, pages.get(idx - 1));
+            PlayerUtils.clickBack(e, pages.get(idx - 1));
         }), cache.getChooseBackButton().getSlot(), 0);
 
         if (idx + 1 < pagesAmount) buttons.addItem(ConvertUtils.parseButton(cache.getChooseNextButton(), e -> {
-            if (!(e.getWhoClicked() instanceof Player p)) return;
-            PlayerUtils.openGui(p, pages.get(idx + 1));
+            PlayerUtils.clickNext(e, pages.get(idx + 1));
         }), cache.getChooseNextButton().getSlot(), 0);
 
         buttons.addItem(ConvertUtils.parseSortButton(cache.getChooseSortButton(), sortType, e -> {
             if (!(e.getWhoClicked() instanceof Player p)) return;
             final int nextIdx = sortIdx == sortOrder.size() - 1 ? 0 : sortIdx + 1;
             choose(p, nextIdx, idx);
+            PlayerUtils.playSound(p, cache.getSortSound());
         }), cache.getChooseSortButton().getSlot(), 0);
 
         buttons.addItem(ConvertUtils.parseButton(cache.getChooseSearchButton(), e -> {

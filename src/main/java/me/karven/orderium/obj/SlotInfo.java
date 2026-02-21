@@ -27,7 +27,7 @@ public class SlotInfo implements Cloneable {
 
 
     public void addDefault(ConfigFile config, String section) {
-        config.addDefault(section + ".slot", slot);
+        if (slot != -1) config.addDefault(section + ".slot", slot);
         if (!lore.isEmpty()) config.addDefault(section + ".lore", lore);
         config.addDefault(section + ".display-name", displayName);
         config.addDefault(section + ".type", type.getKey().toString());
@@ -38,7 +38,7 @@ public class SlotInfo implements Cloneable {
             Orderium.getInst().getLogger().severe("Button deserialization failed because section is null");
             return;
         }
-        slot = section.getInteger("slot");
+        slot = section.get("slot") == null ? -1 : section.getInteger("slot");
         lore = section.getStringList("lore");
         displayName = section.getString("display-name");
         type = ConvertUtils.getItemType(section.getString("type", "minecraft:stone"));

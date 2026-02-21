@@ -112,6 +112,7 @@ public class NewOrderDialog {
                                         }
                                         plugin.getDbManager().createOrder(p.getUniqueId(), display, moneyPer, amount);
                                         p.sendRichMessage(cache.getOrderCreationSuccessful());
+                                        PlayerUtils.playSound(p, cache.getNewOrderSound());
                                     },  ClickCallback.Options.builder().uses(1).build()))
                                     .build(),
                             ActionButton.builder(changeItemLabel)

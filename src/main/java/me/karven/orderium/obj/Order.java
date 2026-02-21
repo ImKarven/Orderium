@@ -6,6 +6,7 @@ import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.EconUtils;
+import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
@@ -64,6 +65,8 @@ public class Order {
         final double earning = moneyPer * a;
         EconUtils.addMoney(deliverer, earning);
         deliverer.sendRichMessage(cache.getDelivered(), Placeholder.unparsed("money", ConvertUtils.formatNumber(earning)));
+        PlayerUtils.playSound(deliverer, cache.getDeliverSound());
+
         final Player ownerPlayer = Bukkit.getPlayer(owner);
         if (ownerPlayer == null || !ownerPlayer.isOnline()) return;
         final ItemMeta meta = item.getItemMeta();

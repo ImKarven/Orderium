@@ -156,23 +156,33 @@ public class MainGUI {
 
     private void addButtons(StaticPane buttonsPane, int curr) {
         if (curr > 0)
-            buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersBackButton(),
-                e -> PlayerUtils.openGui(player, pages.get(curr - 1))
+            buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersBackButton(), e -> {
+                PlayerUtils.clickBack(e, pages.get(curr - 1));
+            }
         ), cache.getOrdersBackButton().getSlot(), 0);
 
         if (curr + 1 < amount)
-            buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersNextButton(),
-                e -> PlayerUtils.openGui(player, pages.get(curr + 1))
+            buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersNextButton(), e -> {
+                PlayerUtils.clickNext(e, pages.get(curr + 1));
+            }
         ), cache.getOrdersNextButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getRefreshButton(), e -> {
+
             if (search.isEmpty()) new MainGUI(player, sortIdx);
             else new MainGUI(player, sortIdx, search);
+
+            PlayerUtils.playSound(player, cache.getRefreshSound());
+
         }), cache.getRefreshButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseSortButton(cache.getOrdersSortButton(), cache.getOrdersSortsOrder().get(sortIdx), e -> {
+
             if (search.isEmpty()) new MainGUI(player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1);
             else new MainGUI(player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1, search);
+
+            PlayerUtils.playSound(player, cache.getSortSound());
+
         }), cache.getOrdersSortButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersSearchButton(), e -> {
