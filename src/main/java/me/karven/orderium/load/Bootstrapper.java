@@ -11,14 +11,9 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.val;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
-import net.kyori.adventure.text.Component;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.NonNull;
-
-import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
 public class Bootstrapper implements PluginBootstrap {

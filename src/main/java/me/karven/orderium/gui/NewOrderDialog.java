@@ -9,8 +9,7 @@ import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
-import me.karven.orderium.utils.ConvertUtils;
-import me.karven.orderium.utils.EconUtils;
+import me.karven.orderium.utils.OrderUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
@@ -91,28 +90,21 @@ public class NewOrderDialog {
                                         if (!(player instanceof Player p)) {
                                             return;
                                         }
-                                        // Create new order
-                                        final String rawAmount = view.getText("amount");
-                                        final String rawMoneyPer = view.getText("money_per");
+
                                         PlayerUtils.closeInv(p);
-                                        if (rawAmount == null || rawMoneyPer == null) {
-                                            p.sendRichMessage(cache.getInvalidInput());
-                                            return;
+
+                                        // Create new order
+                                        final OrderUtils.Response response = OrderUtils.create(p, display, view.getText("money_per"), view.getText("amount"));
+
+                                        switch (response) {
+                                            case INVALID -> p.sendRichMessage(cache.getInvalidInput());
+                                            case FAIL -> p.sendRichMessage(cache.getNotEnoughMoney());
+                                            case SUCCESS -> {
+                                                p.sendRichMessage(cache.getOrderCreationSuccessful());
+                                                PlayerUtils.playSound(p, cache.getNewOrderSound());
+                                            }
                                         }
-                                        final double dAmount = ConvertUtils.formatNumber(rawAmount);
-                                        final int amount = (int) dAmount;
-                                        final double moneyPer = ConvertUtils.formatNumber(rawMoneyPer);
-                                        if (dAmount == -1 || moneyPer == -1 || dAmount != amount) {
-                                            p.sendRichMessage(cache.getInvalidInput());
-                                            return;
-                                        }
-                                        if (!EconUtils.removeMoney(p, moneyPer * amount)) {
-                                            p.sendRichMessage(cache.getNotEnoughMoney());
-                                            return;
-                                        }
-                                        plugin.getDbManager().createOrder(p.getUniqueId(), display, moneyPer, amount);
-                                        p.sendRichMessage(cache.getOrderCreationSuccessful());
-                                        PlayerUtils.playSound(p, cache.getNewOrderSound());
+
                                     },  ClickCallback.Options.builder().uses(1).build()))
                                     .build(),
                             ActionButton.builder(changeItemLabel)

@@ -77,6 +77,8 @@ public final class Orderium extends JavaPlugin {
 
         configs = new ConfigManager(this);
         dbManager = new DBManager(this);
+        AlgoUtils.init(this);
+        OrderUtils.init(this);
         MainGUI.init(this);
         YourOrderGUI.init(this);
         EconUtils.init(this);

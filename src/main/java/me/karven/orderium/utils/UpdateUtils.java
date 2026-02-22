@@ -34,7 +34,7 @@ public class UpdateUtils {
             plugin.getDataFolder().mkdirs();
             itemsFile.createNewFile();
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "An error occured while creating plugin's directory", e);
+            logger.log(Level.SEVERE, "An error occurred while creating plugin's directory", e);
         }
     }
 

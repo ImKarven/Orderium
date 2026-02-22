@@ -1,10 +1,13 @@
 package me.karven.orderium.utils;
 
+import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemEnchantments;
 import io.papermc.paper.datacomponent.item.PotionContents;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
+import me.karven.orderium.data.ConfigManager;
+import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
 import org.bukkit.Material;
@@ -23,6 +26,11 @@ public class AlgoUtils {
 
     private static final Registry<MusicInstrument> instrumentRegistry = RegistryAccess.registryAccess().getRegistry(RegistryKey.INSTRUMENT);
     private static final Registry<PotionEffectType> potionEffectRegistry = Registry.MOB_EFFECT;
+    private static ConfigManager cache;
+
+    public static void init(Orderium plugin) {
+        cache = plugin.getConfigs();
+    }
 
     public static List<ItemStack> searchItem(String query, Collection<ItemStack> items) {
         final String q = fixQuery(query);
@@ -50,19 +58,6 @@ public class AlgoUtils {
         if (PDCUtils.hasCustomSearch(item.getItemMeta())) {
             final String customSearch = PDCUtils.getSearch(item.getItemMeta());
             return customSearch.contains(q); // Not perfect with searches contain commas, but it is fast and simply works
-//            final int len = customSearch.length();
-//            StringBuilder curr = new StringBuilder();
-//            for (int i = 0; i < len; i++) {
-//                final char c = customSearch.charAt(i);
-//                if (c == ',') {
-//                    if (curr.toString().contains(q)) return true;
-//                    curr = new StringBuilder();
-//                    continue;
-//                }
-//                if (c == ' ') curr.append('_');
-//                else curr.append(c);
-//            }
-//            return curr.toString().contains(q);
         }
 
         final Material type = item.getType();
@@ -102,6 +97,18 @@ public class AlgoUtils {
             }
         }
         return false;
+    }
+
+
+    public static boolean isSimilar(final ItemStack a, final ItemStack b) {
+        if (!a.getType().equals(b.getType())) return false;
+        for (final DataComponentType.Valued<?> component : cache.getSimilarityCheck()) {
+            final Object dataA = a.getData(component);
+            final Object dataB = b.getData(component);
+            if (dataA == null && dataB == null) continue;
+            if (dataA == null || !dataA.equals(dataB)) return false;
+        }
+        return true;
     }
 
     public static Comparator<ItemStack> getComparator(SortTypes sortType) {

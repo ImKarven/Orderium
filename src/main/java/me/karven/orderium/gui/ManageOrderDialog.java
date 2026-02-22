@@ -11,8 +11,7 @@ import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
-import me.karven.orderium.utils.EconUtils;
-import me.karven.orderium.utils.PDCUtils;
+import me.karven.orderium.utils.OrderUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -59,29 +58,7 @@ public class ManageOrderDialog {
                                     if (!(player instanceof Player p)) return;
 
                                     final String rawAmount = view.getText("amount");
-                                    if (rawAmount == null) return;
-                                    final double dAmount = ConvertUtils.formatNumber(rawAmount);
-                                    final int amount = (int) dAmount;
-                                    if (dAmount == -1 || dAmount != amount || order.inStorage() < amount) {
-                                        p.sendRichMessage(cache.getInvalidInput());
-                                        return;
-                                    }
-
-                                    if (amount > cache.getMaxCollect() && !p.hasPermission("orderium.bypass.max-collect")) {
-                                        p.sendRichMessage(cache.getExceedMaxCollect());
-                                        return;
-                                    }
-
-                                    // Don't have to use getCollectedSafe because we're in PlayerCustomClickEvent
-                                    final int collectedInMinute = PDCUtils.getCollected(p);
-                                    if (collectedInMinute > cache.getMaxCollectPerMinute() && !p.hasPermission("orderium.bypass.max-collect-per-minute")) {
-                                        p.sendRichMessage(cache.getCollectingTooFast());
-                                        return;
-                                    }
-                                    PDCUtils.setCollected(p, collectedInMinute + amount);
-
-                                    order.setInStorage(order.inStorage() - amount);
-                                    PlayerUtils.give(p, order.item().clone(), amount);
+                                    OrderUtils.collect(order, rawAmount);
                                     YourOrderGUI.open(p);
                                 }, ClickCallback.Options.builder().build()))
                                 .build(),
@@ -107,7 +84,7 @@ public class ManageOrderDialog {
                                 .tooltip(mm.deserialize(cache.getCancelOrderConfirmHover()))
                                 .action(DialogAction.customClick((v, player) -> {
                                     if (!(player instanceof Player p)) return;
-                                    EconUtils.addMoney(p, order.cancel());
+                                    OrderUtils.cancel(order);
                                     YourOrderGUI.open(p);
                                 }, ClickCallback.Options.builder().build()))
                                 .build(),

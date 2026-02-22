@@ -1,6 +1,5 @@
 package me.karven.orderium.gui;
 
-import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
@@ -11,6 +10,7 @@ import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.OrderUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
@@ -31,7 +31,7 @@ public class DeliveryConfirmDialog {
         cache = plugin.getConfigs();
     }
 
-    public static void show(Player p, Order order, int amount, ChestGui returnGUI, List<ItemStack> returnItems) {
+    public static void show(Player p, Order order, int amount, List<ItemStack> items) {
         final Dialog dialog = Dialog.create(builder -> {
             final String amountText = ConvertUtils.formatNumber(amount);
             final int amountWidth = amountText.length() * 10;
@@ -47,29 +47,16 @@ public class DeliveryConfirmDialog {
                             ActionButton.builder(mm.deserialize(cache.getConfirmDeliveryConfirmLabel()))
                                     .tooltip(mm.deserialize(cache.getConfirmDeliveryConfirmHover()))
                                     .action(DialogAction.customClick((view, player) -> {
-                                        final int maxDeliverAmount = order.amount() - order.delivered();
-
-                                        PlayerUtils.give(p, returnItems, true);
-
-                                        if (amount <= maxDeliverAmount) {
-                                            order.deliver(p, amount);
-                                            return;
-                                        }
-                                        order.deliver(p, maxDeliverAmount);
-
-                                        final int rem = amount - maxDeliverAmount;
-                                        PlayerUtils.give(p, order.item().clone(), rem);
+                                        OrderUtils.deliver(order, p, items);
                                     }, ClickCallback.Options.builder().build()))
                                     .build(),
                             ActionButton.builder(mm.deserialize(cache.getConfirmDeliveryCancelLabel()))
                                     .tooltip(mm.deserialize(cache.getConfirmDeliveryCancelHover()))
                                     .action(DialogAction.customClick(
-                                            (view, player) -> MainGUI.cancelDelivery(returnGUI, p),
+                                            (view, player) -> PlayerUtils.give(p, items),
                                             ClickCallback.Options.builder().build()))
                                     .build()
-                    ))
-
-            ;
+                    ));
         });
 
         PlayerUtils.openDialog(p, dialog);

@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class PlayerUtils {
@@ -22,8 +23,12 @@ public class PlayerUtils {
         PlayerUtils.cache = plugin.getConfigs();
     }
 
-    public static void give(Player p, Collection<ItemStack> items, boolean dropIfFull) {
-        p.getScheduler().run(plugin, t -> p.give(items, dropIfFull), null);
+    public static void give(Player p, Collection<ItemStack> items) {
+        p.getScheduler().run(plugin, t -> p.give(items, true), null);
+    }
+
+    public static void give(Player p, ItemStack item) {
+        p.getScheduler().run(plugin, t -> p.give(Collections.singleton(item), true), null);
     }
 
     public static void give(Player p, ItemStack item, int amount) {
@@ -42,7 +47,7 @@ public class PlayerUtils {
             copy.setAmount(rem);
             items.add(copy);
         }
-        PlayerUtils.give(p, items, true);
+        PlayerUtils.give(p, items);
     }
 
     public static void playSound(Player p, Sound s) {

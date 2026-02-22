@@ -6,6 +6,7 @@ import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.MoneyTransaction;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 public class EconUtils {
@@ -21,7 +22,7 @@ public class EconUtils {
         cache = plugin.getConfigs();
     }
 
-    public static void addMoney(Player p, double amount) {
+    public static void addMoney(OfflinePlayer p, double amount) {
         logTransactionBefore(p, amount);
         eco.depositPlayer(p, amount);
         logTransactionAfter(p);
@@ -36,14 +37,14 @@ public class EconUtils {
         return true;
     }
 
-    private static void logTransactionBefore(Player p, double amount) {
+    private static void logTransactionBefore(OfflinePlayer p, double amount) {
         if (!cache.isLogTransactions()) return;
         currentTransaction.player = p.getUniqueId();
         currentTransaction.before = eco.getBalance(p);
         currentTransaction.amount = amount;
     }
 
-    private static void logTransactionAfter(Player p) {
+    private static void logTransactionAfter(OfflinePlayer p) {
         if (!cache.isLogTransactions()) return;
         currentTransaction.after = eco.getBalance(p);
         db.logTransaction();

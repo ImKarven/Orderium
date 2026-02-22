@@ -4,7 +4,6 @@ import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHold
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
-import io.papermc.paper.datacomponent.DataComponentType;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
@@ -49,7 +48,7 @@ public class MainGUI {
             if (item == null) continue;
             items.add(item);
         }
-        PlayerUtils.give(p, items, true);
+        PlayerUtils.give(p, items);
     }
 
     public MainGUI(Player p, int sortIdx) {
@@ -122,36 +121,31 @@ public class MainGUI {
         deliverGUI.setOnClose(e -> {
             if (!(e.getPlayer() instanceof Player p)) return;
             final Inventory inv = e.getInventory();
-            final List<ItemStack> returns = new ArrayList<>();
-            int amount = 0;
-            for (final ItemStack item : inv) {
-                if (item == null || item.isEmpty()) continue;
-                if (isSimilar(item, comparer)) {
-                    amount += item.getAmount();
-                    continue;
-                }
 
-                returns.add(item);
-            }
+            int amount = 0;
+            final List<ItemStack> items = new ArrayList<>();
+            amount += scanInv(inv, items, comparer);
+
             if (amount == 0) {
-                PlayerUtils.give(p, returns, true);
+                PlayerUtils.give(p, items);
                 return;
             }
 
-            DeliveryConfirmDialog.show(p, order, amount, deliverGUI, returns);
+            DeliveryConfirmDialog.show(p, order, amount, items);
         });
         return deliverGUI;
     }
 
-    private boolean isSimilar(final ItemStack a, final ItemStack b) {
-        if (!a.getType().equals(b.getType())) return false;
-        for (final DataComponentType.Valued<?> component : cache.getSimilarityCheck()) {
-             final Object dataA = a.getData(component);
-             final Object dataB = b.getData(component);
-             if (dataA == null && dataB == null) continue;
-             if (dataA == null || !dataA.equals(dataB)) return false;
+    /// Returns the amount of similar item found
+    private int scanInv(Inventory inv, List<ItemStack> items, ItemStack comparer) {
+        int amount = 0;
+        for (final ItemStack item : inv) {
+            if (item == null || item.isEmpty()) continue;
+            items.add(item);
+            if (!AlgoUtils.isSimilar(item, comparer)) continue;
+            amount += item.getAmount();
         }
-        return true;
+        return amount;
     }
 
     private void addButtons(StaticPane buttonsPane, int curr) {
