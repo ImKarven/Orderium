@@ -30,29 +30,29 @@ public class OrderUtils {
                 continue;
             }
 
-            if (AlgoUtils.isSimilar(item, order.item())) {
-                if (currAmount + item.getAmount() <= maxDeliverAmount) {
-                    currAmount += item.getAmount();
-                    continue;
-                }
-
-                // Split the item when it exceeds the max the player can deliver
-                ItemStack toGive = item.clone();
-                toGive.setAmount(item.getAmount() - (maxDeliverAmount - currAmount));
-                PlayerUtils.give(p, toGive);
-                currAmount = maxDeliverAmount;
-                done = true;
+            if (!AlgoUtils.isSimilar(item, order.item())) {
+                PlayerUtils.give(p, item);
                 continue;
             }
-            PlayerUtils.give(p, item);
+
+            if (currAmount + item.getAmount() <= maxDeliverAmount) {
+                currAmount += item.getAmount();
+                continue;
+            }
+
+            // Split the item when it exceeds the max the player can deliver
+            ItemStack toGive = item.clone();
+            toGive.setAmount(item.getAmount() - (maxDeliverAmount - currAmount));
+            PlayerUtils.give(p, toGive);
+            currAmount = maxDeliverAmount;
+            done = true;
         }
         order.deliver(p, currAmount);
     }
 
     public static Response collect(Order order, String rawAmount) {
         final Player p = Bukkit.getPlayer(order.owner());
-        if (p == null || !p.isOnline()) return Response.INVALID;
-        if (rawAmount == null) return Response.INVALID;
+        if (p == null || !p.isOnline() || rawAmount == null) return Response.INVALID;
         final double dAmount = ConvertUtils.formatNumber(rawAmount);
         final int amount = (int) dAmount;
         if (dAmount == -1 || dAmount != amount) {

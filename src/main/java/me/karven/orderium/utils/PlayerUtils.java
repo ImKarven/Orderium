@@ -28,7 +28,7 @@ public class PlayerUtils {
     }
 
     public static void give(Player p, ItemStack item) {
-        p.getScheduler().run(plugin, t -> p.give(Collections.singleton(item), true), null);
+        PlayerUtils.give(p, Collections.singleton(item));
     }
 
     public static void give(Player p, ItemStack item, int amount) {

@@ -211,7 +211,13 @@ public class ConfigManager {
                 "minecraft:max_stack_size",
 //                "minecraft:custom_data", // Custom data doesn't exist in the registry for some reason?
                 "minecraft:custom_model_data",
-                "minecraft:ominous_bottle_amplifier"
+                "minecraft:ominous_bottle_amplifier",
+                "minecraft:damage",
+                "minecraft:custom_name",
+                "minecraft:item_model",
+                "minecraft:bundle_contents",
+                "minecraft:damage_type",
+                "minecraft:consumable"
         ), "This define how should two items to be similar.\n" +
                 "If all of the following data component types are equal on both items beside their item types, they are similar.\n" +
                 "This similarity check happens when a player deliver an order, it accepts items in the delivery inventory that are similar to the one in the order\n" +

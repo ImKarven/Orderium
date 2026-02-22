@@ -99,7 +99,6 @@ public class AlgoUtils {
         return false;
     }
 
-
     public static boolean isSimilar(final ItemStack a, final ItemStack b) {
         if (!a.getType().equals(b.getType())) return false;
         for (final DataComponentType.Valued<?> component : cache.getSimilarityCheck()) {
