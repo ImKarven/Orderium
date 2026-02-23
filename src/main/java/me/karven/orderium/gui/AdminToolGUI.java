@@ -65,7 +65,7 @@ public class AdminToolGUI {
             meta.displayName(Component.text("Next"));
             meta.lore(List.of(
                     Component.empty(),
-                    Component.text("Click to go to the next page")
+                    Component.text("Click to go to the next page", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)
             ));
         });
 
@@ -73,7 +73,7 @@ public class AdminToolGUI {
             meta.displayName(Component.text("Back"));
             meta.lore(List.of(
                     Component.empty(),
-                    Component.text("Click to go to the previous page")
+                    Component.text("Click to go to the previous page", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)
             ));
         });
 

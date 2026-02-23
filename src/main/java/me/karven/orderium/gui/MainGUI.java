@@ -22,7 +22,6 @@ import java.util.List;
 
 import static me.karven.orderium.utils.ConvertUtils.ceil_div;
 
-@SuppressWarnings("UnstableApiUsage")
 public class MainGUI {
     private final List<ChestGui> pages = new ArrayList<>();
     private final Collection<Order> orders;
@@ -140,15 +139,15 @@ public class MainGUI {
 
     private void addButtons(StaticPane buttonsPane, int curr) {
         if (curr > 0)
-            buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersBackButton(), e -> {
-                PlayerUtils.clickBack(e, pages.get(curr - 1));
-            }
+            buttonsPane.addItem(ConvertUtils.parseButton(
+                    cache.getOrdersBackButton(),
+                    e -> PlayerUtils.clickBack(e, pages.get(curr - 1))
         ), cache.getOrdersBackButton().getSlot(), 0);
 
         if (curr + 1 < amount)
-            buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersNextButton(), e -> {
-                PlayerUtils.clickNext(e, pages.get(curr + 1));
-            }
+            buttonsPane.addItem(ConvertUtils.parseButton(
+                    cache.getOrdersNextButton(),
+                    e -> PlayerUtils.clickNext(e, pages.get(curr + 1))
         ), cache.getOrdersNextButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseButton(cache.getRefreshButton(), e -> {
@@ -169,17 +168,19 @@ public class MainGUI {
 
         }), cache.getOrdersSortButton().getSlot(), 0);
 
-        buttonsPane.addItem(ConvertUtils.parseButton(cache.getOrdersSearchButton(), e -> {
-            SignGUI.newSession(
+        buttonsPane.addItem(ConvertUtils.parseButton(
+                cache.getOrdersSearchButton(),
+                e -> SignGUI.newSession(
                     player,
                     (s) -> player.getScheduler().run(plugin, t -> new MainGUI(player, sortIdx, s), null),
                     cache.getLines(), cache.getSignBlock(), cache.getSearchLine()
-            );
-        }), cache.getOrdersSearchButton().getSlot(), 0);
+                )
+        ), cache.getOrdersSearchButton().getSlot(), 0);
 
-        buttonsPane.addItem(ConvertUtils.parseButton(cache.getYoButton(), e -> {
-            YourOrderGUI.open(player);
-        }), cache.getYoButton().getSlot(), 0);
+        buttonsPane.addItem(ConvertUtils.parseButton(
+                cache.getYoButton(),
+                e -> YourOrderGUI.open(player)
+        ), cache.getYoButton().getSlot(), 0);
     }
 
 

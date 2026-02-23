@@ -8,7 +8,6 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.listener.DialogListener;
-import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
@@ -49,9 +48,10 @@ public class DeliveryConfirmDialog {
                     .type(DialogType.confirmation(
                             ActionButton.builder(mm.deserialize(cache.getConfirmDeliveryConfirmLabel()))
                                     .tooltip(mm.deserialize(cache.getConfirmDeliveryConfirmHover()))
-                                    .action(DialogAction.customClick((view, player) -> {
-                                        OrderUtils.deliver(order, p, items);
-                                    }, ClickCallback.Options.builder().build()))
+                                    .action(DialogAction.customClick(
+                                            (view, player) -> OrderUtils.deliver(order, p, items),
+                                            ClickCallback.Options.builder().build()
+                                    ))
                                     .build(),
                             ActionButton.builder(mm.deserialize(cache.getConfirmDeliveryCancelLabel()))
                                     .tooltip(mm.deserialize(cache.getConfirmDeliveryCancelHover()))

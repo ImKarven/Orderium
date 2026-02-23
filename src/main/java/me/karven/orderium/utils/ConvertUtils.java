@@ -5,7 +5,6 @@ import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
 import me.karven.orderium.data.ConfigManager;
-import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
@@ -36,7 +35,6 @@ import java.util.logging.Level;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ConvertUtils {
-    private static DBManager dbManager;
     private static Orderium plugin;
     private static MiniMessage mm;
     private static ConfigManager cache;
@@ -45,7 +43,6 @@ public class ConvertUtils {
 
     public static void init(Orderium pl) {
         plugin = pl;
-        dbManager = pl.getDbManager();
         mm = pl.mm;
         cache = pl.getConfigs();
 

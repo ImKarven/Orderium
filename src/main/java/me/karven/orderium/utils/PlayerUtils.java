@@ -36,9 +36,7 @@ public class PlayerUtils {
             return;
         }
 
-        p.getScheduler().run(plugin, t -> {
-            p.give(items, true);
-        }, null);
+        p.getScheduler().run(plugin, t -> p.give(items, true), null);
 
     }
 

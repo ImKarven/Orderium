@@ -1,13 +1,7 @@
 package me.karven.orderium.listener;
 
 import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
-import io.papermc.paper.dialog.DialogResponseView;
-import io.papermc.paper.event.player.PlayerCustomClickEvent;
 import lombok.val;
-import me.karven.orderium.load.Orderium;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.nbt.api.BinaryTagHolder;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -15,10 +9,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
 public class DisconnectListener implements Listener {

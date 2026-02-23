@@ -1,6 +1,5 @@
 package me.karven.orderium.utils;
 
-import lombok.Getter;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
@@ -11,7 +10,6 @@ import org.bukkit.entity.Player;
 
 public class EconUtils {
     private static Economy eco;
-    @Getter
     private static final MoneyTransaction currentTransaction = new MoneyTransaction();
     private static DBManager db;
     private static ConfigManager cache;
@@ -49,4 +47,6 @@ public class EconUtils {
         currentTransaction.after = eco.getBalance(p);
         db.logTransaction();
     }
+
+    public static MoneyTransaction moneyTransaction() { return currentTransaction; }
 }

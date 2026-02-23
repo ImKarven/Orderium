@@ -41,6 +41,7 @@ public class SlotInfo implements Cloneable {
         slot = section.get("slot") == null ? -1 : section.getInteger("slot");
         lore = section.getStringList("lore");
         displayName = section.getString("display-name");
+
         type = ConvertUtils.getItemType(section.getString("type", "minecraft:stone"));
     }
 

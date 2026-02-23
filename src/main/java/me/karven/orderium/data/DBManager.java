@@ -46,7 +46,6 @@ public class DBManager {
     private final HikariConfig modifiedItemsConfig = new HikariConfig();
     private final HikariDataSource modifiedItemDataSource;
 
-    private final boolean isExecuting = false;
     @Getter
     private final List<Order> orders = new ArrayList<>();
     private final Set<Order> mostMoneyPerItem = new TreeSet<>(
@@ -70,7 +69,7 @@ public class DBManager {
     public DBManager(Orderium plugin) {
         this.plugin = plugin;
         this.configs = plugin.getConfigs();
-        moneyTransaction = EconUtils.getCurrentTransaction();
+        moneyTransaction = EconUtils.moneyTransaction();
         dbFilePath = plugin.getDataFolder() + File.separator + "data.db";
         dbConfig.setJdbcUrl("jdbc:sqlite:" + dbFilePath);
         dataSource = new HikariDataSource(dbConfig);
@@ -212,27 +211,6 @@ public class DBManager {
         return ret;
     }
 
-    public void collectOrder(int orderId, int amount) {
-        int idx = getIdx(orderId);
-        if (idx == -1) return;
-        final Order order = orders.get(idx);
-        collectOrder(order, amount);
-    }
-    public void collectOrder(Order order, int amount) {
-        final int newVal = order.inStorage() - amount;
-        order.setInStorage(newVal);
-        exec("UPDATE " + ORDER_TABLE + " SET in_storage = ? WHERE id = ?", newVal, order.id());
-
-        if (order.inStorage() == 0 && order.delivered() == order.amount()) deleteOrder(order);
-    }
-
-    public void deliverOrder(int orderId, int amount) {
-        int idx = getIdx(orderId);
-        if (idx == -1) return;
-        final Order order = orders.get(idx);
-        deliverOrder(order, amount);
-    }
-
     public void deliverOrder(Order order, int amount) {
         mostDelivered.remove(order);
         mostPaid.remove(order);
@@ -244,13 +222,6 @@ public class DBManager {
         mostPaid.add(order);
     }
 
-    public void deleteOrder(int orderId) {
-        int idx = getIdx(orderId);
-        if (idx == -1) return;
-        final Order order = orders.get(idx);
-        deleteOrder(order);
-    }
-
     public void deleteOrder(Order order) {
         mostMoneyPerItem.remove(order);
         recentlyListed.remove(order);
@@ -258,24 +229,6 @@ public class DBManager {
         mostPaid.remove(order);
         orders.remove(order);
         exec("DELETE FROM " + ORDER_TABLE + " WHERE id = ?", order.id());
-    }
-
-    private int getIdx(int orderId) {
-        // Use binary-search algorithm to find the index since the IDs are sorted
-        int l = 0, r = Math.min(orderId, orders.size()) - 1;
-        int ans = -1;
-        while (l <= r) {
-            final int m = (l + r) / 2;
-            if (orders.get(m).id() >= orderId) {
-                r = m - 1;
-                ans = m;
-            } else l = m + 1;
-        }
-        return ans;
-    }
-
-    public List<Order> getActiveOrders() {
-        return orders.stream().filter(Order::isActive).toList();
     }
 
     public Set<Order> getSortedOrders(SortTypes sortType) {
@@ -327,7 +280,7 @@ public class DBManager {
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
             try (
                     final Connection connection = dataSource.getConnection();
-                    final PreparedStatement preparedStatement = connection.prepareStatement(stmt);
+                    final PreparedStatement preparedStatement = connection.prepareStatement(stmt)
             ) {
                 processStatement(preparedStatement, params);
                 preparedStatement.executeUpdate();

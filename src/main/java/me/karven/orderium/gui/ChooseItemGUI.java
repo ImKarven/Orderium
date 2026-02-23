@@ -26,16 +26,12 @@ public class ChooseItemGUI {
     private static DBManager db;
     private static MiniMessage mm;
     private static ConfigManager cache;
-    private static int pagesAmount;
 
     public static void init(Orderium plugin) {
         ChooseItemGUI.plugin = plugin;
         db = plugin.getDbManager();
         mm = plugin.mm;
         cache = plugin.getConfigs();
-        final int itemsAmount = NMSUtils.getItems(SortTypes.A_Z).size();
-
-        pagesAmount = ConvertUtils.ceil_div(itemsAmount, 45);
 
         AZ.clear();
         ZA.clear();
@@ -65,13 +61,15 @@ public class ChooseItemGUI {
     private static void addButtons(StaticPane buttons, List<ChestGui> pages, SortTypes sortType, final int idx, final int pagesAmount) {
         final List<SortTypes> sortOrder = cache.getChooseSortsOrder();
         final int sortIdx = sortOrder.indexOf(sortType);
-        if (idx > 0) buttons.addItem(ConvertUtils.parseButton(cache.getChooseBackButton(), e -> {
-            PlayerUtils.clickBack(e, pages.get(idx - 1));
-        }), cache.getChooseBackButton().getSlot(), 0);
+        if (idx > 0) buttons.addItem(ConvertUtils.parseButton(
+                cache.getChooseBackButton(),
+                e -> PlayerUtils.clickBack(e, pages.get(idx - 1))
+        ), cache.getChooseBackButton().getSlot(), 0);
 
-        if (idx + 1 < pagesAmount) buttons.addItem(ConvertUtils.parseButton(cache.getChooseNextButton(), e -> {
-            PlayerUtils.clickNext(e, pages.get(idx + 1));
-        }), cache.getChooseNextButton().getSlot(), 0);
+        if (idx + 1 < pagesAmount) buttons.addItem(ConvertUtils.parseButton(
+                cache.getChooseNextButton(),
+                e -> PlayerUtils.clickNext(e, pages.get(idx + 1))
+        ), cache.getChooseNextButton().getSlot(), 0);
 
         buttons.addItem(ConvertUtils.parseSortButton(cache.getChooseSortButton(), sortType, e -> {
             if (!(e.getWhoClicked() instanceof Player p)) return;

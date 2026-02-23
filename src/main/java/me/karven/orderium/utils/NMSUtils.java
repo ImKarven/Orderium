@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SortTypes;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.key.KeyPattern;
 import org.bukkit.Registry;
 import org.bukkit.block.BlockType;
 import org.bukkit.inventory.ItemStack;
@@ -63,7 +64,7 @@ public class NMSUtils {
 
         return AZ;
     }
-    public static BlockType getBlockType(String identifier) {
+    public static BlockType getBlockType(@KeyPattern String identifier) {
         return blockRegistry.get(Key.key(identifier));
     }
 }
