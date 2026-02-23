@@ -13,6 +13,7 @@ import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.*;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -110,7 +111,7 @@ public final class Orderium extends JavaPlugin {
 
         if (configs.isBStats()) {
             final int pluginId = 27569;
-            final Metrics metrics = new Metrics(this, pluginId);
+            val metrics = new Metrics(this, pluginId);
         }
 
         if (configs.isCheckForUpdates()) {
