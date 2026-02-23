@@ -114,6 +114,7 @@ public class AdminToolGUI {
 
         for (ItemStack item : items) {
             if (cnt == 45) {
+                cnt = 0;
                 i++;
                 page.addPane(itemsPane);
                 page.addPane(buttonsPane);
@@ -165,6 +166,7 @@ public class AdminToolGUI {
 
         for (Pair<ItemStack, String> item : items) {
             if (cnt == 45) {
+                cnt = 0;
                 i++;
                 page.addPane(itemsPane);
                 page.addPane(buttonsPane);
