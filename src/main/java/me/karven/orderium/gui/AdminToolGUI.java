@@ -40,11 +40,20 @@ public class AdminToolGUI {
     // Using shared page amount but it's fine I guess
     private static int pageAmount;
 
+    private static final Consumer<InventoryClickEvent> viewWiki = e -> {
+        e.getWhoClicked().closeInventory();
+        e.getWhoClicked().sendRichMessage("<gray>>> <blue><u><click:open_url:'https://github.com/ImKarven/Orderium/wiki/Blacklist-&-Custom-items'>Click here</click></u> <white>to view the wiki");
+    };
+
     private static final ItemStack next = ItemStack.of(Material.ARROW);
     private static final ItemStack previous = ItemStack.of(Material.ARROW);
 
     private static final ItemStack readmeBlacklist = ItemStack.of(Material.KNOWLEDGE_BOOK);
     private static final ItemStack readmeCustomItems = ItemStack.of(Material.KNOWLEDGE_BOOK);
+
+    private static final GuiItem itemRmBlacklist = new GuiItem(readmeBlacklist, viewWiki);
+    private static final GuiItem itemRmCustomItems = new GuiItem(readmeCustomItems, viewWiki);
+
     private static Consumer<InventoryClickEvent> addCustomItem(int i) {
         return e -> {
             ItemStack clicked = e.getCurrentItem();
@@ -62,39 +71,47 @@ public class AdminToolGUI {
         db = plugin.getDbManager();
 
         next.editMeta(meta -> {
-            meta.displayName(Component.text("Next"));
+            meta.displayName(nameDeco("Next"));
             meta.lore(List.of(
                     Component.empty(),
-                    Component.text("Click to go to the next page", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)
+                    loreDeco("Click to go to the next page")
             ));
         });
 
         previous.editMeta(meta -> {
-            meta.displayName(Component.text("Back"));
+            meta.displayName(nameDeco("Back"));
             meta.lore(List.of(
                     Component.empty(),
-                    Component.text("Click to go to the previous page", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)
+                    loreDeco("Click to go to the previous page")
             ));
         });
 
         readmeBlacklist.editMeta(meta -> {
-            meta.displayName(Component.text("Blacklist Items", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));
+            meta.displayName(nameDeco("Blacklist Items"));
             meta.lore(List.of(
                     Component.empty(),
-                    Component.text("View the wiki for usage", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)
+                    loreDeco("View the wiki for usage")
             ));
         });
 
         readmeCustomItems.editMeta(meta -> {
-            meta.displayName(Component.text("Custom Items", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));
+            meta.displayName(nameDeco("Custom Items"));
             meta.lore(List.of(
                     Component.empty(),
-                    Component.text("View the wiki for usage", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false)
+                    loreDeco("View the wiki for usage")
             ));
         });
 
         createBlacklist();
         createCustomItems();
+    }
+
+    private static Component nameDeco(String name) {
+        return Component.text(name, NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false);
+    }
+
+    private static Component loreDeco(String lore) {
+        return Component.text(lore, NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false);
     }
 
     public static void createBlacklist() {
@@ -276,13 +293,13 @@ public class AdminToolGUI {
         if (i > 0) pane.addItem(new GuiItem(previous, e -> blacklist.get(Math.min(i - 1, blacklist.size() - 1)).show(e.getWhoClicked())), 0, 0);
         if (i < pageAmount - 1) pane.addItem(new GuiItem(next, e -> blacklist.get(Math.min(i + 1, blacklist.size() - 1)).show(e.getWhoClicked())), 8, 0);
 
-        pane.addItem(new GuiItem(readmeBlacklist), 4, 0);
+        pane.addItem(itemRmBlacklist, 4, 0);
     }
 
     private static void addCustomItemsButtons(int i, final StaticPane pane) {
         if (i > 0) pane.addItem(new GuiItem(previous, e -> customItems.get(Math.min(i - 1, customItems.size() - 1)).show(e.getWhoClicked())), 0, 0);
         if (i < pageAmount - 1) pane.addItem(new GuiItem(next, e -> customItems.get(Math.min(i + 1, customItems.size() - 1)).show(e.getWhoClicked())), 8, 0);
 
-        pane.addItem(new GuiItem(readmeCustomItems), 4, 0);
+        pane.addItem(itemRmCustomItems, 4, 0);
     }
 }
