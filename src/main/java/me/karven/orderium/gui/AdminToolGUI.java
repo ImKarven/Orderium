@@ -48,15 +48,7 @@ public class AdminToolGUI {
     private static Consumer<InventoryClickEvent> addCustomItem(int i) {
         return e -> {
             ItemStack clicked = e.getCurrentItem();
-            if (clicked == null) {
-                e.getWhoClicked().sendRichMessage("<red>Null item");
-                return;
-            }
-
-            if (clicked.isEmpty()) {
-                e.getWhoClicked().sendRichMessage("<red>Empty item");
-                return;
-            }
+            if (clicked == null || clicked.isEmpty()) return;
 
             db.addCustomItem(clicked);
             createCustomItems();

@@ -7,6 +7,8 @@ import lombok.val;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.gui.*;
+import me.karven.orderium.listener.DialogListener;
+import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.*;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -22,6 +24,10 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public final class Orderium extends JavaPlugin {
     private static Orderium instance;
+    public static boolean isFolia;
+    public static final DialogListener DIALOG_LISTENER = new DialogListener();
+    public static final DisconnectListener DISCONNECT_LISTENER = new DisconnectListener();
+
     private ConfigManager configs;
     private DBManager dbManager;
     private Economy econ;
@@ -64,6 +70,7 @@ public final class Orderium extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        isFolia = isFolia();
         if (!setupEconomy()) {
             getLogger().severe("Orderium disabled due to no Vault dependency found!");
             getServer().getPluginManager().disablePlugin(this);
@@ -114,6 +121,9 @@ public final class Orderium extends JavaPlugin {
             });
         }
 
+        Bukkit.getPluginManager().registerEvents(DISCONNECT_LISTENER, this);
+        Bukkit.getPluginManager().registerEvents(DIALOG_LISTENER, this);
+
         Bukkit.getAsyncScheduler().runAtFixedRate(this, t -> {
 
             for (Player p : Bukkit.getOnlinePlayers()) {
@@ -134,5 +144,13 @@ public final class Orderium extends JavaPlugin {
         econ = rsp.getProvider();
 
         return true;
+    }
+    private static boolean isFolia() {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 }

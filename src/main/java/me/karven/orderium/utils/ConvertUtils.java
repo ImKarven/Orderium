@@ -12,6 +12,7 @@ import me.karven.orderium.obj.Pair;
 import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.key.KeyPattern;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -50,7 +51,7 @@ public class ConvertUtils {
 
     }
 
-    public static ItemType getItemType(final String identifier) {
+    public static ItemType getItemType(@KeyPattern final String identifier) {
         @Subst("ignored")
         final ItemType itemType = itemRegistry.get(TypedKey.create(RegistryKey.ITEM, Key.key(identifier)));
         if (itemType == null) return ItemType.STONE;
@@ -58,7 +59,7 @@ public class ConvertUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> DataComponentType.Valued<T> getDataComponentType(final String identifier) {
+    public static <T> DataComponentType.Valued<T> getDataComponentType(@KeyPattern final String identifier) {
         final DataComponentType component = dataComponentTypeRegistry.get(TypedKey.create(RegistryKey.DATA_COMPONENT_TYPE, Key.key(identifier)));
 
         if (component instanceof DataComponentType.Valued) {

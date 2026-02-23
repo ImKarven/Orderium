@@ -23,15 +23,30 @@ public class PlayerUtils {
         PlayerUtils.cache = plugin.getConfigs();
     }
 
-    public static void give(Player p, Collection<ItemStack> items) {
-        p.getScheduler().run(plugin, t -> p.give(items, true), null);
+    /**
+     *
+     * @param p Player to give item to
+     * @param items the items
+     * @param safe whether to scheduler this to the player's scheduler or not
+     */
+    public static void give(Player p, Collection<ItemStack> items, boolean safe) {
+        if (!Orderium.isFolia || !safe) {
+            p.give(items, true);
+            plugin.getLogger().info("gave player " + p.getName());
+            return;
+        }
+
+        p.getScheduler().run(plugin, t -> {
+            p.give(items, true);
+        }, null);
+
     }
 
-    public static void give(Player p, ItemStack item) {
-        PlayerUtils.give(p, Collections.singleton(item));
+    public static void give(Player p, ItemStack item, boolean safe) {
+        PlayerUtils.give(p, Collections.singleton(item), safe);
     }
 
-    public static void give(Player p, ItemStack item, int amount) {
+    public static void give(Player p, ItemStack item, int amount, boolean safe) {
         final int maxStackSize = item.getMaxStackSize();
 
         final ItemStack copy = item.clone();
@@ -47,7 +62,7 @@ public class PlayerUtils {
             copy.setAmount(rem);
             items.add(copy);
         }
-        PlayerUtils.give(p, items);
+        PlayerUtils.give(p, items, safe);
     }
 
     public static void playSound(Player p, Sound s) {

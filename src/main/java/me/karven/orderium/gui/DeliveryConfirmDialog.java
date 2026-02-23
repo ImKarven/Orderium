@@ -7,11 +7,14 @@ import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.data.ConfigManager;
+import me.karven.orderium.listener.DialogListener;
+import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.OrderUtils;
 import me.karven.orderium.utils.PlayerUtils;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -52,12 +55,11 @@ public class DeliveryConfirmDialog {
                                     .build(),
                             ActionButton.builder(mm.deserialize(cache.getConfirmDeliveryCancelLabel()))
                                     .tooltip(mm.deserialize(cache.getConfirmDeliveryCancelHover()))
-                                    .action(DialogAction.customClick(
-                                            (view, player) -> PlayerUtils.give(p, items),
-                                            ClickCallback.Options.builder().build()))
+                                    .action(DialogAction.customClick(Key.key("orderium:confirm_delivery/cancel"), null))
                                     .build()
                     ));
         });
+        DialogListener.addItems(p, items);
 
         PlayerUtils.openDialog(p, dialog);
     }

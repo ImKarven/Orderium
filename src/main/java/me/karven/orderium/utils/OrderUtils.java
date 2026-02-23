@@ -20,18 +20,19 @@ public class OrderUtils {
         cache = plugin.getConfigs();
     }
 
+    /// Must be called in the player's scheduler
     public static void deliver(Order order, Player p, Collection<ItemStack> items) {
         final int maxDeliverAmount = order.amount() - order.delivered();
         int currAmount = 0;
         boolean done = false;
         for (ItemStack item : items) {
             if (done) {
-                PlayerUtils.give(p, item);
+                PlayerUtils.give(p, item, false);
                 continue;
             }
 
             if (!AlgoUtils.isSimilar(item, order.item())) {
-                PlayerUtils.give(p, item);
+                PlayerUtils.give(p, item, false);
                 continue;
             }
 
@@ -43,7 +44,7 @@ public class OrderUtils {
             // Split the item when it exceeds the max the player can deliver
             ItemStack toGive = item.clone();
             toGive.setAmount(item.getAmount() - (maxDeliverAmount - currAmount));
-            PlayerUtils.give(p, toGive);
+            PlayerUtils.give(p, toGive, false);
             currAmount = maxDeliverAmount;
             done = true;
         }
@@ -62,7 +63,7 @@ public class OrderUtils {
         return collect(order, amount);
     }
 
-    /// Must be called in an entity scheduler
+    /// Must be called in the player's scheduler
     public static Response collect(Order order, int amount) {
         final Player p = Bukkit.getPlayer(order.owner());
         if (p == null || !p.isOnline()) return Response.INVALID;
@@ -85,7 +86,7 @@ public class OrderUtils {
         PDCUtils.setCollected(p, collectedInMinute + amount);
 
         order.setInStorage(order.inStorage() - amount);
-        PlayerUtils.give(p, order.item().clone(), amount);
+        PlayerUtils.give(p, order.item().clone(), amount, false);
         return Response.SUCCESS;
     }
 

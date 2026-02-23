@@ -41,16 +41,6 @@ public class MainGUI {
         mm = plugin.mm;
     }
 
-    public static void cancelDelivery(final ChestGui gui, final Player p) {
-
-        final Collection<ItemStack> items = new ArrayList<>();
-        for (final ItemStack item : gui.getInventory()) {
-            if (item == null) continue;
-            items.add(item);
-        }
-        PlayerUtils.give(p, items);
-    }
-
     public MainGUI(Player p, int sortIdx) {
         this.search = "";
         this.sortIdx = sortIdx;
@@ -127,7 +117,7 @@ public class MainGUI {
             amount += scanInv(inv, items, comparer);
 
             if (amount == 0) {
-                PlayerUtils.give(p, items);
+                PlayerUtils.give(p, items, false);
                 return;
             }
 
