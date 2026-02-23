@@ -4,23 +4,22 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
-import com.github.retrooper.packetevents.protocol.nbt.NBTCompound;
-import com.github.retrooper.packetevents.protocol.nbt.NBTList;
-import com.github.retrooper.packetevents.protocol.nbt.NBTString;
-import com.github.retrooper.packetevents.protocol.nbt.NBTType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
-import com.github.retrooper.packetevents.protocol.world.blockentity.BlockEntityTypes;
-import com.github.retrooper.packetevents.protocol.world.states.WrappedBlockState;
 import com.github.retrooper.packetevents.util.Vector3i;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientUpdateSign;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBlockChange;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBlockEntityData;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerOpenSignEditor;
-import io.github.retrooper.packetevents.util.SpigotConversionUtil;
+import lombok.val;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SignInfo;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.block.BlockType;
+import org.bukkit.block.Sign;
+import org.bukkit.block.TileState;
+import org.bukkit.block.sign.Side;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 
@@ -30,8 +29,8 @@ import java.util.function.Consumer;
 
 public class SignGUI implements PacketListener {
     private static final HashMap<Player, SignInfo> sessionsList = new HashMap<>();
-    private static final HashMap<Player, WrapperPlayServerBlockEntityData> dataChanges = new HashMap<>();
-    private final Orderium plugin;
+    private static MiniMessage mm;
+    private static Orderium plugin;
 
     public static void newSession(Player p, Consumer<String> action, List<String> lines, BlockType blockType, int line) {
         if (blockType == null) {
@@ -46,53 +45,53 @@ public class SignGUI implements PacketListener {
             y -= 4;
         } else y += 5;
 
+        // PAPER PACKET SENDING IMPLEMENTATION
+        Sign signState = (Sign) blockType.createBlockData().createBlockState();
+        val frontSide = signState.getSide(Side.FRONT);
+        for (int i = 0; i < 4; i++) frontSide.line(i, mm.deserialize(lines.get(i)));
+        val loc = new Location(p.getWorld(), x, y, z);
+        p.sendBlockChange(loc, signState.getBlockData());
+        p.sendBlockUpdate(loc, signState);
+        // END
+
         final Vector3i pos = new Vector3i(x, y, z);
-        WrappedBlockState block = SpigotConversionUtil.fromBukkitBlockData(blockType.createBlockData());
-        final WrapperPlayServerBlockChange blockUpdatePacket = new WrapperPlayServerBlockChange(pos, block);
-        final List<NBTString> nbtLines = lines.stream().map(NBTString::new).toList();
-
-        final NBTCompound nbt = new NBTCompound();
-        final NBTCompound frontText = new NBTCompound();
-        frontText.setTag("messages", new NBTList<>(NBTType.STRING, nbtLines));
-        nbt.setTag("front_text", frontText);
-
-        final WrapperPlayServerBlockEntityData changeTextPacket = new WrapperPlayServerBlockEntityData(pos, BlockEntityTypes.SIGN, nbt);
         final WrapperPlayServerOpenSignEditor openSignPacket = new WrapperPlayServerOpenSignEditor(pos, true);
 
-        send(p, blockUpdatePacket);
-        send(p, changeTextPacket);
         send(p, openSignPacket);
+
         sessionsList.put(p, new SignInfo(action, blockType, line, pos));
     }
 
     public SignGUI(Orderium plugin) {
-        this.plugin = plugin;
+        mm = plugin.mm;
+        SignGUI.plugin = plugin;
     }
 
     @Override
     public void onPacketReceive(@NonNull PacketReceiveEvent e) {
         if (e.getPacketType() != PacketType.Play.Client.UPDATE_SIGN) return;
         final Player player = e.getPlayer();
-        if (!sessionsList.containsKey(player)) return;
-        final WrapperPlayClientUpdateSign wrapper = new WrapperPlayClientUpdateSign(e);
-        final String[] lines = wrapper.getTextLines();
         final SignInfo info = sessionsList.get(player);
-
+        if (info == null) return;
+        final WrapperPlayClientUpdateSign wrapper = new WrapperPlayClientUpdateSign(e);
         final Vector3i pos = info.pos();
-        final WrappedBlockState blockState = SpigotConversionUtil.fromBukkitBlockData(player.getWorld().getBlockData(pos.getX(), pos.getY(), pos.getZ())); // Might have to use region scheduler here for folia support
-        final WrapperPlayServerBlockChange blockChangePacket = new WrapperPlayServerBlockChange(pos, blockState);
-        final WrapperPlayServerBlockEntityData blockEntityDataPacket = dataChanges.get(player);
-
-        // Sending the packets immediately doesn't work for some reason
-        player.getScheduler().runDelayed(plugin, t -> {
-            send(player, blockChangePacket);
-            if (blockEntityDataPacket != null) send(player, blockEntityDataPacket);
-        }, null, 2);
-
-        info.action().accept(lines[info.line() - 1]);
+        if (!wrapper.getBlockPosition().equals(pos)) return;
+        final String[] lines = wrapper.getTextLines();
 
         sessionsList.remove(player);
-        dataChanges.remove(player);
+
+        val world = player.getWorld();
+        val loc = new Location(world, pos.getX(), pos.getY(), pos.getZ());
+
+        Bukkit.getRegionScheduler().run(plugin, loc, t -> {
+            player.sendBlockChange(loc, world.getBlockData(loc));
+            if (world.getBlockState(loc) instanceof TileState tile) player.sendBlockUpdate(loc, tile);
+        });
+
+        // END
+
+        info.action().accept(lines[info.line() - 1]);
+        e.setCancelled(true);
     }
 
     @Override
@@ -109,13 +108,7 @@ public class SignGUI implements PacketListener {
 
             case PacketType.Play.Server.BLOCK_ENTITY_DATA -> {
                 final Player player = e.getPlayer();
-                final SignInfo info = sessionsList.get(player);
-                if (info == null) return;
-                final WrapperPlayServerBlockEntityData wrapper = new WrapperPlayServerBlockEntityData(e);
-                if (!wrapper.getPosition().equals(info.pos())) return;
-                dataChanges.remove(player);
-                dataChanges.put(player, wrapper);
-                e.setCancelled(true);
+                if (sessionsList.containsKey(player)) e.setCancelled(true);
             }
 
             default -> {}
