@@ -3,13 +3,11 @@ package me.karven.orderium.gui;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
-import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.util.Vector3i;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientUpdateSign;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerBlockChange;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerOpenSignEditor;
+import io.papermc.paper.math.Position;
 import lombok.val;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SignInfo;
@@ -27,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
+@SuppressWarnings("UnstableApiUsage")
 public class SignGUI implements PacketListener {
     private static final HashMap<Player, SignInfo> sessionsList = new HashMap<>();
     private static MiniMessage mm;
@@ -38,6 +37,8 @@ public class SignGUI implements PacketListener {
             action.accept("");
             return;
         }
+        if (sessionsList.containsKey(p)) return;
+
         final int x = (int) Math.floor(p.getX());
         int y = (int) Math.ceil(p.getY());
         final int z = (int) Math.floor(p.getZ());
@@ -52,14 +53,10 @@ public class SignGUI implements PacketListener {
         val loc = new Location(p.getWorld(), x, y, z);
         p.sendBlockChange(loc, signState.getBlockData());
         p.sendBlockUpdate(loc, signState);
+        p.openVirtualSign(Position.block(loc), Side.FRONT);
         // END
 
-        final Vector3i pos = new Vector3i(x, y, z);
-        final WrapperPlayServerOpenSignEditor openSignPacket = new WrapperPlayServerOpenSignEditor(pos, true);
-
-        send(p, openSignPacket);
-
-        sessionsList.put(p, new SignInfo(action, blockType, line, pos));
+        sessionsList.put(p, new SignInfo(action, blockType, line, new Vector3i(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())));
     }
 
     public SignGUI(Orderium plugin) {
@@ -77,43 +74,23 @@ public class SignGUI implements PacketListener {
         final Vector3i pos = info.pos();
         if (!wrapper.getBlockPosition().equals(pos)) return;
         final String[] lines = wrapper.getTextLines();
+        info.action().accept(lines[info.line() - 1]);
 
         sessionsList.remove(player);
 
         val world = player.getWorld();
         val loc = new Location(world, pos.getX(), pos.getY(), pos.getZ());
 
+        // PAPER
         Bukkit.getRegionScheduler().run(plugin, loc, t -> {
             player.sendBlockChange(loc, world.getBlockData(loc));
             if (world.getBlockState(loc) instanceof TileState tile) player.sendBlockUpdate(loc, tile);
         });
-
         // END
 
-        info.action().accept(lines[info.line() - 1]);
         e.setCancelled(true);
     }
 
-    @Override
-    public void onPacketSend(@NonNull PacketSendEvent e) {
-        switch (e.getPacketType()) {
-            case PacketType.Play.Server.BLOCK_CHANGE -> {
-                final Player player = e.getPlayer();
-                if (!sessionsList.containsKey(player)) return;
-                final WrapperPlayServerBlockChange wrapper = new WrapperPlayServerBlockChange(e);
-                final SignInfo info = sessionsList.get(player);
-                if (!wrapper.getBlockPosition().equals(info.pos())) return;
-                e.setCancelled(true);
-            }
-
-            case PacketType.Play.Server.BLOCK_ENTITY_DATA -> {
-                final Player player = e.getPlayer();
-                if (sessionsList.containsKey(player)) e.setCancelled(true);
-            }
-
-            default -> {}
-        }
-    }
 
     private static void send(Player p, PacketWrapper<?> wrapper) {
         PacketEvents.getAPI().getPlayerManager().sendPacket(p, wrapper);
