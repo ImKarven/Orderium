@@ -5,7 +5,7 @@ plugins {
 //    id("io.papermc.paperweight.userdev") version "2.0.0-beta.19"
 }
 
-version = "1.2.0"
+version = "1.3.0.rc-1"
 
 repositories {
     mavenCentral()
@@ -55,6 +55,8 @@ tasks {
     }
 
     shadowJar {
+        archiveBaseName.set("Orderium")
+        archiveClassifier.set("")
         relocate("com.github.stefvanschie.inventoryframework", "orderium.if")
         relocate("com.zaxxer", "orderium.zaxxer")
         relocate("org.bstats", "orderium.bstats")
