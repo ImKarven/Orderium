@@ -1,5 +1,10 @@
 package me.karven.orderium.utils;
 
+import lombok.val;
+import me.karven.orderium.api.events.PlayerCancelOrderEvent;
+import me.karven.orderium.api.events.PlayerCollectItemsEvent;
+import me.karven.orderium.api.events.PlayerCreateOrderEvent;
+import me.karven.orderium.api.events.PlayerDeliverOrderEvent;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
@@ -22,7 +27,7 @@ public class OrderUtils {
 
     /// Must be called in the player's scheduler
     public static void deliver(Order order, Player p, Collection<ItemStack> items) {
-        final int maxDeliverAmount = order.amount() - order.delivered();
+        final int maxDeliverAmount = order.getAmount() - order.getDelivered();
         int currAmount = 0;
         boolean done = false;
         for (ItemStack item : items) {
@@ -31,7 +36,7 @@ public class OrderUtils {
                 continue;
             }
 
-            if (!AlgoUtils.isSimilar(item, order.item())) {
+            if (!AlgoUtils.isSimilar(item, order.getItem())) {
                 PlayerUtils.give(p, item, false);
                 continue;
             }
@@ -48,11 +53,16 @@ public class OrderUtils {
             currAmount = maxDeliverAmount;
             done = true;
         }
+        if (currAmount == 0) return;
+
+        val event = new PlayerDeliverOrderEvent(p, order, currAmount);
+        if (!event.callEvent()) return;
+
         order.deliver(p, currAmount);
     }
 
     public static Response collect(Order order, String rawAmount) {
-        final Player p = Bukkit.getPlayer(order.owner());
+        final Player p = Bukkit.getPlayer(order.getOwnerUniqueId());
         if (p == null || !p.isOnline() || rawAmount == null) return Response.INVALID;
         final double dAmount = ConvertUtils.formatNumber(rawAmount);
         final int amount = (int) dAmount;
@@ -65,7 +75,7 @@ public class OrderUtils {
 
     /// Must be called in the player's scheduler
     public static Response collect(Order order, int amount) {
-        final Player p = Bukkit.getPlayer(order.owner());
+        final Player p = Bukkit.getPlayer(order.getOwnerUniqueId());
         if (p == null || !p.isOnline()) return Response.INVALID;
         if (amount > cache.getMaxCollect() && !p.hasPermission("orderium.bypass.max-collect")) {
             p.sendRichMessage(cache.getExceedMaxCollect());
@@ -78,20 +88,31 @@ public class OrderUtils {
             return Response.FAIL;
         }
 
-        if (order.inStorage() < amount) {
+        if (order.getInStorage() < amount) {
             p.sendRichMessage(cache.getInvalidInput());
             return Response.INVALID;
         }
 
-        PDCUtils.setCollected(p, collectedInMinute + amount);
+        val event = new PlayerCollectItemsEvent(p, order, amount);
+        if (!event.callEvent()) return Response.CANCELLED;
 
-        order.setInStorage(order.inStorage() - amount);
-        PlayerUtils.give(p, order.item().clone(), amount, false);
+        PDCUtils.setCollected(p, collectedInMinute + amount);
+        order.setInStorage(order.getInStorage() - amount);
+        PlayerUtils.give(p, order.getItem().clone(), amount, false);
+
         return Response.SUCCESS;
     }
 
+    public static void cancel(Player p, Order order) {
+        val event = new PlayerCancelOrderEvent(p, order);
+        if (!event.callEvent()) return;
+
+        cancel(order);
+    }
+
+    /// Notes: This will not fire PlayerCancelOrderEvent. Use cancel(Player, Order) instead
     public static void cancel(Order order) {
-        EconUtils.addMoney(Bukkit.getOfflinePlayer(order.owner()), order.cancel());
+        EconUtils.addMoney(Bukkit.getOfflinePlayer(order.getOwnerUniqueId()), order.cancel());
     }
 
     public static Response create(Player p, ItemStack item, String rawMoneyPer, String rawAmount) {
@@ -100,6 +121,7 @@ public class OrderUtils {
         final int amount = (int) dAmount;
         final double moneyPer = ConvertUtils.formatNumber(rawMoneyPer);
         if (dAmount == -1 || moneyPer == -1 || dAmount != amount) return Response.INVALID;
+
         return create(p, item, moneyPer, amount);
     }
 
@@ -107,6 +129,10 @@ public class OrderUtils {
         if (!EconUtils.removeMoney(owner, moneyPer * amount)) {
             return Response.FAIL;
         }
+
+        val event = new PlayerCreateOrderEvent(owner, item, moneyPer, amount);
+        if (!event.callEvent()) return Response.CANCELLED;
+
         db.createOrder(owner.getUniqueId(), item, moneyPer, amount);
         return Response.SUCCESS;
     }
@@ -115,6 +141,7 @@ public class OrderUtils {
     public enum Response {
         INVALID,
         SUCCESS,
-        FAIL
+        FAIL,
+        CANCELLED
     }
 }

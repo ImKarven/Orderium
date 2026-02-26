@@ -49,16 +49,16 @@ public class DBManager {
     @Getter
     private final List<Order> orders = new ArrayList<>();
     private final Set<Order> mostMoneyPerItem = new TreeSet<>(
-            Comparator.comparingDouble(Order::moneyPer).reversed().thenComparing(Order::id)
+            Comparator.comparingDouble(Order::getMoneyPer).reversed().thenComparing(Order::getId)
     );
     private final Set<Order> recentlyListed = new TreeSet<>(
-            Comparator.comparingLong(Order::expiresAt).reversed().thenComparing(Order::id)
+            Comparator.comparingLong(Order::getExpiresAt).reversed().thenComparing(Order::getId)
     );
     private final Set<Order> mostDelivered = new TreeSet<>(
-            Comparator.comparingInt(Order::delivered).reversed().thenComparing(Order::id)
+            Comparator.comparingInt(Order::getDelivered).reversed().thenComparing(Order::getId)
     );
     private final Set<Order> mostPaid = new TreeSet<>(
-            Comparator.comparingDouble(Order::paid).reversed().thenComparing(Order::id)
+            Comparator.comparingDouble(Order::getPaid).reversed().thenComparing(Order::getId)
     );
 
     @Getter
@@ -214,10 +214,10 @@ public class DBManager {
     public void deliverOrder(Order order, int amount) {
         mostDelivered.remove(order);
         mostPaid.remove(order);
-        final int newVal = order.delivered() + amount;
+        final int newVal = order.getDelivered() + amount;
         order.setDelivered(newVal);
-        order.setInStorage(order.inStorage() + amount);
-        exec("UPDATE " + ORDER_TABLE + " SET delivered = ? WHERE id = ?", newVal, order.id());
+        order.setInStorage(order.getInStorage() + amount);
+        exec("UPDATE " + ORDER_TABLE + " SET delivered = ? WHERE id = ?", newVal, order.getId());
         mostDelivered.add(order);
         mostPaid.add(order);
     }
@@ -228,7 +228,7 @@ public class DBManager {
         mostDelivered.remove(order);
         mostPaid.remove(order);
         orders.remove(order);
-        exec("DELETE FROM " + ORDER_TABLE + " WHERE id = ?", order.id());
+        exec("DELETE FROM " + ORDER_TABLE + " WHERE id = ?", order.getId());
     }
 
     public Set<Order> getSortedOrders(SortTypes sortType) {
@@ -244,7 +244,7 @@ public class DBManager {
     public List<Order> getOrders(UUID ownerId) {
         val toDel = new ArrayList<Order>();
         val res = orders.stream().filter(order -> {
-            if (!order.owner().equals(ownerId)) return false;
+            if (!order.getOwner().equals(ownerId)) return false;
             if (order.shouldBeDeleted()) {
                 toDel.add(order);
                 return false;

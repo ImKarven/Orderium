@@ -17,7 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.UUID;
 
 @Setter
-public class Order {
+public class Order implements me.karven.orderium.api.Order {
     public final int id;
     public final UUID owner;
     public final ItemStack item;
@@ -45,17 +45,6 @@ public class Order {
         this.inStorage = inStorage;
         this.expiresAt = expiresAt;
     }
-
-    // Getters
-    public int id() { return id; }
-    public UUID owner() { return owner; }
-    public ItemStack item() { return item; }
-    public double moneyPer() { return moneyPer; }
-    public int amount() { return amount; }
-    public int delivered() { return delivered; }
-    public int inStorage() { return inStorage; }
-    public long expiresAt() { return expiresAt; }
-    public double paid() { return moneyPer * delivered; }
 
 
     public boolean isActive() { return delivered < amount && expiresAt > System.currentTimeMillis(); }
@@ -94,5 +83,47 @@ public class Order {
 
     public boolean shouldBeDeleted() {
         return !isActive() && inStorage == 0;
+    }
+
+    public double getPaid() { return moneyPer * delivered; }
+
+    @Override
+    public int getId() {
+        return id;
+    }
+
+    @Override
+    public UUID getOwnerUniqueId() {
+        return owner;
+    }
+
+    @Override
+    public ItemStack getItem() {
+        return item;
+    }
+
+    @Override
+    public double getMoneyPer() {
+        return moneyPer;
+    }
+
+    @Override
+    public int getAmount() {
+        return amount;
+    }
+
+    @Override
+    public int getDelivered() {
+        return delivered;
+    }
+
+    @Override
+    public int getInStorage() {
+        return inStorage;
+    }
+
+    @Override
+    public long getExpiresAt() {
+        return expiresAt;
     }
 }

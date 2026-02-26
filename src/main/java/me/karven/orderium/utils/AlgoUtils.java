@@ -45,7 +45,7 @@ public class AlgoUtils {
         final String q = fixQuery(query);
         final List<Order> result = new ArrayList<>();
         for (Order order : orders) {
-            if (search(order.item(), q)) result.add(order);
+            if (search(order.getItem(), q)) result.add(order);
         }
         return result;
     }

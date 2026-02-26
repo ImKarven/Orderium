@@ -42,7 +42,7 @@ public class DeliveryConfirmDialog {
                             .body(List.of(
                                     DialogBody.plainMessage(mm.deserialize(cache.getConfirmDeliveryBody())),
                                     DialogBody.item(ConvertUtils.parseOrder(order, cache.getOrderLore())).description(DialogBody.plainMessage(Component.text(amountText), amountWidth)).build(),
-                                    DialogBody.plainMessage(mm.deserialize(cache.getConfirmDeliveryTransactionMessage(), Placeholder.unparsed("money", ConvertUtils.formatNumber(amount * order.moneyPer()))))
+                                    DialogBody.plainMessage(mm.deserialize(cache.getConfirmDeliveryTransactionMessage(), Placeholder.unparsed("money", ConvertUtils.formatNumber(amount * order.getMoneyPer()))))
                             ))
                             .build())
                     .type(DialogType.confirmation(

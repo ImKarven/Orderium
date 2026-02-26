@@ -144,9 +144,9 @@ public class ConvertUtils {
     }
 
     public static ItemStack parseOrder(Order order, List<String> rawLore) {
-        final ItemStack item = order.item().clone();
-        final String playerName = Bukkit.getOfflinePlayer(order.owner()).getName();
-        final String pName = playerName == null ? String.valueOf(order.owner()) : playerName;
+        final ItemStack item = order.getItem().clone();
+        final String playerName = Bukkit.getOfflinePlayer(order.getOwnerUniqueId()).getName();
+        final String pName = playerName == null ? String.valueOf(order.getOwnerUniqueId()) : playerName;
         final List<Component> lore = rawLore.stream().map(str -> delOrder(str, order, pName).decoration(TextDecoration.ITALIC, false)).toList();
         item.lore(lore);
 
@@ -155,14 +155,14 @@ public class ConvertUtils {
 
     /// Deserialize a text with orders placeholders
     public static Component delOrder(String s, Order order) {
-        final String playerName = Bukkit.getOfflinePlayer(order.owner()).getName();
-        final String pName = playerName == null ? String.valueOf(order.owner()) : playerName;
+        final String playerName = Bukkit.getOfflinePlayer(order.getOwnerUniqueId()).getName();
+        final String pName = playerName == null ? String.valueOf(order.getOwnerUniqueId()) : playerName;
         return delOrder(s, order, pName);
     }
 
     /// Deserialize a text with orders placeholders
     public static Component delOrder(String s, Order order, String pName) {
-        long millis = order.expiresAt() - System.currentTimeMillis();
+        long millis = order.getExpiresAt() - System.currentTimeMillis();
         long sec = millis / 1000;
         long min = sec / 60;
         long hour = min / 60;
@@ -172,14 +172,14 @@ public class ConvertUtils {
         sec %= 60;
         millis %= 1000;
         return mm.deserialize(s,
-                Placeholder.unparsed("money-per", formatNumber(order.moneyPer())),
-                Placeholder.unparsed("paid", formatNumber(order.moneyPer() * order.delivered())),
-                Placeholder.unparsed("total", formatNumber(order.moneyPer() * order.amount())),
-                Placeholder.unparsed("delivered", formatNumber(order.delivered())),
-                Placeholder.unparsed("amount", formatNumber(order.amount())),
-                Placeholder.unparsed("in-storage", formatNumber(order.inStorage())),
+                Placeholder.unparsed("money-per", formatNumber(order.getMoneyPer())),
+                Placeholder.unparsed("paid", formatNumber(order.getMoneyPer() * order.getDelivered())),
+                Placeholder.unparsed("total", formatNumber(order.getMoneyPer() * order.getAmount())),
+                Placeholder.unparsed("delivered", formatNumber(order.getDelivered())),
+                Placeholder.unparsed("amount", formatNumber(order.getAmount())),
+                Placeholder.unparsed("in-storage", formatNumber(order.getInStorage())),
                 Placeholder.unparsed("player", pName),
-                Placeholder.component("item", Component.translatable(order.item().translationKey())),
+                Placeholder.component("item", Component.translatable(order.getItem().translationKey())),
                 Placeholder.component("order-status", mm.deserialize(order.getStatus().getText(),
                         Placeholder.unparsed("day", String.valueOf(day)),
                         Placeholder.unparsed("hour", String.valueOf(hour)),
