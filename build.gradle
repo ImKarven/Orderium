@@ -38,7 +38,6 @@ dependencies {
     implementation("com.github.thatsmusic99:ConfigurationMaster-API:v2.0.0-rc.3")
     implementation("com.github.stefvanschie.inventoryframework:IF:0.11.6")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("me.karven.orderium.api:OrderiumAPI:1.0.0")
 }
 
 //paperweight {
