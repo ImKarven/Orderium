@@ -83,7 +83,7 @@ public class MainGUI {
                 addButtons(buttonsPane, ++curr);
             }
             orderPane.addItem(ConvertUtils.parseOrder(order, cache.getOrderLore(), e -> {
-                if (player.getUniqueId().equals(order.getOwner())) {
+                if (player.getUniqueId().equals(order.getOwnerUniqueId())) {
                     player.sendRichMessage(cache.getDeliverSelf());
                     return;
                 }

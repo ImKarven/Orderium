@@ -244,7 +244,7 @@ public class DBManager {
     public List<Order> getOrders(UUID ownerId) {
         val toDel = new ArrayList<Order>();
         val res = orders.stream().filter(order -> {
-            if (!order.getOwner().equals(ownerId)) return false;
+            if (!order.getOwnerUniqueId().equals(ownerId)) return false;
             if (order.shouldBeDeleted()) {
                 toDel.add(order);
                 return false;
