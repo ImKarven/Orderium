@@ -10,10 +10,7 @@ import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
-import org.bukkit.Material;
-import org.bukkit.MusicInstrument;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
+import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -45,13 +42,20 @@ public class AlgoUtils {
         final String q = fixQuery(query);
         final List<Order> result = new ArrayList<>();
         for (Order order : orders) {
-            if (search(order.getItem(), q)) result.add(order);
+            if (search(order, q)) result.add(order);
         }
         return result;
     }
 
     private static String fixQuery(String query) {
         return query.toLowerCase().trim().replaceAll(" ", "_");
+    }
+
+    private static boolean search(Order order, String q) {
+        String pName = Bukkit.getOfflinePlayer(order.getOwnerUniqueId()).getName();
+        if (pName == null) return search(order.getItem(), q);
+
+        return search(order.getItem(), q) || fixQuery(pName).contains(q);
     }
 
     private static boolean search(final ItemStack item, String q) {

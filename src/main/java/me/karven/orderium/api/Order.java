@@ -57,4 +57,15 @@ public interface Order {
      */
     void setInStorage(int inStorage);
 
+    /**
+     * Set the amount of items needed
+     * @param amount amount to set
+     */
+    void setAmount(int amount);
+
+    /**
+     * Set the amount of money per item
+     * @param moneyPer amount to set
+     */
+    void setMoneyPer(double moneyPer);
 }

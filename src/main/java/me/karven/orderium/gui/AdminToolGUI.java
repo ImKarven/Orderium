@@ -12,8 +12,10 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
+import lombok.val;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
+import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
 import me.karven.orderium.utils.ConvertUtils;
 import net.kyori.adventure.text.Component;
@@ -245,14 +247,14 @@ public class AdminToolGUI {
                                                         case "add" -> item.second += "," + text.trim().toLowerCase().replaceAll(" ", "_");
 
                                                         case "remove" -> {
-                                                            final String[] indices = text.trim().split(",");
+                                                            val indices = text.trim().split(",");
                                                             final List<String> toRev = new ArrayList<>();
                                                             for (String index : indices) {
                                                                 try {
                                                                     toRev.add(searches[Integer.parseInt(index)]);
                                                                 } catch (Exception ignored) {}
                                                             }
-                                                            final List<String> searchList = new ArrayList<>(List.of(searches));
+                                                            val searchList = new ArrayList<>(List.of(searches));
                                                             searchList.removeAll(toRev);
                                                             item.second = String.join(",", searchList);
                                                         }
@@ -279,6 +281,57 @@ public class AdminToolGUI {
         page.addPane(itemsPane);
         page.addPane(buttonsPane);
         customItems.add(page);
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    public static Dialog createEditOrder(Order order) {
+
+        val body = DialogBody.item(order.getItem()).description(DialogBody.plainMessage(Component.text("You're editing this order"))).build();
+
+        val option = DialogInput.singleOption("option", Component.text("Action"), List.of(
+                SingleOptionDialogInput.OptionEntry.create("change_amount", Component.text("Change Amount"), true),
+                SingleOptionDialogInput.OptionEntry.create("change_delivered", Component.text("Change Delivered"), false),
+                SingleOptionDialogInput.OptionEntry.create("change_in_storage", Component.text("Change In Storage"), false),
+                SingleOptionDialogInput.OptionEntry.create("change_money_per", Component.text("Change Money Per"), false)
+        )).build();
+
+        val value = DialogInput.text("value", Component.text("Value")).build();
+
+        val confirm = ActionButton.builder(Component.text("Confirm", NamedTextColor.GREEN))
+                .action(DialogAction.customClick((view, player) -> {
+                    if (!(player instanceof Player p)) return;
+                    val chosen = view.getText("option");
+                    val num = ConvertUtils.formatNumber(view.getText("value"));
+                    final int intNum = (int) num;
+                    if (num == -1 || chosen == null || (!chosen.equals("change_money_per") && num != intNum)) {
+                        p.sendRichMessage("<red>Invalid value");
+                        return;
+                    }
+                    switch (chosen) {
+                        case "change_amount" -> order.setAmount(intNum);
+                        case "change_delivered" -> order.setDelivered(intNum);
+                        case "change_in_storage" -> order.setInStorage(intNum);
+                        case "change_money_per" -> order.setMoneyPer(num);
+                        default -> {
+                            p.sendRichMessage("<red>Failed to set value");
+                            return;
+                        }
+                    }
+
+                    p.sendRichMessage("<green>Successful");
+                }, ClickCallback.Options.builder().build()))
+                .build();
+
+        val cancel = ActionButton.builder(Component.text("Cancel", NamedTextColor.RED)).build();
+
+        return Dialog.create(builder -> builder.empty()
+                .base(DialogBase.builder(Component.text("Edit this order"))
+                        .body(List.of(body))
+                        .inputs(List.of(option, value))
+                        .build()
+                )
+                .type(DialogType.confirmation(confirm, cancel))
+        );
     }
 
     public static void openBlacklist(Player p) {

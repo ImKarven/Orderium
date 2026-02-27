@@ -28,32 +28,20 @@ public class IFFolia extends Gui {
         }
 
         if (ifListener == null) throw new NullPointerException("Inventory Framework did not register any listeners");
-
+        // Unregister IF's registered GuiListener and replace with our own
         HandlerList.unregisterAll(ifListener);
         Bukkit.getPluginManager().registerEvents(new me.karven.orderium.folia.GuiListener(plugin, ifListener), plugin);
     }
 
-    public void show(@NotNull HumanEntity humanEntity) {
+    public void show(@NotNull HumanEntity humanEntity) { throw new UnsupportedOperationException("Use of prohibited method"); }
 
-    }
+    public @NonNull Gui copy() { throw new UnsupportedOperationException("Use of prohibited method"); }
 
-    public @NonNull Gui copy() {
-        throw new UnsupportedOperationException("Use ");
-    }
+    public void click(@NotNull InventoryClickEvent event) { throw new UnsupportedOperationException("Use of prohibited method"); }
 
-    public void click(@NotNull InventoryClickEvent event) {
+    public boolean isPlayerInventoryUsed() { throw new UnsupportedOperationException("Use of prohibited method"); }
 
-    }
+    public int getViewerCount() { throw new UnsupportedOperationException("Use of prohibited method"); }
 
-    public boolean isPlayerInventoryUsed() {
-        return false;
-    }
-
-    public int getViewerCount() {
-        return 0;
-    }
-
-    public @NotNull List<HumanEntity> getViewers() {
-        return List.of();
-    }
+    public @NotNull List<HumanEntity> getViewers() { throw new UnsupportedOperationException("Use of prohibited method"); }
 }

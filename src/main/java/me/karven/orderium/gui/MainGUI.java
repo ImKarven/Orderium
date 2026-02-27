@@ -4,6 +4,7 @@ import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHold
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
+import lombok.val;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
@@ -13,6 +14,7 @@ import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -83,11 +85,16 @@ public class MainGUI {
                 addButtons(buttonsPane, ++curr);
             }
             orderPane.addItem(ConvertUtils.parseOrder(order, cache.getOrderLore(), e -> {
+                val who = e.getWhoClicked();
+                if (e.getClick() == ClickType.RIGHT && who.hasPermission("orderium.admin.edit-orders")) {
+                    val dialog = AdminToolGUI.createEditOrder(order);
+                    who.showDialog(dialog);
+                }
                 if (player.getUniqueId().equals(order.getOwnerUniqueId())) {
                     player.sendRichMessage(cache.getDeliverSelf());
                     return;
                 }
-                setupDeliverGUI(order).show(e.getWhoClicked());
+                setupDeliverGUI(order).show(who);
             }));
             cnt++;
         }

@@ -1,5 +1,6 @@
 package me.karven.orderium.obj;
 
+import lombok.Getter;
 import lombok.Setter;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
@@ -16,13 +17,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.UUID;
 
-@Setter
+@Getter
 public class Order implements me.karven.orderium.api.Order {
     public final int id;
     public final UUID owner;
     public final ItemStack item;
-    public final double moneyPer;
-    public final int amount;
+    public double moneyPer;
+    public int amount;
     public int delivered;
     public int inStorage;
     public long expiresAt;
@@ -88,42 +89,35 @@ public class Order implements me.karven.orderium.api.Order {
     public double getPaid() { return moneyPer * delivered; }
 
     @Override
-    public int getId() {
-        return id;
-    }
-
-    @Override
     public UUID getOwnerUniqueId() {
         return owner;
     }
 
     @Override
-    public ItemStack getItem() {
-        return item;
+    public void setDelivered(int delivered) {
+        this.delivered = delivered;
+        update("delivered", delivered);
     }
 
     @Override
-    public double getMoneyPer() {
-        return moneyPer;
+    public void setInStorage(int inStorage) {
+        this.inStorage = inStorage;
+        update("in_storage", inStorage);
     }
 
     @Override
-    public int getAmount() {
-        return amount;
+    public void setAmount(int amount) {
+        this.amount = amount;
+        update("amount", amount);
     }
 
     @Override
-    public int getDelivered() {
-        return delivered;
+    public void setMoneyPer(double moneyPer) {
+        this.moneyPer = moneyPer;
+        update("money_per", moneyPer);
     }
 
-    @Override
-    public int getInStorage() {
-        return inStorage;
-    }
-
-    @Override
-    public long getExpiresAt() {
-        return expiresAt;
+    private void update(String var, Object value) {
+        db.updateOrder(this, var, value);
     }
 }

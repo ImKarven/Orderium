@@ -27,12 +27,11 @@ public class PlayerUtils {
      *
      * @param p Player to give item to
      * @param items the items
-     * @param safe whether to scheduler this to the player's scheduler or not
+     * @param safe whether to schedule this with the player's scheduler or not
      */
     public static void give(Player p, Collection<ItemStack> items, boolean safe) {
         if (!Orderium.isFolia || !safe) {
             p.give(items, true);
-            plugin.getLogger().info("gave player " + p.getName());
             return;
         }
 

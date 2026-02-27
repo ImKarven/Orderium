@@ -4,6 +4,7 @@ import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
+import lombok.val;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
@@ -254,7 +255,7 @@ public class ConvertUtils {
     }
 
     public static double formatNumber(String s) {
-        if (s.isEmpty()) return -1;
+        if (s == null || s.isEmpty()) return -1;
         try {
             final double num = Double.parseDouble(s);
             if (num < 1) return -1;

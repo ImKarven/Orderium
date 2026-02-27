@@ -231,6 +231,10 @@ public class DBManager {
         exec("DELETE FROM " + ORDER_TABLE + " WHERE id = ?", order.getId());
     }
 
+    public void updateOrder(Order order, String var, Object value) {
+        exec("UPDATE " + ORDER_TABLE + " SET " + var + " = ? WHERE id = ?", value, order.getId());
+    }
+
     public Set<Order> getSortedOrders(SortTypes sortType) {
         switch (sortType) {
             case MOST_MONEY_PER_ITEM -> { return mostMoneyPerItem; }
