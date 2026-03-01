@@ -30,13 +30,13 @@ public class DBManager {
     private final HikariConfig dbConfig = new HikariConfig();
     private final HikariDataSource dataSource;
     private final String dbFilePath;
-    private static final String PREFIX = "orderium_";
-    private static final String ORDER_TABLE = PREFIX + "orders";
-    private static final String TRANSACTION_TABLE = PREFIX + "transactions";
-    private static final String BLACKLIST_TABLE = PREFIX + "blacklist";
+    private static final String ORDERIUM_PREFIX = "orderium_";
+    private String ORDER_TABLE() { return configs.getTablePref() + "orders"; }
+    private String TRANSACTION_TABLE() { return configs.getTablePref() + "transactions"; }
+    private String BLACKLIST_TABLE() { return configs.getTablePref() + "blacklist"; }
     /// pre-1.1.0: PREFIX + "custom_items"
     /// > 1.1.0: PREFIX + "custom_items_v2"
-    private static final String CUSTOM_ITEMS_TABLE = PREFIX + "custom_items_v2";
+    private String CUSTOM_ITEMS_TABLE() { return configs.getTablePref()  + "custom_items_v2"; }
 
     private final MoneyTransaction moneyTransaction;
 
@@ -71,7 +71,14 @@ public class DBManager {
         this.configs = plugin.getConfigs();
         moneyTransaction = EconUtils.moneyTransaction();
         dbFilePath = plugin.getDataFolder() + File.separator + "data.db";
-        dbConfig.setJdbcUrl("jdbc:sqlite:" + dbFilePath);
+        switch (configs.getStorageMethod()) {
+            case SQLITE -> dbConfig.setJdbcUrl("jdbc:sqlite:" + dbFilePath);
+            case MYSQL -> {
+                dbConfig.setJdbcUrl("jdbc:mysql://" + configs.getRemoteAddress() + "/" + configs.getDatabaseName());
+                dbConfig.setUsername(configs.getDbUsername());
+                dbConfig.setPassword(configs.getDbPassword());
+            }
+        }
         dataSource = new HikariDataSource(dbConfig);
 
         itemConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "items.db");
@@ -80,15 +87,15 @@ public class DBManager {
         modifiedItemsConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "modified_items.db");
         modifiedItemDataSource = new HikariDataSource(modifiedItemsConfig);
 
-        execSync("CREATE TABLE IF NOT EXISTS " + ORDER_TABLE + " (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)");
+        execSync("CREATE TABLE IF NOT EXISTS " + ORDER_TABLE() + " (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)");
         reloadOrders();
 
-        execSync("CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, before DOUBLE, amount DOUBLE, after DOUBLE)");
+        execSync("CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE() + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, before DOUBLE, amount DOUBLE, after DOUBLE)");
 
-        execSync(modifiedItemDataSource, "CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB, search VARCHAR(65535))");
+        execSync(modifiedItemDataSource, "CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE() + " (item BLOB, search VARCHAR(65535))");
         reloadCustomItems();
 
-        execSync(modifiedItemDataSource, "CREATE TABLE iF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)");
+        execSync(modifiedItemDataSource, "CREATE TABLE IF NOT EXISTS " + BLACKLIST_TABLE() + " (item BLOB)");
         reloadBlacklist();
     }
 
@@ -110,27 +117,27 @@ public class DBManager {
     }
 
     public void addBlacklist(ItemStack item) {
-        exec(modifiedItemDataSource, "INSERT INTO " + BLACKLIST_TABLE + " (item) VALUES (?)", (Object) item.serializeAsBytes());
+        exec(modifiedItemDataSource, "INSERT INTO " + BLACKLIST_TABLE() + " (item) VALUES (?)", (Object) item.serializeAsBytes());
         blacklistedItems.add(item);
     }
 
     public void removeBlacklist(ItemStack item) {
-        exec(modifiedItemDataSource, "DELETE FROM " + BLACKLIST_TABLE + " WHERE item = (?)", (Object) item.serializeAsBytes());
+        exec(modifiedItemDataSource, "DELETE FROM " + BLACKLIST_TABLE() + " WHERE item = (?)", (Object) item.serializeAsBytes());
         blacklistedItems.remove(item);
     }
 
     public void addCustomItem(ItemStack item) {
-        exec(modifiedItemDataSource, "INSERT INTO " + CUSTOM_ITEMS_TABLE + " (item, search) VALUES (?, ?)", item.serializeAsBytes(), "");
+        exec(modifiedItemDataSource, "INSERT INTO " + CUSTOM_ITEMS_TABLE() + " (item, search) VALUES (?, ?)", item.serializeAsBytes(), "");
         customItems.add(new Pair<>(item, ""));
     }
 
     public void removeCustomItem(ItemStack item) {
-        exec(modifiedItemDataSource, "DELETE FROM " + CUSTOM_ITEMS_TABLE + " WHERE item = (?)", (Object) item.serializeAsBytes());
+        exec(modifiedItemDataSource, "DELETE FROM " + CUSTOM_ITEMS_TABLE() + " WHERE item = (?)", (Object) item.serializeAsBytes());
         customItems.removeIf(e -> e.first().equals(item));
     }
 
     public void updateCustomItemSearch(Pair<ItemStack, String> item) {
-        exec(modifiedItemDataSource, "UPDATE " + CUSTOM_ITEMS_TABLE + " SET search = ? WHERE item = ?", item.second, item.first.serializeAsBytes());
+        exec(modifiedItemDataSource, "UPDATE " + CUSTOM_ITEMS_TABLE() + " SET search = ? WHERE item = ?", item.second, item.first.serializeAsBytes());
 
     }
 
@@ -142,21 +149,21 @@ public class DBManager {
             recentlyListed.addAll(orders);
             mostDelivered.addAll(orders);
             mostPaid.addAll(orders);
-        }, "SELECT * FROM " + ORDER_TABLE);
+        }, "SELECT * FROM " + ORDER_TABLE());
     }
 
     private void reloadCustomItems() {
         query(modifiedItemDataSource, rawItems -> {
             customItems.clear();
             customItems.addAll(ConvertUtils.convertSearchableItems(rawItems));
-        }, "SELECT * FROM " + CUSTOM_ITEMS_TABLE);
+        }, "SELECT * FROM " + CUSTOM_ITEMS_TABLE());
     }
 
     private void reloadBlacklist() {
         query(modifiedItemDataSource,rawItems -> {
             blacklistedItems.clear();
             blacklistedItems.addAll(ConvertUtils.convertItems(rawItems));
-        },  "SELECT * FROM " + BLACKLIST_TABLE);
+        },  "SELECT * FROM " + BLACKLIST_TABLE());
     }
     
     public void createOrder(UUID owner, ItemStack item, double moneyPer, int amount) {
@@ -187,7 +194,7 @@ public class DBManager {
             }
         };
 
-        exec("INSERT INTO " + ORDER_TABLE + " (owner_most, owner_least, item, money_per, amount, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
+        exec("INSERT INTO " + ORDER_TABLE() + " (owner_most, owner_least, item, money_per, amount, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
                 owner.getMostSignificantBits(), owner.getLeastSignificantBits(), itemData, moneyPer, amount, expiresAt).thenAccept(cb);
     }
 
@@ -211,13 +218,72 @@ public class DBManager {
         return ret;
     }
 
-    public void deliverOrder(Order order, int amount) {
+    // TODO: Asynchronize the return value
+    /// Returns the amount of items that exceeded the amount
+    /// Returns 0 if the delivery does not exceed
+    public CompletableFuture<Integer> deliverOrder(Order order, int amount) {
+        val future = new CompletableFuture<Integer>();
+
+        Bukkit.getAsyncScheduler().runNow(plugin, t -> {
+
+            try (
+                    val con = dataSource.getConnection();
+                    val info = con.prepareStatement("SELECT delivered, amount, in_storage FROM " + ORDER_TABLE() + " WHERE id = ? FOR UPDATE");
+                    val updateDelivered = con.prepareStatement("UPDATE " + ORDER_TABLE() + " SET delivered = ?, in_storage = ? WHERE id = ?")
+            ) {
+                con.setAutoCommit(false);
+
+                info.setInt(1, order.getId());
+
+                val raw = info.executeQuery();
+                if (!raw.next()) return;
+                val delivered = raw.getInt(1);
+                order.amount = raw.getInt(2);
+                val inStorage = raw.getInt(3);
+                val newVal = delivered + amount;
+                if (newVal <= order.getAmount()) {
+                    updateDelivered.setInt(1, newVal);
+                    updateDelivered.setInt(2, inStorage + amount);
+
+                    updateDelivered.executeUpdate();
+
+                    updateOrder(order, newVal, inStorage + amount);
+                    future.complete(0);
+                    return;
+                }
+
+                updateDelivered.setInt(1, order.getAmount());
+                updateDelivered.setInt(2, inStorage + order.getAmount() - delivered);
+                updateDelivered.setInt(3, order.getId());
+
+                updateDelivered.executeUpdate();
+
+                con.commit();
+
+                updateOrder(order, order.getAmount(), inStorage + order.getAmount() - delivered);
+
+                future.complete(newVal - order.getAmount());
+
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Failed to deliver order", e);
+            }
+        });
+        return future;
+    }
+
+    /**
+     * Update the order with new delivered and inStorage values
+     * @param order the order to update
+     * @param delivered new delivered amount
+     * @param inStorage new in storage amount
+     */
+    private void updateOrder(Order order, int delivered, int inStorage) {
         mostDelivered.remove(order);
         mostPaid.remove(order);
-        final int newVal = order.getDelivered() + amount;
-        order.setDelivered(newVal);
-        order.setInStorage(order.getInStorage() + amount);
-        exec("UPDATE " + ORDER_TABLE + " SET delivered = ? WHERE id = ?", newVal, order.getId());
+
+        order.delivered = delivered;
+        order.inStorage = inStorage;
+
         mostDelivered.add(order);
         mostPaid.add(order);
     }
@@ -228,11 +294,11 @@ public class DBManager {
         mostDelivered.remove(order);
         mostPaid.remove(order);
         orders.remove(order);
-        exec("DELETE FROM " + ORDER_TABLE + " WHERE id = ?", order.getId());
+        exec("DELETE FROM " + ORDER_TABLE() + " WHERE id = ?", order.getId());
     }
 
     public void updateOrder(Order order, String var, Object value) {
-        exec("UPDATE " + ORDER_TABLE + " SET " + var + " = ? WHERE id = ?", value, order.getId());
+        exec("UPDATE " + ORDER_TABLE() + " SET " + var + " = ? WHERE id = ?", value, order.getId());
     }
 
     public Set<Order> getSortedOrders(SortTypes sortType) {
@@ -261,7 +327,7 @@ public class DBManager {
 
     public void logTransaction() {
         final UUID uuid = moneyTransaction.player;
-        exec("INSERT INTO " + TRANSACTION_TABLE + " (time, player_most, player_least, before, amount, after) VALUES (?, ?, ?, ?, ?, ?)",
+        exec("INSERT INTO " + TRANSACTION_TABLE() + " (time, player_most, player_least, before, amount, after) VALUES (?, ?, ?, ?, ?, ?)",
                 System.currentTimeMillis(),
                 uuid.getMostSignificantBits(),
                 uuid.getLeastSignificantBits(),

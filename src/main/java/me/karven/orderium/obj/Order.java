@@ -2,6 +2,7 @@ package me.karven.orderium.obj;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.val;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;
@@ -16,6 +17,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 @Getter
 public class Order implements me.karven.orderium.api.Order {
@@ -50,24 +53,27 @@ public class Order implements me.karven.orderium.api.Order {
 
     public boolean isActive() { return delivered < amount && expiresAt > System.currentTimeMillis(); }
 
-    public void deliver(Player deliverer, int a) {
-        db.deliverOrder(this, a);
-        final double earning = moneyPer * a;
-        EconUtils.addMoney(deliverer, earning);
-        deliverer.sendRichMessage(cache.getDelivered(), Placeholder.unparsed("money", ConvertUtils.formatNumber(earning)));
-        PlayerUtils.playSound(deliverer, cache.getDeliverSound());
+    public CompletableFuture<Integer> deliver(Player deliverer, int a) {
+        final Function<Integer, Integer> func = exceeded -> {
+            final double earning = moneyPer * (a - exceeded);
+            EconUtils.addMoney(deliverer, earning);
+            deliverer.sendRichMessage(cache.getDelivered(), Placeholder.unparsed("money", ConvertUtils.formatNumber(earning)));
+            PlayerUtils.playSound(deliverer, cache.getDeliverSound());
 
-        final Player ownerPlayer = Bukkit.getPlayer(owner);
-        if (ownerPlayer == null || !ownerPlayer.isOnline()) return;
-        final ItemMeta meta = item.getItemMeta();
-        final Component displayName = meta == null ? null : meta.displayName();
-        assert item.getType().getItemTranslationKey() != null;
-        ownerPlayer.sendRichMessage(
-                cache.getReceiveDelivery(),
-                Placeholder.unparsed("deliverer", deliverer.getName()),
-                Placeholder.unparsed("amount",  ConvertUtils.formatNumber(a)),
-                Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
-                );
+            final Player ownerPlayer = Bukkit.getPlayer(owner);
+            if (ownerPlayer == null || !ownerPlayer.isOnline()) return exceeded;
+            final ItemMeta meta = item.getItemMeta();
+            final Component displayName = meta == null ? null : meta.displayName();
+            assert item.getType().getItemTranslationKey() != null;
+            ownerPlayer.sendRichMessage(
+                    cache.getReceiveDelivery(),
+                    Placeholder.unparsed("deliverer", deliverer.getName()),
+                    Placeholder.unparsed("amount",  ConvertUtils.formatNumber(a)),
+                    Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
+            );
+            return exceeded;
+        };
+        return db.deliverOrder(this, a).thenApply(func);
     }
 
     /// Returns the amount of money the player should get in return

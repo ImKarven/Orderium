@@ -125,6 +125,13 @@ public class ConfigManager {
     private Sound newOrderSound;
     private Sound deliverSound;
 
+    private StorageMethod storageMethod;
+    private String remoteAddress;
+    private String databaseName;
+    private String dbUsername;
+    private String dbPassword;
+    private String tablePref;
+
     private boolean logTransactions = true;
     private long expiresAfter = -1;
     private String sortPrefix;
@@ -190,6 +197,18 @@ public class ConfigManager {
             return;
         }
         // CONFIG
+        config.addComment("storage", "Choose how the data should be saved");
+        config.addDefault("storage.method", "sqlite", "Available options are 'sqlite' and 'mysql'");
+        config.addComment("storage.config", "Configurations if you use mysql method");
+        config.addDefault("storage.config.address", "localhost",
+                "Define the host and port for the database" +
+                "Default port is used if not specified." +
+                "If the port is different, specify as 'host:port'");
+        config.addDefault("storage.config.database", "minecraft", "Name of the database to store data in");
+        config.addDefault("storage.config.username", "root", "Credentials for the database");
+        config.addDefault("storage.config.password", "");
+        config.addDefault("storage.config.table_prefix", "orderium_", "Prefix for tables created by Orderium");
+
         config.addDefault("bstats", true, "Whether to let bStats collect data anonymously or not");
         config.addDefault("check-for-updates", true, "Whether to check for updates or not");
         config.addDefault("log-transactions", true, "Whether to log money changes of players or not");
@@ -394,6 +413,13 @@ public class ConfigManager {
 
         config.save();
         config.reload();
+
+        storageMethod = StorageMethod.fromString(config.getString("storage.method"));
+        remoteAddress = config.getString("storage.config.address");
+        databaseName = config.getString("storage.config.database");
+        dbUsername = config.getString("storage.config.username");
+        dbPassword = config.getString("storage.config.password");
+        tablePref = config.getString("storage.config.table-prefix");
 
         bStats = config.getBoolean("bstats");
         checkForUpdates = config.getBoolean("check-for-updates");

@@ -13,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 public class OrderUtils {
@@ -29,36 +30,46 @@ public class OrderUtils {
     public static void deliver(Order order, Player p, Collection<ItemStack> items) {
         final int maxDeliverAmount = order.getAmount() - order.getDelivered();
         int currAmount = 0;
-        boolean done = false;
+        val accepted = new ArrayList<ItemStack>();
         for (ItemStack item : items) {
-            if (done) {
-                PlayerUtils.give(p, item, false);
-                continue;
-            }
-
             if (!AlgoUtils.isSimilar(item, order.getItem())) {
                 PlayerUtils.give(p, item, false);
                 continue;
             }
 
-            if (currAmount + item.getAmount() <= maxDeliverAmount) {
-                currAmount += item.getAmount();
-                continue;
-            }
-
-            // Split the item when it exceeds the max the player can deliver
-            ItemStack toGive = item.clone();
-            toGive.setAmount(item.getAmount() - (maxDeliverAmount - currAmount));
-            PlayerUtils.give(p, toGive, false);
-            currAmount = maxDeliverAmount;
-            done = true;
+            currAmount += item.getAmount();
+            accepted.add(item);
         }
         if (currAmount == 0) return;
 
         val event = new PlayerDeliverOrderEvent(p, order, currAmount);
-        if (!event.callEvent()) return;
+        event.callEvent();
 
-        order.deliver(p, currAmount);
+        order.deliver(p, currAmount).thenAccept(exceeded -> {
+            boolean done = false;
+            val toGive = new ArrayList<ItemStack>();
+            var am = 0;
+            for (ItemStack item : accepted) {
+                if (done) {
+                    toGive.add(item);
+                    continue;
+                }
+
+                val addAmount = am + item.getAmount();
+
+                if (addAmount <= exceeded) {
+                    am += item.getAmount();
+                    continue;
+                }
+
+                val splitAmount = addAmount - exceeded;
+                item.setAmount(splitAmount);
+                toGive.add(item);
+                done = true;
+            }
+            // TODO: Issue: player loses some their items if they leave before the delivery arrives (rare)
+            PlayerUtils.give(p, toGive, true);
+        });
     }
 
     public static Response collect(Order order, String rawAmount) {
