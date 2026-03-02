@@ -13,12 +13,10 @@ import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.EconUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
+import org.intellij.lang.annotations.MagicConstant;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -45,6 +43,8 @@ public class DBManager {
 
     private final HikariConfig modifiedItemsConfig = new HikariConfig();
     private final HikariDataSource modifiedItemDataSource;
+
+    private final StorageMethod method;
 
     @Getter
     private final List<Order> orders = new ArrayList<>();
@@ -87,10 +87,12 @@ public class DBManager {
         modifiedItemsConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "modified_items.db");
         modifiedItemDataSource = new HikariDataSource(modifiedItemsConfig);
 
-        execSync("CREATE TABLE IF NOT EXISTS " + ORDER_TABLE() + " (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)");
+        this.method = configs.getStorageMethod();
+
+        execSync(method.getCreateOrderTableStatement());
         reloadOrders();
 
-        execSync("CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE() + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, before DOUBLE, amount DOUBLE, after DOUBLE)");
+        execSync(method.getCreateTransactionTableStatement());
 
         execSync(modifiedItemDataSource, "CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE() + " (item BLOB, search VARCHAR(65535))");
         reloadCustomItems();
@@ -117,27 +119,27 @@ public class DBManager {
     }
 
     public void addBlacklist(ItemStack item) {
-        exec(modifiedItemDataSource, "INSERT INTO " + BLACKLIST_TABLE() + " (item) VALUES (?)", (Object) item.serializeAsBytes());
+        exec(modifiedItemDataSource, "INSERT INTO " + BLACKLIST_TABLE() + " (item) VALUES (?)", Statement.NO_GENERATED_KEYS, (Object) item.serializeAsBytes());
         blacklistedItems.add(item);
     }
 
     public void removeBlacklist(ItemStack item) {
-        exec(modifiedItemDataSource, "DELETE FROM " + BLACKLIST_TABLE() + " WHERE item = (?)", (Object) item.serializeAsBytes());
+        exec(modifiedItemDataSource, "DELETE FROM " + BLACKLIST_TABLE() + " WHERE item = (?)", Statement.NO_GENERATED_KEYS, (Object) item.serializeAsBytes());
         blacklistedItems.remove(item);
     }
 
     public void addCustomItem(ItemStack item) {
-        exec(modifiedItemDataSource, "INSERT INTO " + CUSTOM_ITEMS_TABLE() + " (item, search) VALUES (?, ?)", item.serializeAsBytes(), "");
+        exec(modifiedItemDataSource, "INSERT INTO " + CUSTOM_ITEMS_TABLE() + " (item, search) VALUES (?, ?)", Statement.NO_GENERATED_KEYS, item.serializeAsBytes(), "");
         customItems.add(new Pair<>(item, ""));
     }
 
     public void removeCustomItem(ItemStack item) {
-        exec(modifiedItemDataSource, "DELETE FROM " + CUSTOM_ITEMS_TABLE() + " WHERE item = (?)", (Object) item.serializeAsBytes());
+        exec(modifiedItemDataSource, "DELETE FROM " + CUSTOM_ITEMS_TABLE() + " WHERE item = (?)", Statement.NO_GENERATED_KEYS, (Object) item.serializeAsBytes());
         customItems.removeIf(e -> e.first().equals(item));
     }
 
     public void updateCustomItemSearch(Pair<ItemStack, String> item) {
-        exec(modifiedItemDataSource, "UPDATE " + CUSTOM_ITEMS_TABLE() + " SET search = ? WHERE item = ?", item.second, item.first.serializeAsBytes());
+        exec(modifiedItemDataSource, "UPDATE " + CUSTOM_ITEMS_TABLE() + " SET search = ? WHERE item = ?", Statement.NO_GENERATED_KEYS, item.second, item.first.serializeAsBytes());
 
     }
 
@@ -194,7 +196,7 @@ public class DBManager {
             }
         };
 
-        exec("INSERT INTO " + ORDER_TABLE() + " (owner_most, owner_least, item, money_per, amount, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
+        exec("INSERT INTO " + ORDER_TABLE() + " (owner_most, owner_least, item, money_per, amount, expires_at) VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS,
                 owner.getMostSignificantBits(), owner.getLeastSignificantBits(), itemData, moneyPer, amount, expiresAt).thenAccept(cb);
     }
 
@@ -228,7 +230,7 @@ public class DBManager {
 
             try (
                     val con = dataSource.getConnection();
-                    val info = con.prepareStatement("SELECT delivered, amount, in_storage FROM " + ORDER_TABLE() + " WHERE id = ? FOR UPDATE");
+                    val info = con.prepareStatement(method.getOrderInfoStatement());
                     val updateDelivered = con.prepareStatement("UPDATE " + ORDER_TABLE() + " SET delivered = ?, in_storage = ? WHERE id = ?")
             ) {
                 con.setAutoCommit(false);
@@ -294,11 +296,11 @@ public class DBManager {
         mostDelivered.remove(order);
         mostPaid.remove(order);
         orders.remove(order);
-        exec("DELETE FROM " + ORDER_TABLE() + " WHERE id = ?", order.getId());
+        exec("DELETE FROM " + ORDER_TABLE() + " WHERE id = ?", Statement.NO_GENERATED_KEYS, order.getId());
     }
 
     public void updateOrder(Order order, String var, Object value) {
-        exec("UPDATE " + ORDER_TABLE() + " SET " + var + " = ? WHERE id = ?", value, order.getId());
+        exec("UPDATE " + ORDER_TABLE() + " SET " + var + " = ? WHERE id = ?", Statement.NO_GENERATED_KEYS,  value, order.getId());
     }
 
     public Set<Order> getSortedOrders(SortTypes sortType) {
@@ -327,7 +329,8 @@ public class DBManager {
 
     public void logTransaction() {
         final UUID uuid = moneyTransaction.player;
-        exec("INSERT INTO " + TRANSACTION_TABLE() + " (time, player_most, player_least, before, amount, after) VALUES (?, ?, ?, ?, ?, ?)",
+        exec(method.getLogTransactionStatement(),
+                Statement.NO_GENERATED_KEYS,
                 System.currentTimeMillis(),
                 uuid.getMostSignificantBits(),
                 uuid.getLeastSignificantBits(),
@@ -337,20 +340,20 @@ public class DBManager {
                 );
     }
 
-    private CompletableFuture<PreparedStatement> exec(String stmt, Object... params) {
-        return exec(dataSource, stmt, params);
+    private CompletableFuture<PreparedStatement> exec(String stmt,@MagicConstant(intValues = {Statement.NO_GENERATED_KEYS,Statement.RETURN_GENERATED_KEYS}) int autoGeneratedKeys, Object... params) {
+        return exec(dataSource, stmt, autoGeneratedKeys, params);
     }
 
     private void execSync(String stmt, Object... params) {
         execSync(dataSource, stmt, params);
     }
 
-    private CompletableFuture<PreparedStatement> exec(HikariDataSource dataSource, String stmt, Object... params) {
+    private CompletableFuture<PreparedStatement> exec(HikariDataSource dataSource, String stmt, @MagicConstant(intValues = {Statement.NO_GENERATED_KEYS,Statement.RETURN_GENERATED_KEYS}) int autoGeneratedKeys, Object... params) {
         final CompletableFuture<PreparedStatement> completableFuture = new CompletableFuture<>();
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
             try (
                     final Connection connection = dataSource.getConnection();
-                    final PreparedStatement preparedStatement = connection.prepareStatement(stmt)
+                    final PreparedStatement preparedStatement = connection.prepareStatement(stmt, autoGeneratedKeys)
             ) {
                 processStatement(preparedStatement, params);
                 preparedStatement.executeUpdate();
@@ -361,7 +364,6 @@ public class DBManager {
         });
         return completableFuture;
     }
-
 
     private void execSync(HikariDataSource dataSource, String stmt, Object... params) {
         try (

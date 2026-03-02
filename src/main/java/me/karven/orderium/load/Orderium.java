@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.val;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
+import me.karven.orderium.data.StorageMethod;
 import me.karven.orderium.folia.IFFolia;
 import me.karven.orderium.gui.*;
 import me.karven.orderium.listener.DialogListener;
@@ -84,9 +85,10 @@ public final class Orderium extends JavaPlugin {
         }
         saveResource("modified_items.db", false);
 
-        new IFFolia(this);
+        if (isFolia) new IFFolia(this);
 
         configs = new ConfigManager(this);
+        StorageMethod.init(this);
         dbManager = new DBManager(this);
         AlgoUtils.init(this);
         OrderUtils.init(this);

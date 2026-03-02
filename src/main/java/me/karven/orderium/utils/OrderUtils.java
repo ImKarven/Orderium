@@ -46,26 +46,21 @@ public class OrderUtils {
         event.callEvent();
 
         order.deliver(p, currAmount).thenAccept(exceeded -> {
-            boolean done = false;
             val toGive = new ArrayList<ItemStack>();
             var am = 0;
             for (ItemStack item : accepted) {
-                if (done) {
+                val addAmount = am + item.getAmount();
+
+                if (addAmount < exceeded) {
+                    am += item.getAmount();
                     toGive.add(item);
                     continue;
                 }
 
-                val addAmount = am + item.getAmount();
-
-                if (addAmount <= exceeded) {
-                    am += item.getAmount();
-                    continue;
-                }
-
-                val splitAmount = addAmount - exceeded;
+                val splitAmount = exceeded - am;
                 item.setAmount(splitAmount);
                 toGive.add(item);
-                done = true;
+                break;
             }
             // TODO: Issue: player loses some their items if they leave before the delivery arrives (rare)
             PlayerUtils.give(p, toGive, true);
