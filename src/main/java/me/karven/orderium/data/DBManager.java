@@ -33,10 +33,10 @@ public class DBManager {
     private static final String ORDERIUM_PREFIX = "orderium_";
     private String ORDER_TABLE() { return configs.getTablePref() + "orders"; }
     private String TRANSACTION_TABLE() { return configs.getTablePref() + "transactions"; }
-    private String BLACKLIST_TABLE() { return configs.getTablePref() + "blacklist"; }
+    private String BLACKLIST_TABLE() { return ORDERIUM_PREFIX + "blacklist"; }
     /// pre-1.1.0: PREFIX + "custom_items"
     /// > 1.1.0: PREFIX + "custom_items_v2"
-    private String CUSTOM_ITEMS_TABLE() { return configs.getTablePref()  + "custom_items_v2"; }
+    private String CUSTOM_ITEMS_TABLE() { return ORDERIUM_PREFIX  + "custom_items_v2"; }
 
     private final MoneyTransaction moneyTransaction;
 
