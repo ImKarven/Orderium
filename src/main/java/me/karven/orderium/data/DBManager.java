@@ -220,9 +220,9 @@ public class DBManager {
         return ret;
     }
 
-    // TODO: Asynchronize the return value
     /// Returns the amount of items that exceeded the amount
     /// Returns 0 if the delivery does not exceed
+    /// Returns -1 if an error occurred
     public CompletableFuture<Integer> deliverOrder(Order order, int amount) {
         val future = new CompletableFuture<Integer>();
 
@@ -234,38 +234,30 @@ public class DBManager {
                     val updateDelivered = con.prepareStatement("UPDATE " + ORDER_TABLE() + " SET delivered = ?, in_storage = ? WHERE id = ?")
             ) {
                 con.setAutoCommit(false);
-
-                info.setInt(1, order.getId());
-
+                processStatement(info, order.getId());
                 val raw = info.executeQuery();
-                if (!raw.next()) return;
+                if (!raw.next()) {
+                    con.commit();
+                    future.complete(-1);
+                    return;
+                }
                 val delivered = raw.getInt(1);
                 order.amount = raw.getInt(2);
                 val inStorage = raw.getInt(3);
                 val newVal = delivered + amount;
                 if (newVal <= order.getAmount()) {
-                    updateDelivered.setInt(1, newVal);
-                    updateDelivered.setInt(2, inStorage + amount);
-
+                    processStatement(updateDelivered, newVal, inStorage + amount, order.getId());
                     updateDelivered.executeUpdate();
-
                     updateOrder(order, newVal, inStorage + amount);
+                    con.commit();
                     future.complete(0);
                     return;
                 }
-
-                updateDelivered.setInt(1, order.getAmount());
-                updateDelivered.setInt(2, inStorage + order.getAmount() - delivered);
-                updateDelivered.setInt(3, order.getId());
-
+                processStatement(updateDelivered, order.getAmount(), inStorage + order.getAmount() - delivered, order.getId());
                 updateDelivered.executeUpdate();
-
-                con.commit();
-
                 updateOrder(order, order.getAmount(), inStorage + order.getAmount() - delivered);
-
+                con.commit();
                 future.complete(newVal - order.getAmount());
-
             } catch (SQLException e) {
                 plugin.getLogger().log(Level.SEVERE, "Failed to deliver order", e);
             }
@@ -273,8 +265,46 @@ public class DBManager {
         return future;
     }
 
+    /// Returns `true` if the player has enough items in storage to collect.
+    public CompletableFuture<Boolean> collectItems(Order order, int amount) {
+        val future = new CompletableFuture<Boolean>();
+
+        Bukkit.getAsyncScheduler().runNow(plugin, t -> {
+            try (
+                    val con = dataSource.getConnection();
+                    val info = con.prepareStatement("SELECT in_storage FROM " + ORDER_TABLE() + " WHERE id = ?")
+            ) {
+                con.setAutoCommit(false);
+                processStatement(info, order.getId());
+                val raw = info.executeQuery();
+                if (!raw.next()) {
+                    con.commit();
+                    future.complete(false);
+                    return;
+                }
+                order.inStorage = raw.getInt(1);
+
+                if (order.getInStorage() < amount) {
+                    con.commit();
+                    future.complete(false);
+                    return;
+                }
+                val updateInStorage = con.prepareStatement("UPDATE " + ORDER_TABLE() + " SET in_storage = ? WHERE id = ?");
+                processStatement(updateInStorage, order.getInStorage() - amount, order.getId());
+                updateInStorage.executeUpdate();
+                con.commit();
+                future.complete(true);
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Failed to collect items", e);
+            }
+        });
+
+        return future;
+    }
+
     /**
      * Update the order with new delivered and inStorage values
+     * Does not interact with database
      * @param order the order to update
      * @param delivered new delivered amount
      * @param inStorage new in storage amount
@@ -395,6 +425,7 @@ public class DBManager {
         });
     }
 
+    /// Method to set values to ?'s in the statements
     private void processStatement(PreparedStatement statement, Object... vals) throws SQLException {
         for (int i = 0; i < vals.length; i++) {
             statement.setObject(i + 1, vals[i]);

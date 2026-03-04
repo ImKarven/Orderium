@@ -94,19 +94,20 @@ public class OrderUtils {
             return Response.FAIL;
         }
 
-        if (order.getInStorage() < amount) {
-            p.sendRichMessage(cache.getInvalidInput());
-            return Response.INVALID;
-        }
-
         val event = new PlayerCollectItemsEvent(p, order, amount);
-        if (!event.callEvent()) return Response.CANCELLED;
+        if (!event.callEvent()) return Response.FAIL;
 
-        PDCUtils.setCollected(p, collectedInMinute + amount);
-        order.setInStorage(order.getInStorage() - amount);
-        PlayerUtils.give(p, order.getItem().clone(), amount, false);
+        db.collectItems(order, amount).thenAccept(success -> {
+            if (!success) {
+                p.sendRichMessage(cache.getInvalidInput());
+                return;
+            }
 
-        return Response.SUCCESS;
+            PDCUtils.setCollected(p, collectedInMinute + amount);
+            PlayerUtils.give(p, order.getItem().clone(), amount, true);
+        });
+
+        return Response.SCHEDULED;
     }
 
     public static void cancel(Player p, Order order) {
@@ -148,6 +149,7 @@ public class OrderUtils {
         INVALID,
         SUCCESS,
         FAIL,
-        CANCELLED
+        CANCELLED,
+        SCHEDULED
     }
 }

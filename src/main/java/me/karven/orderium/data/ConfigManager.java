@@ -197,18 +197,19 @@ public class ConfigManager {
             return;
         }
         // CONFIG
+
         // NOT YET
-//        config.addComment("storage", "Choose how the data should be saved");
-//        config.addDefault("storage.method", "sqlite", "Available options are 'sqlite' and 'mysql'");
-//        config.addComment("storage.config", "Configurations if you use mysql method");
-//        config.addDefault("storage.config.address", "localhost",
-//                "Define the host and port for the database\n" +
-//                "Default port is used if not specified.\n" +
-//                "If the port is different, specify as 'host:port'");
-//        config.addDefault("storage.config.database", "minecraft", "Name of the database to store data in");
-//        config.addDefault("storage.config.username", "root", "Credentials for the database");
-//        config.addDefault("storage.config.password", "");
-//        config.addDefault("storage.config.table-prefix", "orderium_", "Prefix for tables created by Orderium");
+        config.addComment("storage", "Choose how the data should be saved");
+        config.addDefault("storage.method", "sqlite", "Available options are 'sqlite' and 'mysql'");
+        config.addComment("storage.config", "Configurations if you use mysql method");
+        config.addDefault("storage.config.address", "localhost",
+                "Define the host and port for the database\n" +
+                "Default port is used if not specified.\n" +
+                "If the port is different, specify as 'host:port'");
+        config.addDefault("storage.config.database", "minecraft", "Name of the database to store data in");
+        config.addDefault("storage.config.username", "root", "Credentials for the database");
+        config.addDefault("storage.config.password", "");
+        config.addDefault("storage.config.table-prefix", "orderium_", "Prefix for tables created by Orderium");
 
         config.addDefault("bstats", true, "Whether to let bStats collect data anonymously or not");
         config.addDefault("check-for-updates", true, "Whether to check for updates or not");
@@ -415,14 +416,14 @@ public class ConfigManager {
         config.save();
         config.reload();
 
-//        storageMethod = StorageMethod.fromString(config.getString("storage.method"));
-//        remoteAddress = config.getString("storage.config.address");
-//        databaseName = config.getString("storage.config.database");
-//        dbUsername = config.getString("storage.config.username");
-//        dbPassword = config.getString("storage.config.password");
-//        tablePref = config.getString("storage.config.table-prefix");
-        storageMethod = StorageMethod.SQLITE;
-        tablePref = "orderium_";
+        storageMethod = StorageMethod.fromString(config.getString("storage.method"));
+        remoteAddress = config.getString("storage.config.address");
+        databaseName = config.getString("storage.config.database");
+        dbUsername = config.getString("storage.config.username");
+        dbPassword = config.getString("storage.config.password");
+        tablePref = config.getString("storage.config.table-prefix");
+//        storageMethod = StorageMethod.SQLITE;
+//        tablePref = "orderium_";
 
         bStats = config.getBoolean("bstats");
         checkForUpdates = config.getBoolean("check-for-updates");

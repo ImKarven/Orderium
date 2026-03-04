@@ -41,4 +41,6 @@ public enum StorageMethod {
     }
     private static String ORDER_TABLE() { return configs.getTablePref() + "orders"; }
     private static String TRANSACTION_TABLE() { return configs.getTablePref() + "transactions"; }
+
+
 }
