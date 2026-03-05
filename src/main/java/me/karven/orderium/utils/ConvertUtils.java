@@ -4,7 +4,6 @@ import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
-import lombok.val;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
@@ -135,8 +134,7 @@ public class ConvertUtils {
             assert lore != null;
             lore.addAll(toAdd.stream().map(s -> mm.deserialize(s).decoration(TextDecoration.ITALIC, false)).toList());
             meta.lore(lore);
-        }
-        );
+        });
         return item;
     }
 

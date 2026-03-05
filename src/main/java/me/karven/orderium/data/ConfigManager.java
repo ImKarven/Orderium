@@ -199,17 +199,17 @@ public class ConfigManager {
         // CONFIG
 
         // NOT YET
-        config.addComment("storage", "Choose how the data should be saved");
-        config.addDefault("storage.method", "sqlite", "Available options are 'sqlite' and 'mysql'");
-        config.addComment("storage.config", "Configurations if you use mysql method");
-        config.addDefault("storage.config.address", "localhost",
-                "Define the host and port for the database\n" +
-                "Default port is used if not specified.\n" +
-                "If the port is different, specify as 'host:port'");
-        config.addDefault("storage.config.database", "minecraft", "Name of the database to store data in");
-        config.addDefault("storage.config.username", "root", "Credentials for the database");
-        config.addDefault("storage.config.password", "");
-        config.addDefault("storage.config.table-prefix", "orderium_", "Prefix for tables created by Orderium");
+//        config.addComment("storage", "Choose how the data should be saved");
+//        config.addDefault("storage.method", "sqlite", "Available options are 'sqlite' and 'mysql'");
+//        config.addComment("storage.config", "Configurations if you use mysql method");
+//        config.addDefault("storage.config.address", "localhost",
+//                "Define the host and port for the database\n" +
+//                "Default port is used if not specified.\n" +
+//                "If the port is different, specify as 'host:port'");
+//        config.addDefault("storage.config.database", "minecraft", "Name of the database to store data in");
+//        config.addDefault("storage.config.username", "root", "Credentials for the database");
+//        config.addDefault("storage.config.password", "");
+//        config.addDefault("storage.config.table-prefix", "orderium_", "Prefix for tables created by Orderium");
 
         config.addDefault("bstats", true, "Whether to let bStats collect data anonymously or not");
         config.addDefault("check-for-updates", true, "Whether to check for updates or not");
@@ -239,8 +239,8 @@ public class ConfigManager {
                 "minecraft:bundle_contents",
                 "minecraft:damage_type",
                 "minecraft:consumable"
-        ), "This define how should two items to be similar.\n" +
-                "If all of the following data component types are equal on both items beside their item types, they are similar.\n" +
+        ), "This defines how should two items to be similar.\n" +
+                "If all the following data component types are equal on both items beside their item types, they are similar.\n" +
                 "This similarity check happens when a player deliver an order, it accepts items in the delivery inventory that are similar to the one in the order\n" +
                 "See a list of data components here, note that only use ones that exist on your server version: https://minecraft.wiki/w/Data_component_format#List_of_components");
 
@@ -416,14 +416,14 @@ public class ConfigManager {
         config.save();
         config.reload();
 
-        storageMethod = StorageMethod.fromString(config.getString("storage.method"));
-        remoteAddress = config.getString("storage.config.address");
-        databaseName = config.getString("storage.config.database");
-        dbUsername = config.getString("storage.config.username");
-        dbPassword = config.getString("storage.config.password");
-        tablePref = config.getString("storage.config.table-prefix");
-//        storageMethod = StorageMethod.SQLITE;
-//        tablePref = "orderium_";
+//        storageMethod = StorageMethod.fromString(config.getString("storage.method"));
+//        remoteAddress = config.getString("storage.config.address");
+//        databaseName = config.getString("storage.config.database");
+//        dbUsername = config.getString("storage.config.username");
+//        dbPassword = config.getString("storage.config.password");
+//        tablePref = config.getString("storage.config.table-prefix");
+        storageMethod = StorageMethod.SQLITE;
+        tablePref = "orderium_";
 
         bStats = config.getBoolean("bstats");
         checkForUpdates = config.getBoolean("check-for-updates");

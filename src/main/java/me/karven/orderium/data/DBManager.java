@@ -294,6 +294,7 @@ public class DBManager {
                 updateInStorage.executeUpdate();
                 con.commit();
                 future.complete(true);
+                updateInStorage.close();
             } catch (SQLException e) {
                 plugin.getLogger().log(Level.SEVERE, "Failed to collect items", e);
             }

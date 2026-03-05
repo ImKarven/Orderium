@@ -28,7 +28,6 @@ public class OrderUtils {
 
     /// Must be called in the player's scheduler
     public static void deliver(Order order, Player p, Collection<ItemStack> items) {
-        final int maxDeliverAmount = order.getAmount() - order.getDelivered();
         int currAmount = 0;
         val accepted = new ArrayList<ItemStack>();
         for (ItemStack item : items) {
@@ -58,6 +57,7 @@ public class OrderUtils {
                 }
 
                 val splitAmount = exceeded - am;
+                if (splitAmount == 0) break;
                 item.setAmount(splitAmount);
                 toGive.add(item);
                 break;

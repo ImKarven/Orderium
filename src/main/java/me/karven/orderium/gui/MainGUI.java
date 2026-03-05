@@ -94,7 +94,8 @@ public class MainGUI {
                     player.sendRichMessage(cache.getDeliverSelf());
                     return;
                 }
-                setupDeliverGUI(order).show(who);
+                val deliverGUI = setupDeliverGUI(order);
+                deliverGUI.show(who);
             }));
             cnt++;
         }

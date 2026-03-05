@@ -1,8 +1,6 @@
 package me.karven.orderium.obj;
 
 import lombok.Getter;
-import lombok.Setter;
-import lombok.val;
 import me.karven.orderium.data.ConfigManager;
 import me.karven.orderium.data.DBManager;
 import me.karven.orderium.load.Orderium;

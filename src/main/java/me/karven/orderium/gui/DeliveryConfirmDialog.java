@@ -49,7 +49,10 @@ public class DeliveryConfirmDialog {
                             ActionButton.builder(mm.deserialize(cache.getConfirmDeliveryConfirmLabel()))
                                     .tooltip(mm.deserialize(cache.getConfirmDeliveryConfirmHover()))
                                     .action(DialogAction.customClick(
-                                            (view, player) -> OrderUtils.deliver(order, p, items),
+                                            (view, player) -> {
+                                                DialogListener.removeItems(p);
+                                                OrderUtils.deliver(order, p, items);
+                                            },
                                             ClickCallback.Options.builder().build()
                                     ))
                                     .build(),

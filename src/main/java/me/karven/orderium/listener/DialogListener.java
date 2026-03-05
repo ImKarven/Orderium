@@ -36,6 +36,8 @@ public class DialogListener implements Listener {
         pendingItems.put(p, items);
     }
 
+    public static void removeItems(Player p) { pendingItems.remove(p); }
+
     private boolean checkClick(PlayerCustomClickEvent e, @KeyPattern String key) {
         return e.getIdentifier().equals(Key.key(key));
     }
