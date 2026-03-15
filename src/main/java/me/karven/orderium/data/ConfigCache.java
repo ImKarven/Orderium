@@ -9,8 +9,8 @@ import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.OrderStatus;
 import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.obj.StorageMethod;
 import me.karven.orderium.utils.ConvertUtils;
-import me.karven.orderium.utils.NMSUtils;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -28,7 +28,7 @@ import java.util.logging.Level;
 
 @Getter
 @SuppressWarnings("UnstableApiUsage")
-public class ConfigManager {
+public class ConfigCache {
     private final File configFile;
     private ConfigFile config;
     private final Orderium plugin;
@@ -141,35 +141,22 @@ public class ConfigManager {
 
     private final List<DataComponentType.Valued<?>> similarityCheck = new ArrayList<>();
 
-    public ConfigManager(Orderium plugin) {
+    public ConfigCache(Orderium plugin) {
         this.plugin = plugin;
         this.configFile = new File(plugin.getDataFolder(), "config.yml");
-        if (!reload(false)) {
+        if (!reload()) {
             plugin.getLogger().severe("Failed to load config.");
         }
     }
 
-    public boolean reload(boolean async) {
-        if (!async) {
-            try {
-                loadCfg();
-            } catch (Exception e) {
-                plugin.getLogger().log(Level.SEVERE, "Failed to fetch item from database", e);
-                return false;
-            }
-            return true;
-        }
-        Bukkit.getAsyncScheduler().runNow(plugin, t -> {
-            try {
-                loadCfg();
-                NMSUtils.init(plugin).thenAccept(ignored -> ChooseItemGUI.init(plugin));
+    public boolean reload() {
 
-                AdminToolGUI.createBlacklist();
-                AdminToolGUI.createCustomItems();
-            } catch (Exception e) {
-                plugin.getLogger().log(Level.SEVERE, "Failed to reload", e);
-            }
-        });
+        try {
+            loadCfg();
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to fetch item from database", e);
+            return false;
+        }
         return true;
     }
 
@@ -177,7 +164,8 @@ public class ConfigManager {
         Bukkit.getAsyncScheduler().runNow(plugin, t -> {
             try {
                 loadCfg();
-                NMSUtils.init(plugin).thenAccept(ignored -> ChooseItemGUI.init(plugin));
+                plugin.setStorage(plugin.createStorage());
+                ChooseItemGUI.init(plugin);
 
                 AdminToolGUI.createBlacklist();
                 AdminToolGUI.createCustomItems();
@@ -496,7 +484,7 @@ public class ConfigManager {
 
         searchLine = config.getInteger("gui.search-sign.search-line");
         lines = config.getStringList("gui.search-sign.lines");
-        signBlock = NMSUtils.getBlockType(config.getString("gui.search-sign.type"));
+        signBlock = plugin.getDataCache().getBlockType(config.getString("gui.search-sign.type"));
 
         deliverTitle = config.getString("gui.delivery.title");
         deliverRows = config.getInteger("gui.delivery.rows");

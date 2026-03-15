@@ -6,12 +6,11 @@ import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
-import me.karven.orderium.data.ConfigManager;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.listener.DialogListener;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
-import me.karven.orderium.utils.OrderUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -26,7 +25,7 @@ import java.util.List;
 @SuppressWarnings("UnstableApiUsage")
 public class DeliveryConfirmDialog {
     private static MiniMessage mm;
-    private static ConfigManager cache;
+    private static ConfigCache cache;
 
     public static void init(Orderium plugin) {
         mm = plugin.mm;
@@ -51,7 +50,7 @@ public class DeliveryConfirmDialog {
                                     .action(DialogAction.customClick(
                                             (view, player) -> {
                                                 DialogListener.removeItems(p);
-                                                OrderUtils.deliver(order, p, items);
+                                                order.deliver(p, items);
                                             },
                                             ClickCallback.Options.builder().build()
                                     ))

@@ -3,15 +3,17 @@ package me.karven.orderium.load;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.val;
-import me.karven.orderium.data.ConfigManager;
-import me.karven.orderium.data.DBManager;
-import me.karven.orderium.data.StorageMethod;
+import me.karven.orderium.data.ConfigCache;
+import me.karven.orderium.data.DataCache;
 import me.karven.orderium.folia.IFFolia;
 import me.karven.orderium.gui.*;
 import me.karven.orderium.listener.DialogListener;
 import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.obj.Order;
+import me.karven.orderium.storage.Storage;
+import me.karven.orderium.storage.implementation.SQLStorage;
 import me.karven.orderium.utils.*;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
@@ -21,49 +23,47 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Getter
 public final class Orderium extends JavaPlugin {
-    private static Orderium instance;
+    public static Orderium plugin;
     public static boolean isFolia;
     public static final DialogListener DIALOG_LISTENER = new DialogListener();
     public static final DisconnectListener DISCONNECT_LISTENER = new DisconnectListener();
 
-    private ConfigManager configs;
-    private DBManager dbManager;
+    private ConfigCache configs;
+//    private DBManager dbManager;
+    @Setter
+    private Storage storage;
+    private DataCache dataCache;
     private Economy econ;
     public final MiniMessage mm = MiniMessage.miniMessage();
-    public int VERSION;
+    public int VERSION = -1;
 
-    private CompletableFuture<Boolean> initVersion() {
-        val ret = new CompletableFuture<Boolean>();
-        // noinspection deprecation
-        final int dataVer = Bukkit.getUnsafe().getDataVersion();
-        dbManager.dataVersions().thenAccept(dataVersion -> {
-            if (dataVer < 4438) { // 1.21.7 in data version
-                ret.complete(false);
-                return;
-            }
-            int maxVer = -1;
-            for (int ver : dataVersion) {
-                if (ver > maxVer && ver <= dataVer) maxVer = ver;
-                if (dataVer == ver) {
-                    VERSION = ver;
-                    ret.complete(true);
-                    return;
-                }
-            }
-            VERSION = maxVer;
-            ret.complete(true);
-        });
-        return ret;
-    }
-
-    public static Orderium getInst() {
-        return instance;
-    }
+//    private CompletableFuture<Boolean> initVersion() {
+//        val ret = new CompletableFuture<Boolean>();
+//        // noinspection deprecation
+//        final int dataVer = Bukkit.getUnsafe().getDataVersion();
+//        dbManager.dataVersions().thenAccept(dataVersion -> {
+//            if (dataVer < 4438) { // 1.21.7 in data version
+//                ret.complete(false);
+//                return;
+//            }
+//            int maxVer = -1;
+//            for (int ver : dataVersion) {
+//                if (ver > maxVer && ver <= dataVer) maxVer = ver;
+//                if (dataVer == ver) {
+//                    VERSION = ver;
+//                    ret.complete(true);
+//                    return;
+//                }
+//            }
+//            VERSION = maxVer;
+//            ret.complete(true);
+//        });
+//        return ret;
+//    }
 
     @Override
     public void onLoad() {
@@ -72,10 +72,11 @@ public final class Orderium extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        instance = this;
+        plugin = this;
+        Log.init();
         isFolia = isFolia();
         if (!setupEconomy()) {
-            getLogger().severe("Orderium disabled due to no Vault dependency found!");
+            Log.warn("Orderium disabled due to no Vault dependency found!");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -87,11 +88,14 @@ public final class Orderium extends JavaPlugin {
 
         if (isFolia) new IFFolia(this);
 
-        configs = new ConfigManager(this);
-        StorageMethod.init(this);
-        dbManager = new DBManager(this);
+//        StorageMethod.init(this);
+
+        dataCache = new DataCache();
+        configs = new ConfigCache(this);
+        Storage.init();
+        storage = createStorage();
+//        dbManager = new DBManager(this);
         AlgoUtils.init(this);
-        OrderUtils.init(this);
         MainGUI.init(this);
         YourOrderGUI.init(this);
         EconUtils.init(this);
@@ -101,14 +105,7 @@ public final class Orderium extends JavaPlugin {
         PDCUtils.init(this);
         AdminToolGUI.init(this);
 
-        initVersion().thenAccept(success -> {
-            if (!success) {
-                this.getLogger().severe("You are using an unsupported server version (< 1.21.7). Please update to use the plugin");
-                Bukkit.getPluginManager().disablePlugin(this);
-                return;
-            }
-            NMSUtils.init(this).thenAccept(ignored -> ChooseItemGUI.init(this));
-        });
+        ChooseItemGUI.init(this);
 
         NewOrderDialog.init(this);
         DeliveryConfirmDialog.init(this);
@@ -123,7 +120,8 @@ public final class Orderium extends JavaPlugin {
             Bukkit.getAsyncScheduler().runNow(this, t -> {
                final String newVer = UpdateUtils.checkForUpdates();
                if (newVer == null) return;
-               getLogger().info("A new version of Orderium (" + newVer + ") is available!");
+               Log.warn("A new version of Orderium (" + newVer + ") is available");
+               Log.info(mm.deserialize("<aqua>Download it on <green>Modrinth<gray>: <blue><u>https://modrinth.com/plugin/orderium/version/" + newVer));
             });
         }
 
@@ -137,6 +135,20 @@ public final class Orderium extends JavaPlugin {
             }
 
         }, 1, 1, TimeUnit.MINUTES);
+    }
+
+    public Storage createStorage() {
+        switch (configs.getStorageMethod()) {
+            case SQLITE -> {
+                return SQLStorage.sqlite();
+            }
+            case MYSQL -> {
+                return SQLStorage.mysql();
+            }
+            default -> {
+                return SQLStorage.h2();
+            }
+        }
     }
 
     private boolean setupEconomy() {

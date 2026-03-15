@@ -6,7 +6,7 @@ import io.papermc.paper.datacomponent.item.ItemEnchantments;
 import io.papermc.paper.datacomponent.item.PotionContents;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
-import me.karven.orderium.data.ConfigManager;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
@@ -23,7 +23,7 @@ public class AlgoUtils {
 
     private static final Registry<MusicInstrument> instrumentRegistry = RegistryAccess.registryAccess().getRegistry(RegistryKey.INSTRUMENT);
     private static final Registry<PotionEffectType> potionEffectRegistry = Registry.MOB_EFFECT;
-    private static ConfigManager cache;
+    private static ConfigCache cache;
 
     public static void init(Orderium plugin) {
         cache = plugin.getConfigs();

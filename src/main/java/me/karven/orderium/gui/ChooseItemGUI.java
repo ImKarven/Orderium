@@ -5,11 +5,13 @@ import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
-import me.karven.orderium.data.ConfigManager;
-import me.karven.orderium.data.DBManager;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SortTypes;
-import me.karven.orderium.utils.*;
+import me.karven.orderium.utils.AlgoUtils;
+import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.PDCUtils;
+import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -23,13 +25,13 @@ public class ChooseItemGUI {
     private static final List<ChestGui> AZ = new ArrayList<>();
     private static final List<ChestGui> ZA = new ArrayList<>();
     private static Orderium plugin;
-    private static DBManager db;
+//    private static DBManager db;
     private static MiniMessage mm;
-    private static ConfigManager cache;
+    private static ConfigCache cache;
 
     public static void init(Orderium plugin) {
         ChooseItemGUI.plugin = plugin;
-        db = plugin.getDbManager();
+//        db = plugin.getDbManager();
         mm = plugin.mm;
         cache = plugin.getConfigs();
 
@@ -92,7 +94,7 @@ public class ChooseItemGUI {
     }
 
     private static void createPages(List<ChestGui> pages, SortTypes sortType) {
-        createPages(pages, sortType, NMSUtils.getItems(sortType));
+        createPages(pages, sortType, plugin.getDataCache().getItems(sortType));
     }
 
     private static void createPages(List<ChestGui> pages, SortTypes sortType, String search) {
@@ -101,7 +103,7 @@ public class ChooseItemGUI {
             return;
         }
 
-        final List<ItemStack> items = AlgoUtils.searchItem(search, NMSUtils.getItems(sortType));
+        final List<ItemStack> items = AlgoUtils.searchItem(search, plugin.getDataCache().getItems(sortType));
         createPages(pages, sortType, items);
     }
 
@@ -140,7 +142,7 @@ public class ChooseItemGUI {
                 final ItemStack i = guiItem.getItem();
                 if (PDCUtils.isBlacklist(i.getItemMeta())) return;
 
-                db.addBlacklist(item);
+                plugin.getStorage().addBlacklist(item);
                 p.sendRichMessage("<green>Item added to blacklist. Reload to take effects");
                 i.editMeta(PDCUtils::setBlacklist);
             });

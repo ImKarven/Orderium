@@ -7,11 +7,10 @@ import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
-import me.karven.orderium.data.ConfigManager;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
-import me.karven.orderium.utils.OrderUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -22,7 +21,7 @@ import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ManageOrderDialog {
-    private static ConfigManager cache;
+    private static ConfigCache cache;
     private static MiniMessage mm;
 
     public static void init(Orderium plugin) {
@@ -58,7 +57,7 @@ public class ManageOrderDialog {
                                     if (!(player instanceof Player p)) return;
 
                                     final String rawAmount = view.getText("amount");
-                                    OrderUtils.collect(order, rawAmount);
+                                    order.collect(rawAmount);
                                     YourOrderGUI.open(p);
                                 }, ClickCallback.Options.builder().build()))
                                 .build(),
@@ -84,8 +83,7 @@ public class ManageOrderDialog {
                                 .tooltip(mm.deserialize(cache.getCancelOrderConfirmHover()))
                                 .action(DialogAction.customClick((v, player) -> {
                                     if (!(player instanceof Player p)) return;
-                                    OrderUtils.cancel(order);
-                                    YourOrderGUI.open(p);
+                                    order.cancel(p);
                                 }, ClickCallback.Options.builder().build()))
                                 .build(),
                         ActionButton.builder(mm.deserialize(cache.getCancelOrderCancelLabel()))

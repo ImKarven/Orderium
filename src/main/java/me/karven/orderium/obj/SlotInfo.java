@@ -4,8 +4,8 @@ import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
 import lombok.Getter;
 import lombok.Setter;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.Log;
 import org.bukkit.inventory.ItemType;
 
 import java.util.List;
@@ -35,7 +35,7 @@ public class SlotInfo implements Cloneable {
 
     public void deserialize(ConfigSection section) {
         if (section == null) {
-            Orderium.getInst().getLogger().severe("Button deserialization failed because section is null");
+            Log.warn("Button deserialization failed because section is null");
             return;
         }
         slot = section.get("slot") == null ? -1 : section.getInteger("slot");

@@ -4,7 +4,7 @@ import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
-import me.karven.orderium.data.ConfigManager;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
@@ -37,7 +37,7 @@ import java.util.logging.Level;
 public class ConvertUtils {
     private static Orderium plugin;
     private static MiniMessage mm;
-    private static ConfigManager cache;
+    private static ConfigCache cache;
     private static final Registry<ItemType> itemRegistry = Registry.ITEM;
     private static final Registry<DataComponentType> dataComponentTypeRegistry = Registry.DATA_COMPONENT_TYPE;
 
@@ -79,10 +79,11 @@ public class ConvertUtils {
                                 raw.getInt(7),
                                 raw.getInt(8),
                                 raw.getLong(9)
-                        ));
+                        )
+                );
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to fetch order from database", e);
+            Log.error("Failed to fetch order from database", e);
         }
 
         return orders;

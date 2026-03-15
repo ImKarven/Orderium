@@ -13,8 +13,6 @@ import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import lombok.val;
-import me.karven.orderium.data.DBManager;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
 import me.karven.orderium.utils.ConvertUtils;
@@ -33,11 +31,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import static me.karven.orderium.load.Orderium.plugin;
+
 public class AdminToolGUI {
 
     private static final List<ChestGui> blacklist = new ArrayList<>();
     private static final List<ChestGui> customItems = new ArrayList<>();
-    private static DBManager db;
+//    private static DBManager db;
 
     // Using shared page amount but it's fine I guess
     private static int pageAmount;
@@ -61,7 +61,7 @@ public class AdminToolGUI {
             ItemStack clicked = e.getCurrentItem();
             if (clicked == null || clicked.isEmpty()) return;
 
-            db.addCustomItem(clicked);
+            plugin.getStorage().addCustomItem(clicked);
             createCustomItems();
             customItems.get(Math.min(i, customItems.size() - 1)).show(e.getWhoClicked());
         };
@@ -69,8 +69,8 @@ public class AdminToolGUI {
     }
 
 
-    public static void init(Orderium plugin) {
-        db = plugin.getDbManager();
+    public static void init() {
+//        db = plugin.getDbManager();
 
         next.editMeta(meta -> {
             meta.displayName(nameDeco("Next"));
@@ -119,7 +119,7 @@ public class AdminToolGUI {
     public static void createBlacklist() {
         blacklist.clear();
 
-        final Set<ItemStack> items = db.getBlacklistedItems();
+        final Set<ItemStack> items = plugin.getDataCache().getBlacklist();
         pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
         ChestGui page = new ChestGui(6, "Blacklisted Items");
@@ -152,7 +152,7 @@ public class AdminToolGUI {
                     "",
                     "<white>Click to <red>remove<white> from blacklist"
             )), e -> {
-                db.removeBlacklist(item);
+                plugin.getStorage().removeBlacklist(item);
                 createBlacklist();
                 blacklist.get(Math.min(currentPage, blacklist.size() - 1)).show(e.getWhoClicked());
             }));
@@ -169,7 +169,7 @@ public class AdminToolGUI {
     public static void createCustomItems() {
         customItems.clear();
 
-        final Set<Pair<ItemStack, String>> items = db.getCustomItems();
+        final Set<Pair<ItemStack, String>> items = plugin.getDataCache().getCustomItems();
         pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
         ChestGui page = new ChestGui(6, "Custom Items");
@@ -209,7 +209,7 @@ public class AdminToolGUI {
             )), e -> {
                 switch (e.getClick()) {
                     case LEFT -> {
-                        db.removeCustomItem(item.first());
+                        plugin.getStorage().removeCustomItem(item.first());
                         createCustomItems();
                         customItems.get(Math.min(currentPage, customItems.size() - 1)).show(e.getWhoClicked());
                     }
@@ -261,7 +261,7 @@ public class AdminToolGUI {
 
                                                         case null, default -> {}
                                                     }
-                                                    db.updateCustomItemSearch(  item);
+                                                    plugin.getStorage().updateCustomItemSearch(item);
                                                 }, ClickCallback.Options.builder().build()))
                                                 .build(),
                                         ActionButton.builder(Component.text("Cancel", NamedTextColor.RED)).build()

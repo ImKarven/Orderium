@@ -5,7 +5,7 @@ import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import lombok.val;
-import me.karven.orderium.data.ConfigManager;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
@@ -33,7 +33,7 @@ public class MainGUI {
     private final String search;
 
     private static Orderium plugin;
-    private static ConfigManager cache;
+    private static ConfigCache cache;
     private static MiniMessage mm;
 
     public static void init(Orderium pl) {
@@ -47,7 +47,7 @@ public class MainGUI {
         this.sortIdx = sortIdx;
         this.player = p;
         final SortTypes sortType = cache.getOrdersSortsOrder().get(sortIdx);
-        orders = plugin.getDbManager().getSortedOrders(sortType);
+        orders = plugin.getDataCache().getSortedOrders(sortType);
         this.amount = ceil_div(orders.size(), 45);
         setupPages();
         open(p);
@@ -58,7 +58,7 @@ public class MainGUI {
         this.sortIdx = sortIdx;
         this.player = p;
         final SortTypes sortType = cache.getOrdersSortsOrder().get(sortIdx);
-        orders = AlgoUtils.searchOrder(search, plugin.getDbManager().getSortedOrders(sortType));
+        orders = AlgoUtils.searchOrder(search, plugin.getDataCache().getSortedOrders(sortType));
 
         this.amount = ceil_div(orders.size(), 45);
         setupPages();
@@ -125,6 +125,7 @@ public class MainGUI {
 
             if (amount == 0) {
                 PlayerUtils.give(p, items, false);
+                p.getScheduler().run(plugin, t -> p.updateInventory(), null);
                 return;
             }
 

@@ -1,22 +1,23 @@
 package me.karven.orderium.utils;
 
-import me.karven.orderium.data.ConfigManager;
-import me.karven.orderium.data.DBManager;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.MoneyTransaction;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
+import static me.karven.orderium.load.Orderium.plugin;
+
 public class EconUtils {
     private static Economy eco;
     private static final MoneyTransaction currentTransaction = new MoneyTransaction();
-    private static DBManager db;
-    private static ConfigManager cache;
+//    private static DBManager db;
+    private static ConfigCache cache;
 
     public static void init(Orderium plugin) {
         eco = plugin.getEcon();
-        db = plugin.getDbManager();
+//        db = plugin.getDbManager();
         cache = plugin.getConfigs();
     }
 
@@ -45,8 +46,6 @@ public class EconUtils {
     private static void logTransactionAfter(OfflinePlayer p) {
         if (!cache.isLogTransactions()) return;
         currentTransaction.after = eco.getBalance(p);
-        db.logTransaction();
+        plugin.getStorage().logTransaction(currentTransaction.player, currentTransaction.before, currentTransaction.amount, currentTransaction.after);
     }
-
-    public static MoneyTransaction moneyTransaction() { return currentTransaction; }
 }

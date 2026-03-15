@@ -1,16 +1,15 @@
 package me.karven.orderium.gui;
 
-import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.util.Vector3i;
-import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientUpdateSign;
 import io.papermc.paper.math.Position;
 import lombok.val;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SignInfo;
+import me.karven.orderium.utils.Log;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -33,7 +32,7 @@ public class SignGUI implements PacketListener {
 
     public static void newSession(Player p, Consumer<String> action, List<String> lines, BlockType blockType, int line) {
         if (blockType == null) {
-            Orderium.getInst().getLogger().severe("Failed to show sign GUI because of invalid sign block");
+            Log.warn("Failed to show sign GUI because of invalid sign block");
             action.accept("");
             return;
         }
@@ -89,10 +88,5 @@ public class SignGUI implements PacketListener {
         // END
 
         e.setCancelled(true);
-    }
-
-
-    private static void send(Player p, PacketWrapper<?> wrapper) {
-        PacketEvents.getAPI().getPlayerManager().sendPacket(p, wrapper);
     }
 }

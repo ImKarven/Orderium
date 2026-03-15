@@ -2,9 +2,11 @@ package me.karven.orderium.utils;
 
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import io.papermc.paper.dialog.Dialog;
-import me.karven.orderium.data.ConfigManager;
+import lombok.val;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import net.kyori.adventure.sound.Sound;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -16,7 +18,7 @@ import java.util.List;
 
 public class PlayerUtils {
     private static Orderium plugin;
-    private static ConfigManager cache;
+    private static ConfigCache cache;
 
     public static void init(Orderium plugin) {
         PlayerUtils.plugin = plugin;
@@ -30,12 +32,17 @@ public class PlayerUtils {
      * @param safe whether to schedule this with the player's scheduler or not
      */
     public static void give(Player p, Collection<ItemStack> items, boolean safe) {
-        if (!Orderium.isFolia || !safe) {
+        if (!safe) {
             p.give(items, true);
             return;
         }
-
-        p.getScheduler().run(plugin, t -> p.give(items, true), null);
+        val location = p.getLocation();
+        val world = location.getWorld();
+        p.getScheduler().run(plugin, t -> p.give(items, true), () -> {
+            Bukkit.getRegionScheduler().run(plugin, location, task -> {
+               items.forEach(item -> world.dropItem(location, item));
+            });
+        });
 
     }
 

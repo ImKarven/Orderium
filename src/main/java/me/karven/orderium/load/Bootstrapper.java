@@ -11,9 +11,14 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.val;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
+import me.karven.orderium.obj.Order;
+import me.karven.orderium.obj.SortTypes;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.NonNull;
+
+import static me.karven.orderium.load.Orderium.plugin;
 
 @SuppressWarnings("UnstableApiUsage")
 public class Bootstrapper implements PluginBootstrap {
@@ -43,7 +48,7 @@ public class Bootstrapper implements PluginBootstrap {
                 .then(Commands.literal("reload")
                         .requires(predicate -> predicate.getSender().hasPermission("orderium.admin.reload"))
                         .executes(ctx -> {
-                            Orderium.getInst().getConfigs().reload(() -> {
+                            plugin.getConfigs().reload(() -> {
 
                                 ctx.getSource().getSender().sendRichMessage("<green>Orderium reloaded");
                             });
@@ -73,6 +78,30 @@ public class Bootstrapper implements PluginBootstrap {
 
                             AdminToolGUI.openCustomItems(p);
 
+                            return 1;
+                        })
+                );
+
+        builder
+                .then(Commands.literal("test")
+                        .executes(ctx -> {
+                            val sender = ctx.getSource().getExecutor();
+                            if (sender == null) return 1;
+                            sender.sendMessage(Component.text("Orders: " + plugin.getDataCache().getSortedOrders(SortTypes.MOST_MONEY_PER_ITEM).size()));
+                            sender.sendMessage(Component.text("Blacklist: " + plugin.getDataCache().getBlacklist().size()));
+                            sender.sendMessage(Component.text("Custom Items: " + plugin.getDataCache().getCustomItems().size()));
+                            return 1;
+                        })
+
+                )
+                .then(Commands.literal("orders")
+                        .executes(ctx -> {
+                            val sender = ctx.getSource().getExecutor();
+                            if (!(sender instanceof Player player)) return 1;
+                            for (Order order : plugin.getDataCache().getSortedOrders(SortTypes.MOST_MONEY_PER_ITEM)) {
+                                sender.sendMessage(Component.text("#" + order.id + " amount=" + order.amount + " moneyPer=" + order.moneyPer + " delivered=" + order.delivered + " inStorage=" + order.inStorage + " expiresAt=" + order.expiresAt));
+                                player.give(order.getItem());
+                            }
                             return 1;
                         })
                 );

@@ -3,8 +3,7 @@ package me.karven.orderium.gui;
 import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHolder;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
-import me.karven.orderium.data.ConfigManager;
-import me.karven.orderium.data.DBManager;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
@@ -22,10 +21,10 @@ public class YourOrderGUI {
         YourOrderGUI.plugin = plugin;
     }
     public static void open(Player p) {
-        final DBManager db = plugin.getDbManager();
+//        final DBManager db = plugin.getDbManager();
         final UUID pUUID = p.getUniqueId();
-        final List<Order> orders = db.getOrders(pUUID);
-        final ConfigManager cache = plugin.getConfigs();
+        final List<Order> orders = plugin.getDataCache().getOrders(pUUID);
+        final ConfigCache cache = plugin.getConfigs();
         final MiniMessage mm = plugin.mm;
         final ChestGui gui = new ChestGui(3, ComponentHolder.of(mm.deserialize(cache.getYoGuiTitle())));
         gui.setOnGlobalClick(e -> e.setCancelled(true));

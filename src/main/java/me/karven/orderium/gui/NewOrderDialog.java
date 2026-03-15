@@ -7,9 +7,10 @@ import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
-import me.karven.orderium.data.ConfigManager;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
-import me.karven.orderium.utils.OrderUtils;
+import me.karven.orderium.obj.Order;
+import me.karven.orderium.utils.Log;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
@@ -22,11 +23,9 @@ import java.util.List;
 @SuppressWarnings("UnstableApiUsage")
 public class NewOrderDialog {
 
-    private static Orderium plugin;
     private static MiniMessage mm;
-    private static ConfigManager cache;
+    private static ConfigCache cache;
     public static void init(Orderium plugin) {
-        NewOrderDialog.plugin = plugin;
         mm = plugin.mm;
         cache = plugin.getConfigs();
     }
@@ -50,7 +49,7 @@ public class NewOrderDialog {
                     mm.deserialize(cache.getConfirmTooltip())
             ));
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to send dialog to player " + p.getName());
+            Log.warn("Failed to send dialog to player " + p.getName());
 
         }
     }
@@ -94,7 +93,7 @@ public class NewOrderDialog {
                                         PlayerUtils.closeInv(p);
 
                                         // Create new order
-                                        final OrderUtils.Response response = OrderUtils.create(p, display, view.getText("money_per"), view.getText("amount"));
+                                        final Order.Response response = Order.create(p, display, view.getText("money_per"), view.getText("amount"));
 
                                         switch (response) {
                                             case INVALID -> p.sendRichMessage(cache.getInvalidInput());
