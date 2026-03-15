@@ -103,7 +103,7 @@ public final class Orderium extends JavaPlugin {
         ConvertUtils.init(this);
         PlayerUtils.init(this);
         PDCUtils.init(this);
-        AdminToolGUI.init(this);
+        AdminToolGUI.init();
 
         ChooseItemGUI.init(this);
 
