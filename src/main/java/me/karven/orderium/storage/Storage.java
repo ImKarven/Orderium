@@ -112,14 +112,18 @@ public abstract class Storage {
                 val connection = modifiedItemDataSource.getConnection();
                 val createCustomItemsTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB, search VARCHAR(65535))");
                 val createBlacklistTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)");
-                val getCustomItems = connection.prepareStatement("SELECT * FROM " + CUSTOM_ITEMS_TABLE);
-                val getBlacklist = connection.prepareStatement("SELECT * FROM " + BLACKLIST_TABLE)
         ) {
             createCustomItemsTable.executeUpdate();
             createBlacklistTable.executeUpdate();
 
+            val getCustomItems = connection.prepareStatement("SELECT * FROM " + CUSTOM_ITEMS_TABLE);
+            val getBlacklist = connection.prepareStatement("SELECT * FROM " + BLACKLIST_TABLE);
+
             val blacklist = ConvertUtils.convertItems(getBlacklist.executeQuery());
             val customItems = ConvertUtils.convertSearchableItems(getCustomItems.executeQuery());
+
+            getCustomItems.close();
+            getBlacklist.close();
 
             return new Pair<>(blacklist, customItems);
 

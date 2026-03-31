@@ -48,7 +48,7 @@ public class AlgoUtils {
     }
 
     private static String fixQuery(String query) {
-        return query.toLowerCase().trim().replaceAll(" ", "_");
+        return query.toLowerCase().trim().replace(" ", "_");
     }
 
     private static boolean search(Order order, String q) {

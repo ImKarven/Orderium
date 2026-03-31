@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 public final class Orderium extends JavaPlugin {
     public static Orderium plugin;
     public static boolean isFolia;
-    public static final DialogListener DIALOG_LISTENER = new DialogListener();
-    public static final DisconnectListener DISCONNECT_LISTENER = new DisconnectListener();
+    public final DialogListener DIALOG_LISTENER = new DialogListener();
+    public final DisconnectListener DISCONNECT_LISTENER = new DisconnectListener();
 
     private ConfigCache configs;
 //    private DBManager dbManager;

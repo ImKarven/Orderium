@@ -45,7 +45,6 @@ public class SlotInfo implements Cloneable {
         type = ConvertUtils.getItemType(section.getString("type", "minecraft:stone"));
     }
 
-    @Override
     public SlotInfo clone() {
         try {
             return (SlotInfo) super.clone();

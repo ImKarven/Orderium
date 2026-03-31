@@ -33,14 +33,17 @@ public final class DataCache {
     private final TreeSet<Order> mostPaid = new TreeSet<>(Comparator.comparingDouble(Order::getPaid).reversed().thenComparing(Order::getId));
 
     private void setBlacklistAndCustomItems(Collection<ItemStack> blacklist, Collection<Pair<ItemStack, String>> customItems) {
-        this.blacklist.clear(); this.customItems.clear();
+        this.blacklist.clear();
+        this.customItems.clear();
         this.blacklist.addAll(blacklist);
         this.customItems.addAll(customItems);
     }
 
     public void setItems(Collection<ItemStack> bukkitItems, Collection<ItemStack> blacklistedItems, Collection<Pair<ItemStack, String>> customItems) {
-        itemsAZ.clear(); itemsZA.clear();
-        itemsAZ.addAll(bukkitItems); itemsZA.addAll(bukkitItems);
+        itemsAZ.clear();
+        itemsZA.clear();
+        itemsAZ.addAll(bukkitItems);
+        itemsZA.addAll(bukkitItems);
 
         final List<ItemStack> parsedCustomItems = customItems.stream().map(item -> {
             final ItemStack stack = item.first.clone();
@@ -69,16 +72,32 @@ public final class DataCache {
         order.amount = amount;
         order.delivered = delivered;
         order.inStorage = inStorage;
-        mostMoneyPerItem.remove(order); recentlyListed.remove(order); mostDelivered.remove(order); mostPaid.remove(order);
-        mostMoneyPerItem.add(order); recentlyListed.add(order); mostDelivered.add(order); mostPaid.add(order);
+
+        // Re-add the order to not mess up the sorted collections after updating
+
+        mostMoneyPerItem.remove(order);
+        recentlyListed.remove(order);
+        mostDelivered.remove(order);
+        mostPaid.remove(order);
+
+        mostMoneyPerItem.add(order);
+        recentlyListed.add(order);
+        mostDelivered.add(order);
+        mostPaid.add(order);
     }
 
     public void deleteOrder(Order order) {
-        mostMoneyPerItem.remove(order); recentlyListed.remove(order); mostDelivered.remove(order); mostPaid.remove(order);
+        mostMoneyPerItem.remove(order);
+        recentlyListed.remove(order);
+        mostDelivered.remove(order);
+        mostPaid.remove(order);
     }
 
     public void addOrder(Order order) {
-        mostMoneyPerItem.add(order); recentlyListed.add(order); mostDelivered.add(order); mostPaid.add(order);
+        mostMoneyPerItem.add(order);
+        recentlyListed.add(order);
+        mostDelivered.add(order);
+        mostPaid.add(order);
     }
 
     public List<Order> getOrders(UUID ownerId) {

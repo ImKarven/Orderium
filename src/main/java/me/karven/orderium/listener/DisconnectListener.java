@@ -2,6 +2,7 @@ package me.karven.orderium.listener;
 
 import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
 import lombok.val;
+import me.karven.orderium.gui.SignGUI;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -18,6 +19,7 @@ public class DisconnectListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         val p = e.getPlayer();
+        SignGUI.completeSession(p, "");
         val view = p.getOpenInventory();
         Gui gui = getGui(view.getTopInventory());
         if (gui != null)

@@ -3,7 +3,6 @@ package me.karven.orderium.gui;
 import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
-import com.github.retrooper.packetevents.util.Vector3i;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientUpdateSign;
 import io.papermc.paper.math.Position;
 import lombok.val;
@@ -45,22 +44,28 @@ public class SignGUI implements PacketListener {
             y -= 4;
         } else y += 5;
 
-        // PAPER PACKET SENDING IMPLEMENTATION
         Sign signState = (Sign) blockType.createBlockData().createBlockState();
         val frontSide = signState.getSide(Side.FRONT);
         for (int i = 0; i < 4; i++) frontSide.line(i, mm.deserialize(lines.get(i)));
         val loc = new Location(p.getWorld(), x, y, z);
+        val position = Position.block(x, y, z);
         p.sendBlockChange(loc, signState.getBlockData());
         p.sendBlockUpdate(loc, signState);
-        p.openVirtualSign(Position.block(loc), Side.FRONT);
-        // END
+        p.openVirtualSign(position, Side.FRONT);
 
-        sessionsList.put(p, new SignInfo(action, blockType, line, new Vector3i(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())));
+        sessionsList.put(p, new SignInfo(action, blockType, line, position));
     }
 
     public SignGUI(Orderium plugin) {
         mm = plugin.mm;
         SignGUI.plugin = plugin;
+    }
+
+    public static void completeSession(Player player, String text) {
+        SignInfo info = sessionsList.get(player);
+        if (info == null) return;
+        info.action().accept(text);
+        sessionsList.remove(player);
     }
 
     @Override
@@ -70,22 +75,18 @@ public class SignGUI implements PacketListener {
         final SignInfo info = sessionsList.get(player);
         if (info == null) return;
         final WrapperPlayClientUpdateSign wrapper = new WrapperPlayClientUpdateSign(e);
-        final Vector3i pos = info.pos();
+        final Position pos = info.position();
         if (!wrapper.getBlockPosition().equals(pos)) return;
         final String[] lines = wrapper.getTextLines();
-        info.action().accept(lines[info.line() - 1]);
-
-        sessionsList.remove(player);
+        completeSession(player, lines[info.line() - 1]);
 
         val world = player.getWorld();
-        val loc = new Location(world, pos.getX(), pos.getY(), pos.getZ());
+        val loc = pos.toLocation(world);
 
-        // PAPER
         Bukkit.getRegionScheduler().run(plugin, loc, t -> {
             player.sendBlockChange(loc, world.getBlockData(loc));
             if (world.getBlockState(loc) instanceof TileState tile) player.sendBlockUpdate(loc, tile);
         });
-        // END
 
         e.setCancelled(true);
     }
