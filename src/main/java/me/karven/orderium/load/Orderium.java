@@ -4,7 +4,6 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.val;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.data.DataCache;
 import me.karven.orderium.folia.IFFolia;
@@ -113,7 +112,7 @@ public final class Orderium extends JavaPlugin {
 
         if (configs.isBStats()) {
             final int pluginId = 27569;
-            val metrics = new Metrics(this, pluginId);
+            new Metrics(this, pluginId);
         }
 
         if (configs.isCheckForUpdates()) {

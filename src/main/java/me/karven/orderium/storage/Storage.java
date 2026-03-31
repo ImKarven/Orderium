@@ -111,7 +111,7 @@ public abstract class Storage {
         try (
                 val connection = modifiedItemDataSource.getConnection();
                 val createCustomItemsTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB, search VARCHAR(65535))");
-                val createBlacklistTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)");
+                val createBlacklistTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)")
         ) {
             createCustomItemsTable.executeUpdate();
             createBlacklistTable.executeUpdate();

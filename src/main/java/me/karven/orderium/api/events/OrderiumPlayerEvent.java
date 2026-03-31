@@ -1,5 +1,6 @@
 package me.karven.orderium.api.events;
 
+import lombok.Getter;
 import lombok.Setter;
 import me.karven.orderium.api.Order;
 import org.bukkit.entity.Player;
@@ -9,6 +10,7 @@ import org.bukkit.event.player.PlayerEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
+@Getter
 public abstract class OrderiumPlayerEvent extends PlayerEvent implements Cancellable {
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
@@ -16,6 +18,7 @@ public abstract class OrderiumPlayerEvent extends PlayerEvent implements Cancell
     private boolean isCancelled = false;
     private final Order order;
 
+    @SuppressWarnings("unused")
     public static HandlerList getHandlerList() { return HANDLER_LIST; }
 
     protected OrderiumPlayerEvent(@NotNull Player player, @NotNull Order order) {
@@ -26,7 +29,4 @@ public abstract class OrderiumPlayerEvent extends PlayerEvent implements Cancell
     @Override
     public @NonNull HandlerList getHandlers() { return HANDLER_LIST; }
 
-    public Order getOrder() { return order; }
-
-    public boolean isCancelled() { return isCancelled; }
 }
