@@ -64,8 +64,14 @@ public final class DataCache {
     }
 
     public void setOrders(Collection<Order> orders) {
-        mostMoneyPerItem.clear(); recentlyListed.clear(); mostDelivered.clear(); mostPaid.clear();
-        mostMoneyPerItem.addAll(orders); recentlyListed.addAll(orders); mostDelivered.addAll(orders); mostPaid.addAll(orders);
+        mostMoneyPerItem.clear();
+        recentlyListed.clear();
+        mostDelivered.clear();
+        mostPaid.clear();
+        mostMoneyPerItem.addAll(orders);
+        recentlyListed.addAll(orders);
+        mostDelivered.addAll(orders);
+        mostPaid.addAll(orders);
     }
     public void updateOrder(Order order, double moneyPer, int amount, int delivered, int inStorage) {
         order.moneyPer = moneyPer;
@@ -74,7 +80,6 @@ public final class DataCache {
         order.inStorage = inStorage;
 
         // Re-add the order to not mess up the sorted collections after updating
-
         mostMoneyPerItem.remove(order);
         recentlyListed.remove(order);
         mostDelivered.remove(order);

@@ -94,7 +94,7 @@ public class Order implements me.karven.orderium.api.Order {
                 toGive.add(item);
                 break;
             }
-            // FIXME player loses some their items if they leave before the delivery arrives
+
             PlayerUtils.give(p, toGive, true);
         });
     }
@@ -137,7 +137,6 @@ public class Order implements me.karven.orderium.api.Order {
 
             PDCUtils.setCollected(p, collectedInMinute + amount);
 
-            // FIXME Player loses the items if they disconnect
             PlayerUtils.give(p, getItem().clone(), amount, true);
         });
 
