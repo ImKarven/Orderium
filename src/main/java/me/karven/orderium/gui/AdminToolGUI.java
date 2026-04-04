@@ -4,6 +4,7 @@ import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
@@ -123,8 +124,8 @@ public class AdminToolGUI {
         pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
         ChestGui page = new ChestGui(6, "Blacklisted Items");
-        OutlinePane itemsPane = new OutlinePane(0, 0, 9, 5);
-        StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
+        OutlinePane itemsPane = new OutlinePane(9, 5);
+        StaticPane buttonsPane = new StaticPane(9, 1);
         addBlacklistButtons(0, buttonsPane);
 
         page.setOnGlobalDrag(e -> e.setCancelled(true));
@@ -135,13 +136,13 @@ public class AdminToolGUI {
             if (cnt == 45) {
                 cnt = 0;
                 i++;
-                page.addPane(itemsPane);
-                page.addPane(buttonsPane);
+                page.addPane(Slot.fromXY(0, 0), itemsPane);
+                page.addPane(Slot.fromXY(0, 5), buttonsPane);
                 blacklist.add(page);
 
                 page = new ChestGui(6, "Blacklisted Items");
-                itemsPane = new OutlinePane(0, 0, 9, 5);
-                buttonsPane = new StaticPane(0, 5, 9, 1);
+                itemsPane = new OutlinePane(9, 5);
+                buttonsPane = new StaticPane(9, 1);
                 addBlacklistButtons(i, buttonsPane);
 
                 page.setOnGlobalDrag(e -> e.setCancelled(true));
@@ -160,8 +161,8 @@ public class AdminToolGUI {
             cnt++;
         }
 
-        page.addPane(itemsPane);
-        page.addPane(buttonsPane);
+        page.addPane(Slot.fromXY(0, 0), itemsPane);
+        page.addPane(Slot.fromXY(0, 5), buttonsPane);
         blacklist.add(page);
     }
 
@@ -173,8 +174,8 @@ public class AdminToolGUI {
         pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
         ChestGui page = new ChestGui(6, "Custom Items");
-        OutlinePane itemsPane = new OutlinePane(0, 0, 9, 5);
-        StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
+        OutlinePane itemsPane = new OutlinePane(9, 5);
+        StaticPane buttonsPane = new StaticPane(9, 1);
         addCustomItemsButtons(0, buttonsPane);
 
         page.setOnGlobalDrag(e -> e.setCancelled(true));
@@ -187,13 +188,13 @@ public class AdminToolGUI {
             if (cnt == 45) {
                 cnt = 0;
                 i++;
-                page.addPane(itemsPane);
-                page.addPane(buttonsPane);
+                page.addPane(Slot.fromXY(0, 0), itemsPane);
+                page.addPane(Slot.fromXY(0, 5), buttonsPane);
                 customItems.add(page);
 
                 page = new ChestGui(6, "Custom Items");
-                itemsPane = new OutlinePane(0, 0, 9, 5);
-                buttonsPane = new StaticPane(0, 5, 9, 1);
+                itemsPane = new OutlinePane(9, 5);
+                buttonsPane = new StaticPane(9, 1);
                 addCustomItemsButtons(i, buttonsPane);
 
                 page.setOnGlobalDrag(e -> e.setCancelled(true));
@@ -278,8 +279,8 @@ public class AdminToolGUI {
             cnt++;
         }
 
-        page.addPane(itemsPane);
-        page.addPane(buttonsPane);
+        page.addPane(Slot.fromXY(0, 0), itemsPane);
+        page.addPane(Slot.fromXY(0, 5), buttonsPane);
         customItems.add(page);
     }
 

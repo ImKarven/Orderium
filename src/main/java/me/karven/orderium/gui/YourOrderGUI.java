@@ -3,6 +3,7 @@ package me.karven.orderium.gui;
 import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHolder;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
@@ -29,7 +30,7 @@ public class YourOrderGUI {
         final ChestGui gui = new ChestGui(3, ComponentHolder.of(mm.deserialize(cache.getYoGuiTitle())));
         gui.setOnGlobalClick(e -> e.setCancelled(true));
         gui.setOnGlobalDrag(e -> e.setCancelled(true));
-        final OutlinePane ordersPane = new OutlinePane(0, 0, 9, 3);
+        final OutlinePane ordersPane = new OutlinePane(9, 3);
         final List<String> rawLore = cache.getYoLore();
         for (Order order : orders) {
             ordersPane.addItem(ConvertUtils.parseOrder(order, rawLore, e -> {
@@ -44,7 +45,7 @@ public class YourOrderGUI {
             }));
         }
 
-        gui.addPane(ordersPane);
+        gui.addPane(Slot.fromXY(0, 0), ordersPane);
         PlayerUtils.openGui(p, gui);
     }
 }

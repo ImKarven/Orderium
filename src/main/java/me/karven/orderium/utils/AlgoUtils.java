@@ -197,9 +197,9 @@ public class AlgoUtils {
     private static int compareBytes(byte[] a, byte[] b) {
         final int l1 = a.length;
         final int l2 = b.length;
-        if (l1 != l2) return l1 - l2;
+        if (l1 != l2) return 1;
         for (int i = 0; i < l1; i++) {
-            if (a[i] != b[i]) return a[i] - b[i];
+            if (a[i] != b[i]) return 1;
         }
         return 0;
     }

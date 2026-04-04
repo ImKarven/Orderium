@@ -1,5 +1,6 @@
 package me.karven.orderium.folia;
 
+import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.GuiListener;
 import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
 import lombok.val;
@@ -44,4 +45,10 @@ public class IFFolia extends Gui {
     public int getViewerCount() { throw new UnsupportedOperationException("Use of prohibited method"); }
 
     public @NotNull List<HumanEntity> getViewers() { throw new UnsupportedOperationException("Use of prohibited method"); }
+
+    @Override
+    public void update() { throw new UnsupportedOperationException("Use of prohibited method"); }
+
+    @Override
+    public @NotNull Iterable<? extends GuiItem> getItems() { throw new UnsupportedOperationException("Use of prohibited method"); }
 }

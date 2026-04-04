@@ -4,6 +4,7 @@ import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHold
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import lombok.val;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
@@ -68,20 +69,20 @@ public class MainGUI {
     private void setupPages() {
         int curr = 0, cnt = 0;
         ChestGui page = initPage();
-        OutlinePane orderPane = new OutlinePane(0, 0, 9, 5);
-        StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
+        OutlinePane orderPane = new OutlinePane(9, 5);
+        StaticPane buttonsPane = new StaticPane(9, 1);
         addButtons(buttonsPane, curr);
 
         for (final Order order : orders) {
             if (!order.isActive()) continue;
             if (cnt == 45) {
                 cnt = 0;
-                page.addPane(orderPane);
-                page.addPane(buttonsPane);
+                page.addPane(Slot.fromXY(0, 0), orderPane);
+                page.addPane(Slot.fromXY(0, 5), buttonsPane);
                 pages.add(page);
                 page = initPage();
-                orderPane = new OutlinePane(0, 0, 9, 5);
-                buttonsPane = new StaticPane(0, 5, 9, 1);
+                orderPane = new OutlinePane(9, 5);
+                buttonsPane = new StaticPane(9, 1);
                 addButtons(buttonsPane, ++curr);
             }
             orderPane.addItem(ConvertUtils.parseOrder(order, cache.getOrderLore(), e -> {
@@ -99,8 +100,8 @@ public class MainGUI {
             }));
             cnt++;
         }
-        page.addPane(orderPane);
-        page.addPane(buttonsPane);
+        page.addPane(Slot.fromXY(0, 0), orderPane);
+        page.addPane(Slot.fromXY(0, 5), buttonsPane);
         pages.add(page);
     }
 

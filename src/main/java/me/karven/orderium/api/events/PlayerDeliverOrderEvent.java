@@ -4,26 +4,22 @@ import lombok.Getter;
 import me.karven.orderium.api.Order;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
-import org.bukkit.event.player.PlayerEvent;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-public class PlayerDeliverOrderEvent extends PlayerEvent {
+public class PlayerDeliverOrderEvent extends OrderiumPlayerEvent {
     /**
-     * Get the amount of items the player is trying to order
+     * the amount of items the player is trying to order
      */
     private final int amount;
 
-    /**
-     * Get the order involved in this event
-     */
-    private final Order order;
-
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
+    /**
+     * Fired when the player attempts to deliver an order
+     */
     public PlayerDeliverOrderEvent(@NotNull Player player, @NotNull Order order, int amount) {
-        super(player);
-        this.order = order;
+        super(player, order);
         this.amount = amount;
     }
 
@@ -32,5 +28,6 @@ public class PlayerDeliverOrderEvent extends PlayerEvent {
         return HANDLER_LIST;
     }
 
+    @SuppressWarnings("unused")
     public static HandlerList getHandlerList() { return HANDLER_LIST; }
 }

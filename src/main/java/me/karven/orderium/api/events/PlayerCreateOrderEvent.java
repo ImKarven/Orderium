@@ -17,7 +17,9 @@ public class PlayerCreateOrderEvent extends PlayerEvent implements Cancellable {
     private final double moneyPer;
     private final int amount;
 
-
+    /**
+     * Fired when a player attempts to create an order
+     */
     public PlayerCreateOrderEvent(@NotNull Player player, @NotNull ItemStack item, double moneyPer, int amount) {
         super(player);
         this.item = item;
@@ -40,5 +42,6 @@ public class PlayerCreateOrderEvent extends PlayerEvent implements Cancellable {
         return HANDLER_LIST;
     }
 
+    @SuppressWarnings("unused")
     public static HandlerList getHandlerList() { return HANDLER_LIST; }
 }

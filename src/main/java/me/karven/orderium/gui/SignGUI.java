@@ -3,6 +3,7 @@ package me.karven.orderium.gui;
 import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.util.Vector3i;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientUpdateSign;
 import io.papermc.paper.math.Position;
 import lombok.val;
@@ -76,7 +77,8 @@ public class SignGUI implements PacketListener {
         if (info == null) return;
         final WrapperPlayClientUpdateSign wrapper = new WrapperPlayClientUpdateSign(e);
         final Position pos = info.position();
-        if (!wrapper.getBlockPosition().equals(pos)) return;
+        final Vector3i blockPos = new Vector3i(pos.blockX(), pos.blockY(), pos.blockZ());
+        if (!wrapper.getBlockPosition().equals(blockPos)) return;
         final String[] lines = wrapper.getTextLines();
         completeSession(player, lines[info.line() - 1]);
 

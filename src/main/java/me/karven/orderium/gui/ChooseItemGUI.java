@@ -5,6 +5,7 @@ import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SortTypes;
@@ -110,8 +111,8 @@ public class ChooseItemGUI {
     private static void createPages(List<ChestGui> pages, SortTypes sortType, Collection<ItemStack> items) {
         final int pagesAmount = ConvertUtils.ceil_div(items.size(), 45);
 
-        OutlinePane itemsPane = new OutlinePane(0, 0, 9, 5);
-        StaticPane buttonsPane = new StaticPane(0, 5, 9, 1);
+        OutlinePane itemsPane = new OutlinePane(9, 5);
+        StaticPane buttonsPane = new StaticPane(9, 1);
         addButtons(buttonsPane, pages, sortType, 0, pagesAmount);
         ChestGui currPage = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
         currPage.setOnGlobalClick(e -> e.setCancelled(true));
@@ -121,12 +122,12 @@ public class ChooseItemGUI {
             if (cnt == 45) {
                 cnt = 0;
                 idx++;
-                currPage.addPane(itemsPane);
-                currPage.addPane(buttonsPane);
+                currPage.addPane(Slot.fromXY(0, 0), itemsPane);
+                currPage.addPane(Slot.fromXY(0, 5), buttonsPane);
                 pages.add(currPage);
 
-                itemsPane = new OutlinePane(0, 0, 9, 5);
-                buttonsPane = new StaticPane(0, 5, 9, 1);
+                itemsPane = new OutlinePane(9, 5);
+                buttonsPane = new StaticPane(9, 1);
                 addButtons(buttonsPane, pages, sortType, idx, pagesAmount);
                 currPage = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
                 currPage.setOnGlobalClick(e -> e.setCancelled(true));
@@ -136,6 +137,7 @@ public class ChooseItemGUI {
             guiItem.setAction(e -> {
                 if (!(e.getWhoClicked() instanceof Player p)) return;
                 if (e.getClick() != ClickType.RIGHT || !p.hasPermission("orderium.admin.blacklist")) {
+//                    new EnchantGUI(p, new OrderItem(item.clone()), (ignored) -> {});
                     NewOrderDialog.newSession(p, item.clone());
                     return;
                 }
@@ -151,8 +153,8 @@ public class ChooseItemGUI {
             cnt++;
         }
 
-        currPage.addPane(itemsPane);
-        currPage.addPane(buttonsPane);
+        currPage.addPane(Slot.fromXY(0, 0), itemsPane);
+        currPage.addPane(Slot.fromXY(0, 5), buttonsPane);
         pages.add(currPage);
     }
 }
