@@ -7,6 +7,6 @@ Orderium is a plugin that allows players on your server to create and deliver or
 Documentation for usage of Orderium can be found in [this repository wiki](https://github.com/ImKarven/Orderium/wiki).
 
 # Compiling
-Requirements: JDK 21+
+Requirements: JDK 25+
 <br>Once the repository is cloned, run `./gradlew shadowJar` to compile the plugin.
 <br>Compiled jar file can be found in build/libs
