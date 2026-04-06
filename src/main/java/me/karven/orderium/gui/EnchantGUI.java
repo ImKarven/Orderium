@@ -6,6 +6,7 @@ import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.obj.OrderItem;
+import me.karven.orderium.utils.Log;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -24,7 +25,7 @@ import java.util.function.Consumer;
  * GUI that lets players select enchantments of their item
  */
 public class EnchantGUI {
-
+    // Store all the applicable enchantments and their current levels.
     HashMap<Enchantment, Integer> enchantsWithLevel = new HashMap<>();
 
     /**
@@ -35,10 +36,15 @@ public class EnchantGUI {
      */
     public EnchantGUI(Player player, OrderItem item, Consumer<ItemStack> action) {
         // TODO: replace texts from config where relevant
-        ChestGui gui = new ChestGui(3, "enchant gui");
+        List<Enchantment> enchantable = item.getEnchantable();
+        int length = enchantable.size();
+        // Create the GUI. Use 4 rows if more than 9 enchantments
+        int addition = length > 9 ? 1 : 0;
+        ChestGui gui = new ChestGui(3 + addition, "enchant gui");
+        gui.setOnGlobalClick(event -> event.setCancelled(true));
+        gui.setOnGlobalDrag(event -> event.setCancelled(true));
 
         StaticPane topPane = new StaticPane(9, 1);
-        topPane.setOnClick(event -> event.setCancelled(true));
         Consumer<InventoryClickEvent> confirmAction = e -> {
             NewOrderDialog.newSession(player, item.getItem());
         };
@@ -48,11 +54,8 @@ public class EnchantGUI {
         topPane.addItem(displayItem, 0, 0);
         topPane.addItem(confirmItem, 8, 0);
 
-        OutlinePane enchantmentsPane = new OutlinePane(9, 1);
-        enchantmentsPane.setOnClick(event -> event.setCancelled(true));
-        List<Enchantment> enchantable = item.getEnchantable();
-        // TODO: Boots have 11 applicable enchantments
-        int length = Math.min(9, enchantable.size());
+        OutlinePane enchantmentsPane = new OutlinePane(9, 1 + addition);
+
         for (int i = 0; i < length; i++) {
             Enchantment enchantment = enchantable.get(i);
             ItemStack bookItem = ItemStack.of(Material.ENCHANTED_BOOK);
@@ -72,6 +75,7 @@ public class EnchantGUI {
                     if (currentLevel.equals(end)) return 0;
                     return currentLevel + increment;
                 });
+                Log.info("" + newLevel);
                 guiItem.getItem().editMeta(meta -> {
                     switch (newLevel) {
                         case 0 -> meta.displayName(enchantment.description().color(NamedTextColor.GRAY));
@@ -87,8 +91,8 @@ public class EnchantGUI {
 
             Consumer<InventoryClickEvent> clickAction = e -> {
                 switch (e.getClick()) {
-                    case RIGHT -> changeLevel.accept(enchantment.getMaxLevel(), 0, -1);
-                    case LEFT -> changeLevel.accept(1, enchantment.getMaxLevel(), 1);
+                    case RIGHT -> changeLevel.accept(enchantment.getMaxLevel(), 0, -1); // Decrease level
+                    case LEFT -> changeLevel.accept(1, enchantment.getMaxLevel(), 1); // Increase level
                 }
             };
             guiItem.setAction(clickAction);
