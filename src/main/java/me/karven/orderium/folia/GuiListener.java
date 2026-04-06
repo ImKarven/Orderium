@@ -10,7 +10,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.*;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -125,11 +124,11 @@ public class GuiListener implements Listener {
             humanEntity.getScheduler().run(plugin, t -> gui.navigateToParent(humanEntity), null);
         }
     }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPlayerDropItem(@NotNull PlayerDropItemEvent event) {
-        ifListener.onPlayerDropItem(event);
-    }
+//
+//    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+//    public void onPlayerDropItem(@NotNull PlayerDropItemEvent event) {
+//        ifListener.onPlayerDropItem(event);
+//    }
 
     /**
      * Registers newly opened inventories

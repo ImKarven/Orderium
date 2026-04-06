@@ -85,7 +85,7 @@ public final class Orderium extends JavaPlugin {
         }
         saveResource("modified_items.db", false);
 
-        if (isFolia) new IFFolia(this);
+        new IFFolia(this);
 
 //        StorageMethod.init(this);
 

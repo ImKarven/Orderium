@@ -6,7 +6,6 @@ import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.obj.OrderItem;
-import me.karven.orderium.utils.Log;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -52,6 +51,7 @@ public class EnchantGUI {
         OutlinePane enchantmentsPane = new OutlinePane(9, 1);
         enchantmentsPane.setOnClick(event -> event.setCancelled(true));
         List<Enchantment> enchantable = item.getEnchantable();
+        // TODO: Boots have 11 applicable enchantments
         int length = Math.min(9, enchantable.size());
         for (int i = 0; i < length; i++) {
             Enchantment enchantment = enchantable.get(i);
@@ -72,7 +72,6 @@ public class EnchantGUI {
                     if (currentLevel.equals(end)) return 0;
                     return currentLevel + increment;
                 });
-                Log.info("" + newLevel);
                 guiItem.getItem().editMeta(meta -> {
                     switch (newLevel) {
                         case 0 -> meta.displayName(enchantment.description().color(NamedTextColor.GRAY));

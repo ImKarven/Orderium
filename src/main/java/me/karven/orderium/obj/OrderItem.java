@@ -31,7 +31,7 @@ public class OrderItem {
         this.enchantable = new ArrayList<>();
 
         for (Enchantment enchantment : enchantRegistry) {
-            if (!enchantment.canEnchantItem(item)) continue;
+            if (!enchantment.canEnchantItem(item) || enchantment.isCursed()) continue;
             enchantable.add(enchantment);
         }
     }

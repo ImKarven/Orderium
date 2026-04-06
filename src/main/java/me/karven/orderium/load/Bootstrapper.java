@@ -83,17 +83,21 @@ public class Bootstrapper implements PluginBootstrap {
                 );
 
         builder
-                .then(Commands.literal("test")
-                        .executes(ctx -> {
-                            val sender = ctx.getSource().getExecutor();
-                            if (sender == null) return 1;
-                            sender.sendMessage(Component.text("Orders: " + plugin.getDataCache().getSortedOrders(SortTypes.MOST_MONEY_PER_ITEM).size()));
-                            sender.sendMessage(Component.text("Blacklist: " + plugin.getDataCache().getBlacklist().size()));
-                            sender.sendMessage(Component.text("Custom Items: " + plugin.getDataCache().getCustomItems().size()));
-                            return 1;
-                        })
-
-                )
+//                .then(Commands.literal("test")
+//                        .executes(ctx -> {
+//                            val sender = ctx.getSource().getExecutor();
+//                            if (sender == null) return 1;
+//                            for (ItemStack item : plugin.getDataCache().getItems(SortTypes.A_Z)) {
+//                                OrderItem orderItem = new OrderItem(item);
+//                                int amount = orderItem.getEnchantable().size();
+//                                if (amount > 9) {
+//                                    sender.sendMessage(Component.text("item " + item.getType() + " has " + amount));
+//                                }
+//                            }
+//                            return 1;
+//                        })
+//
+//                )
                 .then(Commands.literal("orders")
                         .executes(ctx -> {
                             val sender = ctx.getSource().getExecutor();

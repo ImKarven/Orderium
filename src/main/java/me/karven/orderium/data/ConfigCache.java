@@ -232,6 +232,8 @@ public class ConfigCache {
                 "This similarity check happens when a player deliver an order, it accepts items in the delivery inventory that are similar to the one in the order\n" +
                 "See a list of data components here, note that only use ones that exist on your server version: https://minecraft.wiki/w/Data_component_format#List_of_components");
 
+//        config.addDefault("enchantments", false, "Whether to enable enchanting items");
+
         // MESSAGES
         config.addDefault("messages.create-order-success", "<gray>Your order has been created");
         config.addDefault("messages.invalid-input", "<red>Invalid number or format");
@@ -353,6 +355,11 @@ public class ConfigCache {
         // DELIVERY GUI
         config.addDefault("gui.delivery.title", "Delivering...");
         config.addDefault("gui.delivery.rows", 6);
+
+//        // ENCHANT GUI
+//        config.addDefault("gui.enchant-item.title", "Enchant Your Item");
+//        config.addDefault("gui.enchant-items.name-prefix.active", "<aqua>", "Put this prefix when an enchantment has level 1 or above");
+//        config.addDefault("gui.enchant-items.name-prefix.inactive", "<gray>", "Put this prefix when an enchantment is not applied");
 
         // NEW ORDER DIALOG
         config.addDefault("gui.new-order.title", "Create A New Order");
