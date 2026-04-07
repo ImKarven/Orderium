@@ -86,7 +86,7 @@ public class ChooseItemGUI {
             if (!(e.getWhoClicked() instanceof Player p)) return;
             SignGUI.newSession(
                     p,
-                    (s) -> p.getScheduler().run(plugin, t -> ChooseItemGUI.choose(p, sortIdx, s), null),
+                    (s) -> p.getScheduler().run(plugin, _ -> ChooseItemGUI.choose(p, sortIdx, s), null),
                     cache.getLines(),
                     cache.getSignBlock(),
                     cache.getSearchLine()
@@ -147,9 +147,7 @@ public class ChooseItemGUI {
                         NewOrderDialog.newSession(p, cloned);
                         return;
                     }
-                    new EnchantGUI(p, new OrderItem(cloned), (enchantedItem) -> {
-                        NewOrderDialog.newSession(p, enchantedItem);
-                    });
+                    new EnchantGUI(p, new OrderItem(cloned), (enchantedItem) -> NewOrderDialog.newSession(p, enchantedItem));
                     return;
                 }
                 final ItemStack i = guiItem.getItem();
