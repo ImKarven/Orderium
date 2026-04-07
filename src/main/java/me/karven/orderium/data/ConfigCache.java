@@ -67,6 +67,12 @@ public class ConfigCache {
     private String deliverTitle;
     private int deliverRows = 6;
 
+    private String enchantItemTitle;
+    private String enchantActivePrefix;
+    private String enchantInactivePrefix;
+    private List<String> enchantLore;
+    private final SlotInfo confirmEnchantButton = new SlotInfo(-1, null, null, null);
+
     private String newOrderDialogTitle;
     private String itemDescription;
     private String amountLabel;
@@ -138,6 +144,7 @@ public class ConfigCache {
     private int maxCollectPerMinute = 1000;
     private int maxCollect = 1000;
     private TagResolver[] sortPlaceholders;
+    private boolean enchantItem = false;
 
     private final List<DataComponentType.Valued<?>> similarityCheck = new ArrayList<>();
 
@@ -161,7 +168,7 @@ public class ConfigCache {
     }
 
     public void reload(Runnable cb) {
-        Bukkit.getAsyncScheduler().runNow(plugin, t -> {
+        Bukkit.getAsyncScheduler().runNow(plugin, _ -> {
             try {
                 loadCfg();
                 plugin.setStorage(plugin.createStorage());
@@ -206,9 +213,10 @@ public class ConfigCache {
         config.addDefault("sort-prefix", "<aqua>", "This will be put at the beginning of the sort type that is being selected");
         config.addDefault("max-collect", 1000, "Maximum amount of items to collect, this shouldn't be confused with max-collect-per-minute");
         config.addDefault("max-collect-per-minute", 1000,
-                "The maximum amount of items a player can collect every minute\n" +
-                "Setting this too high might allow players to lag the server with large orders\n" +
-                "The 1-minute timer is global, not per-player.");
+                """
+                        The maximum amount of items a player can collect every minute
+                        Setting this too high might allow players to lag the server with large orders
+                        The 1-minute timer is global, not per-player.""");
         config.addDefault("similarity-check", List.of(
                 "minecraft:enchantments",
                 "minecraft:bundle_contents",
@@ -227,12 +235,15 @@ public class ConfigCache {
                 "minecraft:bundle_contents",
                 "minecraft:damage_type",
                 "minecraft:consumable"
-        ), "This defines how should two items to be similar.\n" +
-                "If all the following data component types are equal on both items beside their item types, they are similar.\n" +
-                "This similarity check happens when a player deliver an order, it accepts items in the delivery inventory that are similar to the one in the order\n" +
-                "See a list of data components here, note that only use ones that exist on your server version: https://minecraft.wiki/w/Data_component_format#List_of_components");
+        ), """
+                This defines how should two items to be similar.
+                If all the following data component types are equal on both items beside their item types, they are similar.
+                This similarity check happens when a player deliver an order, it accepts items in the delivery inventory that are similar to the one in the order
+                See a list of data components here, note that only use ones that exist on your server version: https://minecraft.wiki/w/Data_component_format#List_of_components""");
 
-//        config.addDefault("enchantments", false, "Whether to enable enchanting items");
+        config.addDefault("enchantments", false,
+                "Whether to enable enchanting items.\n" +
+                "Currently you cannot edit what enchantments can be applied, the default will be used.");
 
         // MESSAGES
         config.addDefault("messages.create-order-success", "<gray>Your order has been created");
@@ -356,10 +367,13 @@ public class ConfigCache {
         config.addDefault("gui.delivery.title", "Delivering...");
         config.addDefault("gui.delivery.rows", 6);
 
-//        // ENCHANT GUI
-//        config.addDefault("gui.enchant-item.title", "Enchant Your Item");
-//        config.addDefault("gui.enchant-items.name-prefix.active", "<aqua>", "Put this prefix when an enchantment has level 1 or above");
-//        config.addDefault("gui.enchant-items.name-prefix.inactive", "<gray>", "Put this prefix when an enchantment is not applied");
+        // ENCHANT GUI
+        config.addDefault("gui.enchant-item.title", "Enchant Your Item");
+        config.addDefault("gui.enchant-item.name-prefix.active", "<aqua>", "This prefix is applied when an enchantment has level 1 or above");
+        config.addDefault("gui.enchant-item.name-prefix.inactive", "<gray>", "This prefix is applied when the enchantment is not applied");
+        config.addDefault("gui.enchant-item.lore", List.of("", "<gray>Right-click to decrease level", "<gray>Left-click to increase level"));
+        new SlotInfo(8, List.of("<white>Click to confirm your enchantments"), "<green>Confirm", ItemType.GREEN_WOOL).addDefault(config, "gui.enchant-item.confirm-button");
+        config.addComment("gui.enchant-item", "This GUI is only shown if the setting \"enchantments\" is true");
 
         // NEW ORDER DIALOG
         config.addDefault("gui.new-order.title", "Create A New Order");
@@ -427,6 +441,7 @@ public class ConfigCache {
         sortPrefix = config.getString("sort-prefix");
         maxCollect = config.getInteger("max-collect");
         maxCollectPerMinute = config.getInteger(("max-collect-per-minute"));
+        enchantItem = config.getBoolean("enchantments");
         sortPlaceholders = new TagResolver[SortTypes.values().length];
         int i = 0;
         for (SortTypes sortType : SortTypes.values()) {
@@ -495,6 +510,12 @@ public class ConfigCache {
 
         deliverTitle = config.getString("gui.delivery.title");
         deliverRows = config.getInteger("gui.delivery.rows");
+
+        enchantItemTitle = config.getString("gui.enchant-item.title");
+        enchantActivePrefix = config.getString("gui.enchant-item.name-prefix.active");
+        enchantInactivePrefix = config.getString("gui.enchant-item.name-prefix.inactive");
+        enchantLore = config.getStringList("gui.enchant-item.lore");
+        confirmEnchantButton.deserialize(config.getConfigSection("gui.enchant-item.confirm-button"));
 
         newOrderDialogTitle = config.getString("gui.new-order.title");
         itemDescription = config.getString("gui.new-order.item-description");

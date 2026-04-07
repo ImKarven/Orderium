@@ -8,6 +8,7 @@ import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
+import me.karven.orderium.obj.OrderItem;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.ConvertUtils;
@@ -133,12 +134,22 @@ public class ChooseItemGUI {
                 currPage.setOnGlobalClick(e -> e.setCancelled(true));
                 currPage.setOnGlobalDrag(e -> e.setCancelled(true));
             }
-            final GuiItem guiItem = new GuiItem(item.clone());
+            ItemStack cloned = item.clone();
+            final GuiItem guiItem = new GuiItem(cloned);
             guiItem.setAction(e -> {
                 if (!(e.getWhoClicked() instanceof Player p)) return;
                 if (e.getClick() != ClickType.RIGHT || !p.hasPermission("orderium.admin.blacklist")) {
-//                    new EnchantGUI(p, new OrderItem(item.clone()), (ignored) -> {});
-                    NewOrderDialog.newSession(p, item.clone());
+
+                    if (
+                            !cache.isEnchantItem() ||
+                            PDCUtils.hasCustomSearch(cloned.getItemMeta()) // Assume a custom item has no applicable enchantment
+                    ) {
+                        NewOrderDialog.newSession(p, cloned);
+                        return;
+                    }
+                    new EnchantGUI(p, new OrderItem(cloned), (enchantedItem) -> {
+                        NewOrderDialog.newSession(p, enchantedItem);
+                    });
                     return;
                 }
                 final ItemStack i = guiItem.getItem();
