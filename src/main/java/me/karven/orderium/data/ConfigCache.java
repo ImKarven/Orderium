@@ -422,6 +422,8 @@ public class ConfigCache {
         config.addDefault("gui.cancel-order.confirm-button", "<green>Confirm");
         config.addDefault("gui.cancel-order.confirm-tooltip", "Click to confirm the cancellation of this order");
 
+        config.addDefault("config-version", 1);
+
         config.save();
         config.reload();
 
