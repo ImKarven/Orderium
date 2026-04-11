@@ -23,7 +23,7 @@ public final class DataCache {
     private final TreeSet<ItemStack> itemsZA = new TreeSet<>(AlgoUtils.getComparator(SortTypes.Z_A));
 
     @Getter
-    private final HashSet<Pair<ItemStack, String>> customItems = new HashSet<>();
+    private final List<Pair<byte[], String>> customItems = new ArrayList<>();
     @Getter
     private final HashSet<ItemStack> blacklist = new HashSet<>();
 
@@ -32,21 +32,21 @@ public final class DataCache {
     private final TreeSet<Order> mostDelivered = new TreeSet<>(Comparator.comparingInt(Order::getDelivered).reversed().thenComparing(Order::getId));
     private final TreeSet<Order> mostPaid = new TreeSet<>(Comparator.comparingDouble(Order::getPaid).reversed().thenComparing(Order::getId));
 
-    private void setBlacklistAndCustomItems(Collection<ItemStack> blacklist, Collection<Pair<ItemStack, String>> customItems) {
+    private void setBlacklistAndCustomItems(Collection<ItemStack> blacklist, Collection<Pair<byte[], String>> customItems) {
         this.blacklist.clear();
         this.customItems.clear();
         this.blacklist.addAll(blacklist);
         this.customItems.addAll(customItems);
     }
 
-    public void setItems(Collection<ItemStack> bukkitItems, Collection<ItemStack> blacklistedItems, Collection<Pair<ItemStack, String>> customItems) {
+    public void setItems(Collection<ItemStack> bukkitItems, Collection<ItemStack> blacklistedItems, Collection<Pair<byte[], String>> customItems) {
         itemsAZ.clear();
         itemsZA.clear();
         itemsAZ.addAll(bukkitItems);
         itemsZA.addAll(bukkitItems);
 
         final List<ItemStack> parsedCustomItems = customItems.stream().map(item -> {
-            final ItemStack stack = item.first.clone();
+            final ItemStack stack = ItemStack.deserializeBytes(item.first());
             stack.editMeta(meta -> PDCUtils.setSearch(meta, item.second));
             return stack;
         }).toList();

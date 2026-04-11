@@ -14,6 +14,7 @@ import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
@@ -126,7 +127,7 @@ public class MainGUI {
 
             if (amount == 0) {
                 PlayerUtils.give(p, items, false);
-                p.getScheduler().run(plugin, t -> p.updateInventory(), null);
+                p.getScheduler().run(plugin, _ -> p.updateInventory(), null);
                 return;
             }
 
@@ -135,16 +136,45 @@ public class MainGUI {
         return deliverGUI;
     }
 
-    /// Returns the amount of similar item found
-    private int scanInv(Inventory inv, List<ItemStack> items, ItemStack comparer) {
+    /**
+     * Scan an inventory for similar items
+     * @param inv the inventory to scan
+     * @param items the mutable list to add declined items to
+     * @param comparer the item to compare for similarity
+     * @return the amount of similar items
+     */
+    @SuppressWarnings("UnstableApiUsage")
+    private int scanInv(Iterable<ItemStack> inv, List<ItemStack> items, ItemStack comparer) {
         int amount = 0;
+        boolean isShulkerBox = isShulkerBox(comparer);
         for (final ItemStack item : inv) {
             if (item == null || item.isEmpty()) continue;
+            if (!isShulkerBox(item)) {
+                if (AlgoUtils.isSimilar(item, comparer)) amount += item.getAmount();
+                items.add(item);
+                continue;
+            }
+            if (isShulkerBox) {
+                if (AlgoUtils.isSimilar(item, comparer)) amount += item.getAmount();
+                items.add(item);
+                continue;
+            }
             items.add(item);
-            if (!AlgoUtils.isSimilar(item, comparer)) continue;
-            amount += item.getAmount();
+//            ItemContainerContents shulkerContent = item.getData(DataComponentTypes.CONTAINER);
+//            if (shulkerContent == null) continue;
+//
+//            amount += scanInv(shulkerContent.contents(), items, comparer);
         }
         return amount;
+    }
+
+    private boolean isShulkerBox(ItemStack item) {
+        Material type = item.getType();
+        return type == Material.SHULKER_BOX || type == Material.WHITE_SHULKER_BOX || type == Material.LIGHT_GRAY_SHULKER_BOX || type == Material.GRAY_SHULKER_BOX ||
+                type == Material.BLACK_SHULKER_BOX || type == Material.BROWN_SHULKER_BOX || type == Material.RED_SHULKER_BOX || type == Material.ORANGE_SHULKER_BOX ||
+                type == Material.YELLOW_SHULKER_BOX || type == Material.GREEN_SHULKER_BOX || type == Material.LIME_SHULKER_BOX || type == Material.CYAN_SHULKER_BOX ||
+                type == Material.LIGHT_BLUE_SHULKER_BOX || type == Material.BLUE_SHULKER_BOX || type == Material.PURPLE_SHULKER_BOX ||
+                type == Material.MAGENTA_SHULKER_BOX || type == Material.PINK_SHULKER_BOX;
     }
 
     private void addButtons(StaticPane buttonsPane, int curr) {

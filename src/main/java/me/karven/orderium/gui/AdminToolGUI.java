@@ -17,6 +17,7 @@ import lombok.val;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -63,6 +64,7 @@ public class AdminToolGUI {
             if (clicked == null || clicked.isEmpty()) return;
 
             plugin.getStorage().addCustomItem(clicked);
+            plugin.getDataCache().getCustomItems().add(new Pair<>(clicked.serializeAsBytes(), ""));
             createCustomItems();
             customItems.get(Math.min(i, customItems.size() - 1)).show(e.getWhoClicked());
         };
@@ -170,7 +172,7 @@ public class AdminToolGUI {
     public static void createCustomItems() {
         customItems.clear();
 
-        final Set<Pair<ItemStack, String>> items = plugin.getDataCache().getCustomItems();
+        final List<Pair<byte[], String>> items = plugin.getDataCache().getCustomItems();
         pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
         ChestGui page = new ChestGui(6, "Custom Items");
@@ -184,7 +186,7 @@ public class AdminToolGUI {
 
         page.setOnBottomClick(addCustomItem(0));
 
-        for (Pair<ItemStack, String> item : items) {
+        for (Pair<byte[], String> item : items) {
             if (cnt == 45) {
                 cnt = 0;
                 i++;
@@ -203,14 +205,22 @@ public class AdminToolGUI {
                 page.setOnBottomClick(addCustomItem(i));
             }
             final int currentPage = i;
-            final GuiItem guiItem = new GuiItem(ConvertUtils.addLore(item.first().clone(), List.of(
+            ItemStack stack = ItemStack.deserializeBytes(item.first());
+            final GuiItem guiItem = new GuiItem(ConvertUtils.addLore(stack, List.of(
                     "",
                     "<white>Left-click to <red>remove<white> from custom items list",
-                    "<white>Right-click to <yellow>edit<white> this item"
+                    "<white>Right-click to <yellow>edit<white> this item",
+                    "<white>Middle-click to <aqua>get<white> this item <gray>(creative only)"
             )), e -> {
                 switch (e.getClick()) {
+                    case MIDDLE -> {
+                        if (e.getWhoClicked() instanceof Player player)
+                            PlayerUtils.give(player, ItemStack.deserializeBytes(item.first()), false);
+                    }
+
                     case LEFT -> {
                         plugin.getStorage().removeCustomItem(item.first());
+                        items.remove(item);
                         createCustomItems();
                         customItems.get(Math.min(currentPage, customItems.size() - 1)).show(e.getWhoClicked());
                     }
@@ -222,7 +232,8 @@ public class AdminToolGUI {
                             if (s.isEmpty()) continue;
                             bodies.add(DialogBody.plainMessage(Component.text(j++ + ". " + s)));
                         }
-                        bodies.addFirst(DialogBody.item(item.first()).description(DialogBody.plainMessage(Component.text("Search aliases of this custom item:"))).build());
+                        String noneText = searches.length == 0 ? " None" : "";
+                        bodies.addFirst(DialogBody.item(stack).description(DialogBody.plainMessage(Component.text("Search aliases of this custom item:" + noneText))).build());
 
                         final Dialog dialog = Dialog.create(builder -> builder.empty()
                                 .base(DialogBase.builder(Component.text("Edit custom item"))
@@ -245,7 +256,7 @@ public class AdminToolGUI {
                                                     final String text = v.getText("text");
                                                     if (text == null) return;
                                                     switch (choice) {
-                                                        case "add" -> item.second += "," + text.trim().toLowerCase().replaceAll(" ", "_");
+                                                        case "add" -> item.second += "," + text.trim().toLowerCase().replace(" ", "_");
 
                                                         case "remove" -> {
                                                             val indices = text.trim().split(",");

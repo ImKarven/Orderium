@@ -106,17 +106,15 @@ public class ConvertUtils {
         return items;
     }
 
-    public static List<Pair<ItemStack, String>> convertSearchableItems(ResultSet raw) {
-        final List<Pair<ItemStack, String>> items = new ArrayList<>();
+    public static List<Pair<byte[], String>> convertSearchableItems(ResultSet raw) {
+        final List<Pair<byte[], String>> items = new ArrayList<>();
         if (raw == null) return items;
         try (raw) {
-
             while (raw.next()) {
-                final ItemStack item = ItemStack.deserializeBytes(raw.getBytes(1));
+                final byte[] itemBytes = raw.getBytes(1);
                 final String search = raw.getString(2);
-                items.add(new Pair<>(item, search));
+                items.add(new Pair<>(itemBytes, search));
             }
-
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to fetch searchable item from database", e);
         }

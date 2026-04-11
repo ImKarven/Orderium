@@ -8,19 +8,13 @@ import org.jetbrains.annotations.NotNull;
 
 @Getter
 public class PlayerDeliverOrderEvent extends OrderiumPlayerEvent {
-    /**
-     * the amount of items the player is trying to order
-     */
-    private final int amount;
-
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
     /**
      * Fired when the player attempts to deliver an order
      */
-    public PlayerDeliverOrderEvent(@NotNull Player player, @NotNull Order order, int amount) {
+    public PlayerDeliverOrderEvent(@NotNull Player player, @NotNull Order order) {
         super(player, order);
-        this.amount = amount;
     }
 
     @Override

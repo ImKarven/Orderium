@@ -2,13 +2,15 @@ package me.karven.orderium.storage.implementation;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.ItemContainerContents;
 import lombok.val;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.StorageMethod;
 import me.karven.orderium.storage.Storage;
-import me.karven.orderium.utils.ConvertUtils;
-import me.karven.orderium.utils.DispatchUtil;
-import me.karven.orderium.utils.Log;
+import me.karven.orderium.utils.*;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
@@ -16,6 +18,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -221,6 +224,121 @@ public class SQLStorage extends Storage {
         });
         return future;
     }
+
+    /**
+     * deliver an order from an inventory of items
+     * @param deliverer the player that is delivering the order
+     * @param order the order the player is delivering
+     * @param items the inventory of items
+     * @return the amount of money the player receive after delivering
+     */
+    @Override
+    public CompletableFuture<Double> deliverOrder(Player deliverer, Order order, Iterable<ItemStack> items) {
+        val future = new CompletableFuture<Double>();
+
+        DispatchUtil.async(() -> {
+            try (
+                    val connection = data.getConnection();
+                    val getOrder = connection.prepareStatement(GET_ORDER);
+                    val updateOrder = connection.prepareStatement(UPDATE_ORDER)
+            ) {
+                connection.setAutoCommit(false);
+                val orderId = order.getId();
+                getOrder.setInt(1, orderId);
+                val raw = getOrder.executeQuery();
+                if (!raw.next()) {
+                    connection.commit();
+                    future.complete(null);
+                    return;
+                }
+                val delivered = raw.getInt("delivered");
+                val orderAmount = raw.getInt("amount");
+                val inStorage = raw.getInt("in_storage");
+                val moneyPer = raw.getDouble("money_per");
+
+                var deliverable = orderAmount - delivered;
+
+                for (ItemStack item : items) {
+                    if (item == null || item.isEmpty()) continue;
+                    if (!AlgoUtils.isSimilar(item, order.getItem())) {
+                        if (isShulkerBox(item)) {
+                            deliverable = scanShulkerBox(item, order.getItem(), deliverable);
+                        }
+                        PlayerUtils.give(deliverer, item, true);
+                        continue;
+                    }
+                    val itemAmount = item.getAmount();
+                    if (deliverable >= itemAmount) {
+                        deliverable -= itemAmount;
+                        continue;
+                    }
+                    item.setAmount(itemAmount - deliverable);
+                    deliverable = 0;
+
+                    PlayerUtils.give(deliverer, item, true);
+                }
+                val newDelivered = orderAmount - deliverable;
+                updateOrder.setInt(1, orderAmount);
+                updateOrder.setDouble(2, moneyPer);
+                updateOrder.setInt(3, orderAmount);
+                updateOrder.setInt(4, inStorage + orderAmount - delivered);
+                updateOrder.setInt(5, orderId);
+                updateOrder.executeUpdate();
+                plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, newDelivered, inStorage + orderAmount - delivered);
+                connection.commit();
+                future.complete((newDelivered - delivered) * moneyPer);
+            } catch (SQLException e) {
+                Log.error("Failed to deliver order", e);
+            }
+        });
+        return future;
+    }
+
+    /**
+     * scan this shulker box for similar items
+     * @param shulkerBox the shulker box to scan
+     * @param comparer the item to check for similarity
+     * @param deliverable the maximum amount of items can be delivered
+     * @return the new deliverable value after scanning
+     */
+    @SuppressWarnings("UnstableApiUsage")
+    private int scanShulkerBox(ItemStack shulkerBox, ItemStack comparer, int deliverable) {
+        ItemContainerContents shulkerContent = shulkerBox.getData(DataComponentTypes.CONTAINER);
+        List<ItemStack> declinedItems = new ArrayList<>();
+        if (shulkerContent == null) return deliverable;
+        for (ItemStack item : shulkerContent.contents()) {
+            if (deliverable == 0) {
+                declinedItems.add(item);
+                continue;
+            }
+            if (item.isEmpty()) continue;
+            if (!AlgoUtils.isSimilar(item, comparer)) {
+                declinedItems.add(item);
+                continue;
+            }
+            val itemAmount = item.getAmount();
+            if (deliverable >= itemAmount) {
+                deliverable -= itemAmount;
+                continue;
+            }
+            item.setAmount(itemAmount - deliverable);
+            deliverable = 0;
+            declinedItems.add(item);
+        }
+        ItemContainerContents contentAfterScan = ItemContainerContents.containerContents(declinedItems);
+        shulkerBox.setData(DataComponentTypes.CONTAINER, contentAfterScan);
+        return deliverable;
+    }
+
+    private boolean isShulkerBox(ItemStack item) {
+        Material type = item.getType();
+        return type == Material.SHULKER_BOX || type == Material.WHITE_SHULKER_BOX || type == Material.LIGHT_GRAY_SHULKER_BOX || type == Material.GRAY_SHULKER_BOX ||
+                type == Material.BLACK_SHULKER_BOX || type == Material.BROWN_SHULKER_BOX || type == Material.RED_SHULKER_BOX || type == Material.ORANGE_SHULKER_BOX ||
+                type == Material.YELLOW_SHULKER_BOX || type == Material.GREEN_SHULKER_BOX || type == Material.LIME_SHULKER_BOX || type == Material.CYAN_SHULKER_BOX ||
+                type == Material.LIGHT_BLUE_SHULKER_BOX || type == Material.BLUE_SHULKER_BOX || type == Material.PURPLE_SHULKER_BOX ||
+                type == Material.MAGENTA_SHULKER_BOX || type == Material.PINK_SHULKER_BOX;
+    }
+
 
     @Override
     public CompletableFuture<Boolean> collectItems(Order order, int amount) {

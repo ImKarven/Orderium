@@ -9,6 +9,7 @@ import me.karven.orderium.obj.Pair;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.Log;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
@@ -82,32 +83,32 @@ public abstract class Storage {
         }
     }
 
-    public void removeCustomItem(ItemStack item) {
+    public void removeCustomItem(byte[] item) {
         try (
                 val connection = modifiedItemDataSource.getConnection();
                 val removeCustomItem = connection.prepareStatement("DELETE FROM " + CUSTOM_ITEMS_TABLE + " WHERE item = (?)")
         ) {
-            removeCustomItem.setBytes(1, item.serializeAsBytes());
+            removeCustomItem.setBytes(1, item);
             removeCustomItem.executeUpdate();
         } catch (SQLException e) {
             Log.error("Failed to remove custom item", e);
         }
     }
 
-    public void updateCustomItemSearch(Pair<ItemStack, String> item) {
+    public void updateCustomItemSearch(Pair<byte[], String> item) {
         try (
                 val connection = modifiedItemDataSource.getConnection();
                 val updateSearch = connection.prepareStatement("UPDATE " + CUSTOM_ITEMS_TABLE + " SET search = ? WHERE item = ?")
         ) {
             updateSearch.setString(1, item.second);
-            updateSearch.setBytes(2, item.first.serializeAsBytes());
+            updateSearch.setBytes(2, item.first);
             updateSearch.executeUpdate();
         } catch (SQLException e) {
             Log.error("Failed to update custom item search", e);
         }
     }
 
-    private Pair<Collection<ItemStack>, Collection<Pair<ItemStack, String>>> loadBlacklistAndCustomItems() {
+    private Pair<Collection<ItemStack>, Collection<Pair<byte[], String>>> loadBlacklistAndCustomItems() {
         try (
                 val connection = modifiedItemDataSource.getConnection();
                 val createCustomItemsTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB, search VARCHAR(65535))");
@@ -213,6 +214,15 @@ public abstract class Storage {
      * @return number of exceeded or 0 if the delivery doesn't exceed the amount
      */
     public abstract CompletableFuture<Integer> deliverOrder(Order order, int amount);
+
+    /**
+     * Process a delivery from a player
+     * @param deliverer the player that delivers the order
+     * @param order the order the player is delivering
+     * @param items the inventory the player is requesting to deliver
+     * @return the amount of money the player receive for this delivery, or null if an error occurred
+     */
+    public abstract CompletableFuture<Double> deliverOrder(Player deliverer, Order order, Iterable<ItemStack> items);
 
     public abstract CompletableFuture<Void> deleteOrder(Order order);
 

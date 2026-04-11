@@ -73,8 +73,12 @@ public class Order implements me.karven.orderium.api.Order {
         }
         if (currAmount == 0) return;
 
-        val event = new PlayerDeliverOrderEvent(p, this, currAmount);
+        val event = new PlayerDeliverOrderEvent(p, this);
         event.callEvent();
+
+//        plugin.getStorage().deliverOrder(p, this, items).thenAccept(receive -> {
+//
+//        });
 
         deliver(p, currAmount).thenAccept(exceeded -> {
             val toGive = new ArrayList<ItemStack>();
