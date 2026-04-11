@@ -8,6 +8,7 @@ import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.data.DataCache;
 import me.karven.orderium.folia.IFFolia;
 import me.karven.orderium.gui.*;
+import me.karven.orderium.listener.ContainerContentListener;
 import me.karven.orderium.listener.DialogListener;
 import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.obj.Order;
@@ -67,6 +68,7 @@ public final class Orderium extends JavaPlugin {
     @Override
     public void onLoad() {
         PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(this), PacketListenerPriority.NORMAL);
+        PacketEvents.getAPI().getEventManager().registerListener(new ContainerContentListener(), PacketListenerPriority.NORMAL);
     }
 
     @Override

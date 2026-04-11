@@ -5,6 +5,8 @@ import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.ItemContainerContents;
 import lombok.val;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
@@ -122,8 +124,13 @@ public class MainGUI {
             final Inventory inv = e.getInventory();
 
             int amount = 0;
+            amount += scanInv(inv, comparer);
+
             final List<ItemStack> items = new ArrayList<>();
-            amount += scanInv(inv, items, comparer);
+            for (ItemStack item : inv) {
+                if (item == null || item.isEmpty()) continue;
+                items.add(item);
+            }
 
             if (amount == 0) {
                 PlayerUtils.give(p, items, false);
@@ -139,31 +146,23 @@ public class MainGUI {
     /**
      * Scan an inventory for similar items
      * @param inv the inventory to scan
-     * @param items the mutable list to add declined items to
      * @param comparer the item to compare for similarity
      * @return the amount of similar items
      */
     @SuppressWarnings("UnstableApiUsage")
-    private int scanInv(Iterable<ItemStack> inv, List<ItemStack> items, ItemStack comparer) {
+    private int scanInv(Iterable<ItemStack> inv, ItemStack comparer) {
         int amount = 0;
-        boolean isShulkerBox = isShulkerBox(comparer);
         for (final ItemStack item : inv) {
             if (item == null || item.isEmpty()) continue;
-            if (!isShulkerBox(item)) {
-                if (AlgoUtils.isSimilar(item, comparer)) amount += item.getAmount();
-                items.add(item);
+            if (AlgoUtils.isSimilar(item, comparer)) {
+                amount += item.getAmount();
                 continue;
             }
-            if (isShulkerBox) {
-                if (AlgoUtils.isSimilar(item, comparer)) amount += item.getAmount();
-                items.add(item);
-                continue;
-            }
-            items.add(item);
-//            ItemContainerContents shulkerContent = item.getData(DataComponentTypes.CONTAINER);
-//            if (shulkerContent == null) continue;
-//
-//            amount += scanInv(shulkerContent.contents(), items, comparer);
+            if (!cache.isShulkerDelivering() || !isShulkerBox(item)) continue;
+            ItemContainerContents shulkerContent = item.getData(DataComponentTypes.CONTAINER);
+            if (shulkerContent == null) continue;
+
+            amount += scanInv(shulkerContent.contents(), comparer);
         }
         return amount;
     }

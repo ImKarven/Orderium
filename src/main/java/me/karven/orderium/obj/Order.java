@@ -9,7 +9,10 @@ import me.karven.orderium.api.events.PlayerDeliverOrderEvent;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.gui.YourOrderGUI;
 import me.karven.orderium.load.Orderium;
-import me.karven.orderium.utils.*;
+import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.EconUtils;
+import me.karven.orderium.utils.PDCUtils;
+import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
@@ -17,8 +20,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -59,48 +60,64 @@ public class Order implements me.karven.orderium.api.Order {
     public boolean isActive() { return delivered < amount && expiresAt > System.currentTimeMillis(); }
 
     /// Must be called in the player region
-    public void deliver(Player p, Collection<ItemStack> items) {
-        int currAmount = 0;
-        val accepted = new ArrayList<ItemStack>();
-        for (ItemStack item : items) {
-            if (!AlgoUtils.isSimilar(item, getItem())) {
-                PlayerUtils.give(p, item, false);
-                continue;
-            }
-
-            currAmount += item.getAmount();
-            accepted.add(item);
-        }
-        if (currAmount == 0) return;
+    public void deliver(Player p, Iterable<ItemStack> items) {
+//        int currAmount = 0;
+//        val accepted = new ArrayList<ItemStack>();
+//        for (ItemStack item : items) {
+//            if (!AlgoUtils.isSimilar(item, getItem())) {
+//                PlayerUtils.give(p, item, false);
+//                continue;
+//            }
+//
+//            currAmount += item.getAmount();
+//            accepted.add(item);
+//        }
+//        if (currAmount == 0) return;
 
         val event = new PlayerDeliverOrderEvent(p, this);
         event.callEvent();
 
-//        plugin.getStorage().deliverOrder(p, this, items).thenAccept(receive -> {
-//
-//        });
+        plugin.getStorage().deliverOrder(p, this, items).thenAccept(receive -> {
+            double moneyReceived = receive; // I don't like working with wrapped class at all so will use primitive
+            if (moneyReceived == 0.0) return;
+            EconUtils.addMoney(p, moneyReceived);
+            p.sendRichMessage(cache.getDelivered(), Placeholder.unparsed("money", ConvertUtils.formatNumber(moneyReceived)));
+            PlayerUtils.playSound(p, cache.getDeliverSound());
 
-        deliver(p, currAmount).thenAccept(exceeded -> {
-            val toGive = new ArrayList<ItemStack>();
-            var am = 0;
-            for (ItemStack item : accepted) {
-                val addAmount = am + item.getAmount();
-
-                if (addAmount < exceeded) {
-                    am += item.getAmount();
-                    toGive.add(item);
-                    continue;
-                }
-
-                val splitAmount = exceeded - am;
-                if (splitAmount == 0) break;
-                item.setAmount(splitAmount);
-                toGive.add(item);
-                break;
-            }
-
-            PlayerUtils.give(p, toGive, true);
+            final Player ownerPlayer = Bukkit.getPlayer(owner);
+            if (ownerPlayer == null || !ownerPlayer.isOnline()) return;
+            final ItemMeta meta = item.getItemMeta();
+            final Component displayName = meta == null ? null : meta.displayName();
+            assert item.getType().getItemTranslationKey() != null;
+            ownerPlayer.sendRichMessage(
+                    cache.getReceiveDelivery(),
+                    Placeholder.unparsed("deliverer", p.getName()),
+                    Placeholder.unparsed("amount",  ConvertUtils.formatNumber((int) (moneyReceived / moneyPer))),
+                    Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
+            );
         });
+
+//        deliver(p, currAmount).thenAccept(exceeded -> {
+//            val toGive = new ArrayList<ItemStack>();
+//            var am = 0;
+//            for (ItemStack item : accepted) {
+//                val addAmount = am + item.getAmount();
+//
+//                if (addAmount < exceeded) {
+//                    am += item.getAmount();
+//                    toGive.add(item);
+//                    continue;
+//                }
+//
+//                val splitAmount = exceeded - am;
+//                if (splitAmount == 0) break;
+//                item.setAmount(splitAmount);
+//                toGive.add(item);
+//                break;
+//            }
+//
+//            PlayerUtils.give(p, toGive, true);
+//        });
     }
 
     public Response collect(String rawAmount) {
@@ -251,8 +268,9 @@ public class Order implements me.karven.orderium.api.Order {
         if (!EconUtils.removeMoney(owner, moneyPer * amount)) {
             return Response.FAIL;
         }
-
-        plugin.getStorage().createOrder(owner.getUniqueId(), item, amount, moneyPer);
+        ItemStack strippedItem = item.clone();
+        strippedItem.setItemMeta(PDCUtils.removeOrderiumPD(strippedItem.getItemMeta()));
+        plugin.getStorage().createOrder(owner.getUniqueId(), strippedItem, amount, moneyPer);
         return Response.SUCCESS;
     }
 

@@ -11,6 +11,7 @@ import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.Log;
+import me.karven.orderium.utils.PDCUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
@@ -35,7 +36,7 @@ public class NewOrderDialog {
     }
 
     public static void newSession(Player p, ItemStack displayItem) {
-
+        displayItem.setItemMeta(PDCUtils.removeOrderiumPD(displayItem.getItemMeta()));
         try {
             PlayerUtils.openDialog(p, createDialog(
                     mm.deserialize(cache.getNewOrderDialogTitle()),

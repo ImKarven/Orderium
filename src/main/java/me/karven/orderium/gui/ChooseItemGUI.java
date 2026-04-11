@@ -144,10 +144,10 @@ public class ChooseItemGUI {
                             !cache.isEnchantItem() ||
                             PDCUtils.hasCustomSearch(cloned.getItemMeta()) // Assume a custom item has no applicable enchantment
                     ) {
-                        NewOrderDialog.newSession(p, cloned);
+                        NewOrderDialog.newSession(p, cloned.clone());
                         return;
                     }
-                    new EnchantGUI(p, new OrderItem(cloned), (enchantedItem) -> NewOrderDialog.newSession(p, enchantedItem));
+                    new EnchantGUI(p, new OrderItem(cloned.clone()), (enchantedItem) -> NewOrderDialog.newSession(p, enchantedItem));
                     return;
                 }
                 final ItemStack i = guiItem.getItem();

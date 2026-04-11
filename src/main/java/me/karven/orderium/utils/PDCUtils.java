@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class PDCUtils {
@@ -15,13 +16,21 @@ public class PDCUtils {
     private static final NamespacedKey blacklistKey = new NamespacedKey("orderium", "blacklist");
     private static final NamespacedKey searchKey = new NamespacedKey("orderium", "search");
 
+    public static final List<NamespacedKey> KEYS = List.of(collectedKey, blacklistKey, searchKey);
+
     public static void init(Orderium plugin) {
         PDCUtils.plugin = plugin;
-
     }
 
     public static void setCollected(Player p, int amount) {
         p.getScheduler().run(plugin, t -> p.getPersistentDataContainer().set(collectedKey, PersistentDataType.INTEGER, amount), null);
+    }
+
+    public static ItemMeta removeOrderiumPD(ItemMeta meta) {
+        for  (NamespacedKey key : KEYS) {
+            meta.getPersistentDataContainer().remove(key);
+        }
+        return meta;
     }
 
     public static void removeCollected(Player p) {

@@ -215,7 +215,7 @@ public class AdminToolGUI {
                 switch (e.getClick()) {
                     case MIDDLE -> {
                         if (e.getWhoClicked() instanceof Player player)
-                            PlayerUtils.give(player, ItemStack.deserializeBytes(item.first()), false);
+                            PlayerUtils.give(player, e.getCurrentItem(), false);
                     }
 
                     case LEFT -> {

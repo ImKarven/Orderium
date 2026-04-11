@@ -46,10 +46,23 @@ public class PlayerUtils {
 
     }
 
+    /**
+     * give player an item stack
+     * @param p the player
+     * @param item the item stack
+     * @param safe whether to schedule this task in the correct thread or not
+     */
     public static void give(Player p, ItemStack item, boolean safe) {
         PlayerUtils.give(p, Collections.singleton(item), safe);
     }
 
+    /**
+     * give player a specific amount of an item stack, overrides item stack's amount
+     * @param p the player
+     * @param item the item stack
+     * @param amount the amount
+     * @param safe whether to schedule this task in the correct thread
+     */
     public static void give(Player p, ItemStack item, int amount, boolean safe) {
         final int maxStackSize = item.getMaxStackSize();
 
@@ -74,7 +87,10 @@ public class PlayerUtils {
     }
 
     public static void openGui(Player p, ChestGui gui) {
-        p.getScheduler().run(plugin, t -> gui.show(p), null);
+        DispatchUtil.entity(p, () -> {
+            gui.show(p);
+            DispatchUtil.entity(p, p::updateInventory);
+        });
     }
 
     public static void openDialog(Player p, Dialog dialog) {

@@ -20,6 +20,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Collection;
 import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -32,7 +33,7 @@ public class DeliveryConfirmDialog {
         cache = plugin.getConfigs();
     }
 
-    public static void show(Player p, Order order, int amount, List<ItemStack> items) {
+    public static void show(Player p, Order order, int amount, Collection<ItemStack> items) {
         final Dialog dialog = Dialog.create(builder -> {
             final String amountText = ConvertUtils.formatNumber(amount);
             final int amountWidth = amountText.length() * 10;

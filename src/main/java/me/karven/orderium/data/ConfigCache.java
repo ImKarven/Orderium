@@ -145,6 +145,7 @@ public class ConfigCache {
     private int maxCollect = 1000;
     private TagResolver[] sortPlaceholders;
     private boolean enchantItem = false;
+    private boolean shulkerDelivering = true;
 
     private final List<DataComponentType.Valued<?>> similarityCheck = new ArrayList<>();
 
@@ -244,6 +245,8 @@ public class ConfigCache {
         config.addDefault("enchantments", false,
                 "Whether to enable enchanting items.\n" +
                 "Currently you cannot edit what enchantments can be applied, the default will be used.");
+
+        config.addDefault("shulker-delivering", true, "Whether to allow players to deliver orders with items in shulker boxes");
 
         // MESSAGES
         config.addDefault("messages.create-order-success", "<gray>Your order has been created");
@@ -444,6 +447,7 @@ public class ConfigCache {
         maxCollect = config.getInteger("max-collect");
         maxCollectPerMinute = config.getInteger(("max-collect-per-minute"));
         enchantItem = config.getBoolean("enchantments");
+        shulkerDelivering = config.getBoolean("shulker-delivering");
         sortPlaceholders = new TagResolver[SortTypes.values().length];
         int i = 0;
         for (SortTypes sortType : SortTypes.values()) {

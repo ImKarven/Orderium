@@ -259,9 +259,8 @@ public class SQLStorage extends Storage {
                 var deliverable = orderAmount - delivered;
 
                 for (ItemStack item : items) {
-                    if (item == null || item.isEmpty()) continue;
                     if (!AlgoUtils.isSimilar(item, order.getItem())) {
-                        if (isShulkerBox(item)) {
+                        if (isShulkerBox(item) && plugin.getConfigs().isShulkerDelivering()) {
                             deliverable = scanShulkerBox(item, order.getItem(), deliverable);
                         }
                         PlayerUtils.give(deliverer, item, true);
@@ -273,18 +272,17 @@ public class SQLStorage extends Storage {
                         continue;
                     }
                     item.setAmount(itemAmount - deliverable);
-                    deliverable = 0;
-
                     PlayerUtils.give(deliverer, item, true);
+                    deliverable = 0;
                 }
                 val newDelivered = orderAmount - deliverable;
                 updateOrder.setInt(1, orderAmount);
                 updateOrder.setDouble(2, moneyPer);
-                updateOrder.setInt(3, orderAmount);
-                updateOrder.setInt(4, inStorage + orderAmount - delivered);
+                updateOrder.setInt(3, newDelivered);
+                updateOrder.setInt(4, inStorage + newDelivered - delivered);
                 updateOrder.setInt(5, orderId);
                 updateOrder.executeUpdate();
-                plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, newDelivered, inStorage + orderAmount - delivered);
+                plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, newDelivered, inStorage + newDelivered - delivered);
                 connection.commit();
                 future.complete((newDelivered - delivered) * moneyPer);
             } catch (SQLException e) {
@@ -307,11 +305,11 @@ public class SQLStorage extends Storage {
         List<ItemStack> declinedItems = new ArrayList<>();
         if (shulkerContent == null) return deliverable;
         for (ItemStack item : shulkerContent.contents()) {
+            if (item.isEmpty()) continue;
             if (deliverable == 0) {
                 declinedItems.add(item);
                 continue;
             }
-            if (item.isEmpty()) continue;
             if (!AlgoUtils.isSimilar(item, comparer)) {
                 declinedItems.add(item);
                 continue;
