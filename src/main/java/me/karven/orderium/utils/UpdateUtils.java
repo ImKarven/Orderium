@@ -5,12 +5,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import me.karven.orderium.load.Orderium;
 import org.bukkit.Bukkit;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
+
+import static me.karven.orderium.load.Orderium.plugin;
 
 @Slf4j
 public class UpdateUtils {
@@ -22,7 +23,7 @@ public class UpdateUtils {
     private static final String mcVer = Bukkit.getMinecraftVersion();
     private static String plVer;
 
-    public static void init(Orderium plugin) {
+    public static void init() {
         itemsFile = new File(plugin.getDataFolder(), "items.db");
         plVer = plugin.getPluginMeta().getVersion();
 

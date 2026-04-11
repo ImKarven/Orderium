@@ -8,7 +8,6 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.listener.DialogListener;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.PlayerUtils;
@@ -23,12 +22,14 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Collection;
 import java.util.List;
 
+import static me.karven.orderium.load.Orderium.plugin;
+
 @SuppressWarnings("UnstableApiUsage")
 public class DeliveryConfirmDialog {
     private static MiniMessage mm;
     private static ConfigCache cache;
 
-    public static void init(Orderium plugin) {
+    public static void init() {
         mm = plugin.mm;
         cache = plugin.getConfigs();
     }
