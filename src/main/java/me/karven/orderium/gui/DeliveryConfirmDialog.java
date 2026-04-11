@@ -50,7 +50,7 @@ public class DeliveryConfirmDialog {
                             ActionButton.builder(mm.deserialize(cache.getConfirmDeliveryConfirmLabel()))
                                     .tooltip(mm.deserialize(cache.getConfirmDeliveryConfirmHover()))
                                     .action(DialogAction.customClick(
-                                            (view, player) -> {
+                                            (_, _) -> {
                                                 DialogListener.removeItems(p);
                                                 order.deliver(p, items);
                                             },

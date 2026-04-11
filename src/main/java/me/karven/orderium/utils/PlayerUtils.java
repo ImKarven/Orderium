@@ -37,11 +37,13 @@ public class PlayerUtils {
         }
         val location = p.getLocation();
         val world = location.getWorld();
-        p.getScheduler().run(plugin, t -> p.give(items, true), () -> {
-            Bukkit.getRegionScheduler().run(plugin, location, task -> {
-               items.forEach(item -> world.dropItem(location, item));
-            });
-        });
+        p.getScheduler().run(plugin, _ -> p.give(items, true), () ->
+                Bukkit.getRegionScheduler().run(plugin, location, _ ->
+                        items.forEach(item ->
+                                world.dropItem(location, item)
+                        )
+                )
+        );
 
     }
 
@@ -93,11 +95,11 @@ public class PlayerUtils {
     }
 
     public static void openDialog(Player p, Dialog dialog) {
-        p.getScheduler().run(plugin, t -> p.showDialog(dialog), null);
+        DispatchUtil.entity(p, () -> p.showDialog(dialog));
     }
 
     public static void closeInv(Player p) {
-        p.getScheduler().run(plugin, t -> p.closeInventory(), null);
+        DispatchUtil.entity(p, () -> p.closeInventory());
     }
 
     public static void clickNext(InventoryClickEvent e, ChestGui nextPage) {

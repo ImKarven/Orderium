@@ -28,16 +28,14 @@ public class YourOrderGUI {
         final OutlinePane ordersPane = new OutlinePane(9, 3);
         final List<String> rawLore = cache.getYoLore();
         for (Order order : orders) {
-            ordersPane.addItem(ConvertUtils.parseOrder(order, rawLore, e -> {
+            ordersPane.addItem(ConvertUtils.parseOrder(order, rawLore, _ -> {
                 PlayerUtils.closeInv(p);
                 ManageOrderDialog.show(order, p);
             }));
         }
 
         if (orders.size() < 27) {
-            ordersPane.addItem(ConvertUtils.parseButton(cache.getNewOrderButton(), e -> {
-                NewOrderDialog.start(p);
-            }));
+            ordersPane.addItem(ConvertUtils.parseButton(cache.getNewOrderButton(), _ -> NewOrderDialog.start(p)));
         }
 
         gui.addPane(Slot.fromXY(0, 0), ordersPane);

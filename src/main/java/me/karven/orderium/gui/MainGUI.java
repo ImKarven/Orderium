@@ -13,6 +13,7 @@ import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.DispatchUtil;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
@@ -187,7 +188,7 @@ public class MainGUI {
                     e -> PlayerUtils.clickNext(e, pages.get(curr + 1))
         ), cache.getOrdersNextButton().getSlot(), 0);
 
-        buttonsPane.addItem(ConvertUtils.parseButton(cache.getRefreshButton(), e -> {
+        buttonsPane.addItem(ConvertUtils.parseButton(cache.getRefreshButton(), _ -> {
 
             if (search.isEmpty()) new MainGUI(player, sortIdx);
             else new MainGUI(player, sortIdx, search);
@@ -196,7 +197,7 @@ public class MainGUI {
 
         }), cache.getRefreshButton().getSlot(), 0);
 
-        buttonsPane.addItem(ConvertUtils.parseSortButton(cache.getOrdersSortButton(), cache.getOrdersSortsOrder().get(sortIdx), e -> {
+        buttonsPane.addItem(ConvertUtils.parseSortButton(cache.getOrdersSortButton(), cache.getOrdersSortsOrder().get(sortIdx), _ -> {
 
             if (search.isEmpty()) new MainGUI(player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1);
             else new MainGUI(player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1, search);
@@ -207,16 +208,16 @@ public class MainGUI {
 
         buttonsPane.addItem(ConvertUtils.parseButton(
                 cache.getOrdersSearchButton(),
-                e -> SignGUI.newSession(
+                _ -> SignGUI.newSession(
                     player,
-                    (s) -> player.getScheduler().run(plugin, t -> new MainGUI(player, sortIdx, s), null),
+                    (s) -> DispatchUtil.entity(player, () -> new MainGUI(player, sortIdx, s)),
                     cache.getLines(), cache.getSignBlock(), cache.getSearchLine()
                 )
         ), cache.getOrdersSearchButton().getSlot(), 0);
 
         buttonsPane.addItem(ConvertUtils.parseButton(
                 cache.getYoButton(),
-                e -> YourOrderGUI.open(player)
+                _ -> YourOrderGUI.open(player)
         ), cache.getYoButton().getSlot(), 0);
     }
 

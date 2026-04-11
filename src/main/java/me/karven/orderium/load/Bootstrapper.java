@@ -45,10 +45,7 @@ public class Bootstrapper implements PluginBootstrap {
                 .then(Commands.literal("reload")
                         .requires(predicate -> predicate.getSender().hasPermission("orderium.admin.reload"))
                         .executes(ctx -> {
-                            plugin.getConfigs().reload(() -> {
-
-                                ctx.getSource().getSender().sendRichMessage("<green>Orderium reloaded");
-                            });
+                            plugin.getConfigs().reload(() -> ctx.getSource().getSender().sendRichMessage("<green>Orderium reloaded"));
                             return 1;
                         })
                 )
