@@ -39,7 +39,6 @@ public class AdminToolGUI {
 
     private static final List<ChestGui> blacklist = new ArrayList<>();
     private static final List<ChestGui> customItems = new ArrayList<>();
-//    private static DBManager db;
 
     // Using shared page amount but it's fine I guess
     private static int pageAmount;
@@ -73,8 +72,6 @@ public class AdminToolGUI {
 
 
     public static void init() {
-//        db = plugin.getDbManager();
-
         next.editMeta(meta -> {
             meta.displayName(nameDeco("Next"));
             meta.lore(List.of(

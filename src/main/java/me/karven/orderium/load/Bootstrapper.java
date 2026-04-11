@@ -78,35 +78,6 @@ public class Bootstrapper implements PluginBootstrap {
                             return 1;
                         })
                 );
-
-//        builder
-//                .then(Commands.literal("test")
-//                        .executes(ctx -> {
-//                            val sender = ctx.getSource().getExecutor();
-//                            if (sender == null) return 1;
-//                            for (ItemStack item : plugin.getDataCache().getItems(SortTypes.A_Z)) {
-//                                OrderItem orderItem = new OrderItem(item);
-//                                int amount = orderItem.getEnchantable().size();
-//                                if (amount > 9) {
-//                                    sender.sendMessage(Component.text("item " + item.getType() + " has " + amount));
-//                                }
-//                            }
-//                            return 1;
-//                        })
-//
-//                )
-//                .then(Commands.literal("orders")
-//                        .executes(ctx -> {
-//                            val sender = ctx.getSource().getExecutor();
-//                            if (!(sender instanceof Player player)) return 1;
-//                            for (Order order : plugin.getDataCache().getSortedOrders(SortTypes.MOST_MONEY_PER_ITEM)) {
-//                                sender.sendMessage(Component.text("#" + order.id + " amount=" + order.amount + " moneyPer=" + order.moneyPer + " delivered=" + order.delivered + " inStorage=" + order.inStorage + " expiresAt=" + order.expiresAt));
-//                                player.give(order.getItem());
-//                            }
-//                            return 1;
-//                        })
-//                );
-
         return builder.build();
     }
 

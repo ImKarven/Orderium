@@ -5,7 +5,6 @@ import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.data.ConfigCache;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.PlayerUtils;
@@ -15,14 +14,10 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.UUID;
 
-public class YourOrderGUI {
-    private static Orderium plugin;
+import static me.karven.orderium.load.Orderium.plugin;
 
-    public static void init(Orderium plugin) {
-        YourOrderGUI.plugin = plugin;
-    }
+public class YourOrderGUI {
     public static void open(Player p) {
-//        final DBManager db = plugin.getDbManager();
         final UUID pUUID = p.getUniqueId();
         final List<Order> orders = plugin.getDataCache().getOrders(pUUID);
         final ConfigCache cache = plugin.getConfigs();

@@ -7,7 +7,6 @@ import io.papermc.paper.datacomponent.item.PotionContents;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import me.karven.orderium.data.ConfigCache;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
 import org.bukkit.*;
@@ -18,6 +17,8 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 
+import static me.karven.orderium.load.Orderium.plugin;
+
 @SuppressWarnings("UnstableApiUsage")
 public class AlgoUtils {
 
@@ -25,7 +26,7 @@ public class AlgoUtils {
     private static final Registry<PotionEffectType> potionEffectRegistry = Registry.MOB_EFFECT;
     private static ConfigCache cache;
 
-    public static void init(Orderium plugin) {
+    public static void init() {
         cache = plugin.getConfigs();
     }
 

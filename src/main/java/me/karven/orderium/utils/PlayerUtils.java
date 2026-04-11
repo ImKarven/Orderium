@@ -4,7 +4,6 @@ import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import io.papermc.paper.dialog.Dialog;
 import lombok.val;
 import me.karven.orderium.data.ConfigCache;
-import me.karven.orderium.load.Orderium;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -16,12 +15,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import static me.karven.orderium.load.Orderium.plugin;
+
 public class PlayerUtils {
-    private static Orderium plugin;
     private static ConfigCache cache;
 
-    public static void init(Orderium plugin) {
-        PlayerUtils.plugin = plugin;
+    public static void init() {
         PlayerUtils.cache = plugin.getConfigs();
     }
 

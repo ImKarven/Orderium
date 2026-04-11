@@ -7,7 +7,6 @@ import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.data.ConfigCache;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.OrderItem;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.utils.AlgoUtils;
@@ -23,17 +22,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static me.karven.orderium.load.Orderium.plugin;
+
 public class ChooseItemGUI {
     private static final List<ChestGui> AZ = new ArrayList<>();
     private static final List<ChestGui> ZA = new ArrayList<>();
-    private static Orderium plugin;
-//    private static DBManager db;
     private static MiniMessage mm;
     private static ConfigCache cache;
 
-    public static void init(Orderium plugin) {
-        ChooseItemGUI.plugin = plugin;
-//        db = plugin.getDbManager();
+    public static void init() {
         mm = plugin.mm;
         cache = plugin.getConfigs();
 

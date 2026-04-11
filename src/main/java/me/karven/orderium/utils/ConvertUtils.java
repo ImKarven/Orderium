@@ -5,7 +5,6 @@ import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
 import me.karven.orderium.data.ConfigCache;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
 import me.karven.orderium.obj.SlotInfo;
@@ -33,18 +32,18 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
+import static me.karven.orderium.load.Orderium.plugin;
+
 @SuppressWarnings("UnstableApiUsage")
 public class ConvertUtils {
-    private static Orderium plugin;
     private static MiniMessage mm;
     private static ConfigCache cache;
     private static final Registry<ItemType> itemRegistry = Registry.ITEM;
     private static final Registry<DataComponentType> dataComponentTypeRegistry = Registry.DATA_COMPONENT_TYPE;
 
-    public static void init(Orderium pl) {
-        plugin = pl;
-        mm = pl.mm;
-        cache = pl.getConfigs();
+    public static void init() {
+        mm = plugin.mm;
+        cache = plugin.getConfigs();
 
     }
 

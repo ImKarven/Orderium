@@ -172,59 +172,6 @@ public class SQLStorage extends Storage {
         return future;
     }
 
-    @Override
-    public CompletableFuture<Integer> deliverOrder(Order order, int amount) {
-        val future = new CompletableFuture<Integer>();
-
-        DispatchUtil.async(() -> {
-            try (
-                    val connection = data.getConnection();
-                    val getOrder = connection.prepareStatement(GET_ORDER);
-                    val updateOrder = connection.prepareStatement(UPDATE_ORDER)
-            ) {
-                connection.setAutoCommit(false);
-                val orderId = order.getId();
-                getOrder.setInt(1, orderId);
-                val raw = getOrder.executeQuery();
-                if (!raw.next()) {
-                    connection.commit();
-                    future.complete(-1);
-                    return;
-                }
-                val delivered = raw.getInt("delivered");
-                val orderAmount = raw.getInt("amount");
-                val inStorage = raw.getInt("in_storage");
-                val moneyPer = raw.getDouble("money_per");
-                val newVal = delivered + amount;
-                if (newVal <= orderAmount) {
-                    updateOrder.setInt(1, orderAmount);
-                    updateOrder.setDouble(2, moneyPer);
-                    updateOrder.setInt(3, newVal);
-                    updateOrder.setInt(4, inStorage + amount);
-                    updateOrder.setInt(5, orderId);
-                    updateOrder.executeUpdate();
-
-                    plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, newVal, inStorage + amount);
-                    connection.commit();
-                    future.complete(0);
-                    return;
-                }
-                updateOrder.setInt(1, orderAmount);
-                updateOrder.setDouble(2, moneyPer);
-                updateOrder.setInt(3, orderAmount);
-                updateOrder.setInt(4, inStorage + orderAmount - delivered);
-                updateOrder.setInt(5, orderId);
-                updateOrder.executeUpdate();
-                plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, orderAmount, inStorage + orderAmount - delivered);
-                connection.commit();
-                future.complete(newVal - orderAmount);
-            } catch (SQLException e) {
-                Log.error("Failed to deliver order", e);
-            }
-        });
-        return future;
-    }
-
     /**
      * deliver an order from an inventory of items
      * @param deliverer the player that is delivering the order

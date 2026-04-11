@@ -208,14 +208,6 @@ public abstract class Storage {
     public abstract CompletableFuture<Double> cancelOrder(Order order);
 
     /**
-     * Add {@code amount} to delivered and in_storage value
-     * @param order the order
-     * @param amount the amount to deliver
-     * @return number of exceeded or 0 if the delivery doesn't exceed the amount
-     */
-    public abstract CompletableFuture<Integer> deliverOrder(Order order, int amount);
-
-    /**
      * Process a delivery from a player
      * @param deliverer the player that delivers the order
      * @param order the order the player is delivering

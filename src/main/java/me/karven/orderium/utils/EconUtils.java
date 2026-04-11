@@ -1,7 +1,6 @@
 package me.karven.orderium.utils;
 
 import me.karven.orderium.data.ConfigCache;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.MoneyTransaction;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.OfflinePlayer;
@@ -12,12 +11,10 @@ import static me.karven.orderium.load.Orderium.plugin;
 public class EconUtils {
     private static Economy eco;
     private static final MoneyTransaction currentTransaction = new MoneyTransaction();
-//    private static DBManager db;
     private static ConfigCache cache;
 
-    public static void init(Orderium plugin) {
+    public static void init() {
         eco = plugin.getEcon();
-//        db = plugin.getDbManager();
         cache = plugin.getConfigs();
     }
 

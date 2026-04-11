@@ -7,7 +7,6 @@ import com.github.retrooper.packetevents.util.Vector3i;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientUpdateSign;
 import io.papermc.paper.math.Position;
 import lombok.val;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.SignInfo;
 import me.karven.orderium.utils.Log;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -24,11 +23,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static me.karven.orderium.load.Orderium.plugin;
+
 @SuppressWarnings("UnstableApiUsage")
 public class SignGUI implements PacketListener {
     private static final HashMap<Player, SignInfo> sessionsList = new HashMap<>();
     private static MiniMessage mm;
-    private static Orderium plugin;
 
     public static void newSession(Player p, Consumer<String> action, List<String> lines, BlockType blockType, int line) {
         if (blockType == null) {
@@ -57,9 +57,8 @@ public class SignGUI implements PacketListener {
         sessionsList.put(p, new SignInfo(action, blockType, line, position));
     }
 
-    public SignGUI(Orderium plugin) {
+    public SignGUI() {
         mm = plugin.mm;
-        SignGUI.plugin = plugin;
     }
 
     public static void completeSession(Player player, String text) {

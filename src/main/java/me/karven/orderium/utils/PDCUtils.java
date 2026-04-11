@@ -1,6 +1,5 @@
 package me.karven.orderium.utils;
 
-import me.karven.orderium.load.Orderium;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -9,18 +8,14 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class PDCUtils {
-    private static Orderium plugin;
+import static me.karven.orderium.load.Orderium.plugin;
 
+public class PDCUtils {
     private static final NamespacedKey collectedKey = new NamespacedKey("orderium", "collected"); // String namespace isn't perfect but it works
     private static final NamespacedKey blacklistKey = new NamespacedKey("orderium", "blacklist");
     private static final NamespacedKey searchKey = new NamespacedKey("orderium", "search");
 
     public static final List<NamespacedKey> KEYS = List.of(collectedKey, blacklistKey, searchKey);
-
-    public static void init(Orderium plugin) {
-        PDCUtils.plugin = plugin;
-    }
 
     public static void setCollected(Player p, int amount) {
         p.getScheduler().run(plugin, t -> p.getPersistentDataContainer().set(collectedKey, PersistentDataType.INTEGER, amount), null);

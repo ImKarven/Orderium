@@ -8,7 +8,6 @@ import me.karven.orderium.api.events.PlayerCreateOrderEvent;
 import me.karven.orderium.api.events.PlayerDeliverOrderEvent;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.gui.YourOrderGUI;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.EconUtils;
 import me.karven.orderium.utils.PDCUtils;
@@ -21,8 +20,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 import static me.karven.orderium.load.Orderium.plugin;
 
@@ -37,11 +34,9 @@ public class Order implements me.karven.orderium.api.Order {
     public int inStorage;
     public long expiresAt;
 
-//    private static DBManager db;
     private static ConfigCache cache;
 
-    public static void init(Orderium plugin) {
-//        db = plugin.getDbManager();
+    public static void init() {
         cache = plugin.getConfigs();
     }
 
@@ -61,19 +56,6 @@ public class Order implements me.karven.orderium.api.Order {
 
     /// Must be called in the player region
     public void deliver(Player p, Iterable<ItemStack> items) {
-//        int currAmount = 0;
-//        val accepted = new ArrayList<ItemStack>();
-//        for (ItemStack item : items) {
-//            if (!AlgoUtils.isSimilar(item, getItem())) {
-//                PlayerUtils.give(p, item, false);
-//                continue;
-//            }
-//
-//            currAmount += item.getAmount();
-//            accepted.add(item);
-//        }
-//        if (currAmount == 0) return;
-
         val event = new PlayerDeliverOrderEvent(p, this);
         event.callEvent();
 
@@ -96,28 +78,6 @@ public class Order implements me.karven.orderium.api.Order {
                     Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
             );
         });
-
-//        deliver(p, currAmount).thenAccept(exceeded -> {
-//            val toGive = new ArrayList<ItemStack>();
-//            var am = 0;
-//            for (ItemStack item : accepted) {
-//                val addAmount = am + item.getAmount();
-//
-//                if (addAmount < exceeded) {
-//                    am += item.getAmount();
-//                    toGive.add(item);
-//                    continue;
-//                }
-//
-//                val splitAmount = exceeded - am;
-//                if (splitAmount == 0) break;
-//                item.setAmount(splitAmount);
-//                toGive.add(item);
-//                break;
-//            }
-//
-//            PlayerUtils.give(p, toGive, true);
-//        });
     }
 
     public Response collect(String rawAmount) {
@@ -177,29 +137,6 @@ public class Order implements me.karven.orderium.api.Order {
             YourOrderGUI.open(p);
             EconUtils.addMoney(Bukkit.getOfflinePlayer(getOwnerUniqueId()), payBack);
         });
-    }
-
-    private CompletableFuture<Integer> deliver(Player deliverer, int a) {
-        final Function<Integer, Integer> func = exceeded -> {
-            final double earning = moneyPer * (a - exceeded);
-            EconUtils.addMoney(deliverer, earning);
-            deliverer.sendRichMessage(cache.getDelivered(), Placeholder.unparsed("money", ConvertUtils.formatNumber(earning)));
-            PlayerUtils.playSound(deliverer, cache.getDeliverSound());
-
-            final Player ownerPlayer = Bukkit.getPlayer(owner);
-            if (ownerPlayer == null || !ownerPlayer.isOnline()) return exceeded;
-            final ItemMeta meta = item.getItemMeta();
-            final Component displayName = meta == null ? null : meta.displayName();
-            assert item.getType().getItemTranslationKey() != null;
-            ownerPlayer.sendRichMessage(
-                    cache.getReceiveDelivery(),
-                    Placeholder.unparsed("deliverer", deliverer.getName()),
-                    Placeholder.unparsed("amount",  ConvertUtils.formatNumber(a)),
-                    Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
-            );
-            return exceeded;
-        };
-        return plugin.getStorage().deliverOrder(this, a).thenApply(func);
     }
 
     public OrderStatus getStatus() {

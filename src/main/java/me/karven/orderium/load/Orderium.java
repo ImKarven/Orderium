@@ -33,7 +33,6 @@ public final class Orderium extends JavaPlugin {
     public final DisconnectListener DISCONNECT_LISTENER = new DisconnectListener();
 
     private ConfigCache configs;
-//    private DBManager dbManager;
     @Setter
     private Storage storage;
     private DataCache dataCache;
@@ -41,33 +40,9 @@ public final class Orderium extends JavaPlugin {
     public final MiniMessage mm = MiniMessage.miniMessage();
     public int VERSION = -1;
 
-//    private CompletableFuture<Boolean> initVersion() {
-//        val ret = new CompletableFuture<Boolean>();
-//        // noinspection deprecation
-//        final int dataVer = Bukkit.getUnsafe().getDataVersion();
-//        dbManager.dataVersions().thenAccept(dataVersion -> {
-//            if (dataVer < 4438) { // 1.21.7 in data version
-//                ret.complete(false);
-//                return;
-//            }
-//            int maxVer = -1;
-//            for (int ver : dataVersion) {
-//                if (ver > maxVer && ver <= dataVer) maxVer = ver;
-//                if (dataVer == ver) {
-//                    VERSION = ver;
-//                    ret.complete(true);
-//                    return;
-//                }
-//            }
-//            VERSION = maxVer;
-//            ret.complete(true);
-//        });
-//        return ret;
-//    }
-
     @Override
     public void onLoad() {
-        PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(this), PacketListenerPriority.NORMAL);
+        PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(), PacketListenerPriority.NORMAL);
         PacketEvents.getAPI().getEventManager().registerListener(new ContainerContentListener(), PacketListenerPriority.NORMAL);
     }
 
@@ -81,36 +56,30 @@ public final class Orderium extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        UpdateUtils.init(this);
+        UpdateUtils.init();
         if (!UpdateUtils.downloadItems()) {
             saveResource("items.db", false);
         }
         saveResource("modified_items.db", false);
 
         new IFFolia(this);
-
-//        StorageMethod.init(this);
-
         dataCache = new DataCache();
-        configs = new ConfigCache(this);
+        configs = new ConfigCache();
         Storage.init();
         storage = createStorage();
-//        dbManager = new DBManager(this);
-        AlgoUtils.init(this);
-        MainGUI.init(this);
-        YourOrderGUI.init(this);
-        EconUtils.init(this);
-        Order.init(this);
-        ConvertUtils.init(this);
-        PlayerUtils.init(this);
-        PDCUtils.init(this);
+        AlgoUtils.init();
+        MainGUI.init();
+        EconUtils.init();
+        Order.init();
+        ConvertUtils.init();
+        PlayerUtils.init();
         AdminToolGUI.init();
 
-        ChooseItemGUI.init(this);
+        ChooseItemGUI.init();
 
-        NewOrderDialog.init(this);
-        DeliveryConfirmDialog.init(this);
-        ManageOrderDialog.init(this);
+        NewOrderDialog.init();
+        DeliveryConfirmDialog.init();
+        ManageOrderDialog.init();
 
         if (configs.isBStats()) {
             final int pluginId = 27569;
@@ -132,7 +101,7 @@ public final class Orderium extends JavaPlugin {
         Bukkit.getAsyncScheduler().runAtFixedRate(this, t -> {
 
             for (Player p : Bukkit.getOnlinePlayers()) {
-                p.getScheduler().run(this, t2 -> PDCUtils.removeCollected(p), null);
+                DispatchUtil.entity(p, () -> PDCUtils.removeCollected(p));
             }
 
         }, 1, 1, TimeUnit.MINUTES);

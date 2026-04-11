@@ -11,8 +11,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("UnstableApiUsage")
 /// This class helps things happen normally when the player disconnects
+@SuppressWarnings("UnstableApiUsage")
 public class DisconnectListener implements Listener {
 
     // Properly give items back to the player in case they quit while still in the delivery GUI

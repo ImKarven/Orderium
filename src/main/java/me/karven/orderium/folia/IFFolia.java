@@ -31,7 +31,7 @@ public class IFFolia extends Gui {
         if (ifListener == null) throw new NullPointerException("Inventory Framework did not register any listeners");
         // Unregister IF's registered GuiListener and replace with our own
         HandlerList.unregisterAll(ifListener);
-        Bukkit.getPluginManager().registerEvents(new me.karven.orderium.folia.GuiListener(plugin, ifListener), plugin);
+        Bukkit.getPluginManager().registerEvents(new me.karven.orderium.folia.GuiListener(ifListener), plugin);
     }
 
     public void show(@NotNull HumanEntity humanEntity) { throw new UnsupportedOperationException("Use of prohibited method"); }

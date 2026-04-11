@@ -5,7 +5,6 @@ import io.papermc.paper.datacomponent.DataComponentType;
 import lombok.Getter;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.ChooseItemGUI;
-import me.karven.orderium.load.Orderium;
 import me.karven.orderium.obj.OrderStatus;
 import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
@@ -26,12 +25,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+import static me.karven.orderium.load.Orderium.plugin;
+
 @Getter
 @SuppressWarnings("UnstableApiUsage")
 public class ConfigCache {
     private final File configFile;
     private ConfigFile config;
-    private final Orderium plugin;
 
     private boolean bStats = true;
     private boolean checkForUpdates = true;
@@ -149,8 +149,7 @@ public class ConfigCache {
 
     private final List<DataComponentType.Valued<?>> similarityCheck = new ArrayList<>();
 
-    public ConfigCache(Orderium plugin) {
-        this.plugin = plugin;
+    public ConfigCache() {
         this.configFile = new File(plugin.getDataFolder(), "config.yml");
         if (!reload()) {
             plugin.getLogger().severe("Failed to load config.");
@@ -173,7 +172,7 @@ public class ConfigCache {
             try {
                 loadCfg();
                 plugin.setStorage(plugin.createStorage());
-                ChooseItemGUI.init(plugin);
+                ChooseItemGUI.init();
 
                 AdminToolGUI.createBlacklist();
                 AdminToolGUI.createCustomItems();
@@ -217,7 +216,9 @@ public class ConfigCache {
                 """
                         The maximum amount of items a player can collect every minute
                         Setting this too high might allow players to lag the server with large orders
-                        The 1-minute timer is global, not per-player.""");
+                        The 1-minute timer is global, not per-player.
+                        """
+        );
         config.addDefault("similarity-check", List.of(
                 "minecraft:enchantments",
                 "minecraft:bundle_contents",
@@ -236,15 +237,21 @@ public class ConfigCache {
                 "minecraft:bundle_contents",
                 "minecraft:damage_type",
                 "minecraft:consumable"
-        ), """
+        ),
+                """
                 This defines how should two items to be similar.
                 If all the following data component types are equal on both items beside their item types, they are similar.
                 This similarity check happens when a player deliver an order, it accepts items in the delivery inventory that are similar to the one in the order
-                See a list of data components here, note that only use ones that exist on your server version: https://minecraft.wiki/w/Data_component_format#List_of_components""");
+                See a list of data components here, note that only use ones that exist on your server version: https://minecraft.wiki/w/Data_component_format#List_of_components
+                """
+        );
 
         config.addDefault("enchantments", false,
-                "Whether to enable enchanting items.\n" +
-                "Currently you cannot edit what enchantments can be applied, the default will be used.");
+                        """
+                        Whether to enable enchanting items or not.
+                        Currently you cannot edit what enchantments can be applied, the default will be used.
+                        """
+        );
 
         config.addDefault("shulker-delivering", true, "Whether to allow players to deliver orders with items in shulker boxes");
 
