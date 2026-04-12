@@ -203,25 +203,25 @@ public class AdminToolGUI {
             }
             final int currentPage = i;
             ItemStack stack = ItemStack.deserializeBytes(item.first());
-            final GuiItem guiItem = new GuiItem(ConvertUtils.addLore(stack, List.of(
+            final GuiItem guiItem = new GuiItem(ConvertUtils.addLore(stack.clone(), List.of(
                     "",
-                    "<white>Left-click to <red>remove<white> from custom items list",
-                    "<white>Right-click to <yellow>edit<white> this item",
-                    "<white>Middle-click to <aqua>get<white> this item <gray>(creative only)"
+                    "<white>Shift-right-click to <red>remove<white> from custom items list",
+                    "<white>Left-click to <yellow>edit<white> this item",
+                    "<white>Right-click to <aqua>get<white> this item"
             )), e -> {
                 switch (e.getClick()) {
-                    case MIDDLE -> {
+                    case RIGHT -> {
                         if (e.getWhoClicked() instanceof Player player)
-                            PlayerUtils.give(player, e.getCurrentItem(), false);
+                            PlayerUtils.give(player, stack.clone(), false);
                     }
 
-                    case LEFT -> {
+                    case SHIFT_RIGHT -> {
                         plugin.getStorage().removeCustomItem(item.first());
                         items.remove(item);
                         createCustomItems();
                         customItems.get(Math.min(currentPage, customItems.size() - 1)).show(e.getWhoClicked());
                     }
-                    case RIGHT -> {
+                    case LEFT -> {
                         final List<DialogBody> bodies = new LinkedList<>();
                         int j = 1;
                         final String[] searches = item.second().split(",");

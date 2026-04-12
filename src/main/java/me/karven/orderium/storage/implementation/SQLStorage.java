@@ -248,7 +248,11 @@ public class SQLStorage extends Storage {
         List<ItemStack> declinedItems = new ArrayList<>();
         if (shulkerContent == null) return deliverable;
         for (ItemStack item : shulkerContent.contents()) {
-            if (item.isEmpty()) continue;
+            if (item.isEmpty()) {
+                // Add empty items to keep the order of the items in the shulker
+                declinedItems.add(ItemStack.empty());
+                continue;
+            }
             if (deliverable == 0) {
                 declinedItems.add(item);
                 continue;
@@ -260,6 +264,7 @@ public class SQLStorage extends Storage {
             val itemAmount = item.getAmount();
             if (deliverable >= itemAmount) {
                 deliverable -= itemAmount;
+                declinedItems.add(ItemStack.empty());
                 continue;
             }
             item.setAmount(itemAmount - deliverable);

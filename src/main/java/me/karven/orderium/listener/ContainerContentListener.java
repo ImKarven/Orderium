@@ -6,6 +6,7 @@ import com.github.retrooper.packetevents.protocol.component.ComponentTypes;
 import com.github.retrooper.packetevents.protocol.item.ItemStack;
 import com.github.retrooper.packetevents.protocol.nbt.NBTCompound;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems;
 import me.karven.orderium.utils.PDCUtils;
 import org.bukkit.NamespacedKey;
@@ -17,21 +18,36 @@ public class ContainerContentListener implements PacketListener {
 
     @Override
     public void onPacketSend(PacketSendEvent event) {
-        if (event.getPacketType() != PacketType.Play.Server.WINDOW_ITEMS) return;
-        WrapperPlayServerWindowItems packet = new WrapperPlayServerWindowItems(event);
-        for (ItemStack item : packet.getItems()) {
-            Optional<NBTCompound> nbtOptional = item.getComponent(ComponentTypes.CUSTOM_DATA);
-            if (nbtOptional.isEmpty()) continue;
-            NBTCompound nbt = nbtOptional.get();
-            NBTCompound persistentData = nbt.getCompoundTagOrNull("PublicBukkitValues");
-            if (persistentData == null) continue;
-            persistentData.removeTag("orderium:if-uuid");
-            for (NamespacedKey key : PDCUtils.KEYS) {
-                persistentData.removeTag(key.toString());
+        switch (event.getPacketType()) {
+            case PacketType.Play.Server.SET_SLOT -> {
+                WrapperPlayServerSetSlot setSlotPacket = new WrapperPlayServerSetSlot(event);
+                stripItemPD(setSlotPacket.getItem());
             }
-            if (persistentData.getTags().isEmpty()) nbt.removeTag("PublicBukkitValues");
-            if (nbt.getTags().isEmpty()) item.unsetComponent(ComponentTypes.CUSTOM_DATA);
+            
+            case  PacketType.Play.Server.WINDOW_ITEMS -> {
+                WrapperPlayServerWindowItems containerCotentPacket = new WrapperPlayServerWindowItems(event);
+                for (ItemStack item : containerCotentPacket.getItems()) {
+                    stripItemPD(item);
+                }
+            }
+            
+            default -> { return; }
         }
         event.markForReEncode(true);
+    }
+    
+    /// Strip persistent data of Orderium from this item
+    private void stripItemPD(ItemStack item) {
+        Optional<NBTCompound> nbtOptional = item.getComponent(ComponentTypes.CUSTOM_DATA);
+        if (nbtOptional.isEmpty()) return;
+        NBTCompound nbt = nbtOptional.get();
+        NBTCompound persistentData = nbt.getCompoundTagOrNull("PublicBukkitValues");
+        if (persistentData == null) return;
+        persistentData.removeTag("orderium:if-uuid");
+        for (NamespacedKey key : PDCUtils.KEYS) {
+            persistentData.removeTag(key.toString());
+        }
+        if (persistentData.getTags().isEmpty()) nbt.removeTag("PublicBukkitValues");
+        if (nbt.getTags().isEmpty()) item.unsetComponent(ComponentTypes.CUSTOM_DATA);
     }
 }

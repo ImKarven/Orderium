@@ -58,7 +58,7 @@ public class SignGUI implements PacketListener {
     }
 
     public SignGUI() {
-        mm = plugin.mm;
+        mm = MiniMessage.miniMessage();
     }
 
     public static void completeSession(Player player, String text) {
