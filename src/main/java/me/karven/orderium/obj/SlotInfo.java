@@ -17,6 +17,7 @@ public class SlotInfo implements Cloneable {
     private List<String> lore;
     private String displayName;
     private ItemType type;
+    private String itemModel = null;
 
     public SlotInfo() {}
 
@@ -33,6 +34,7 @@ public class SlotInfo implements Cloneable {
         if (!lore.isEmpty()) config.addDefault(section + ".lore", lore);
         config.addDefault(section + ".display-name", displayName);
         config.addDefault(section + ".type", type.getKey().toString());
+        if (itemModel != null) config.addDefault(section + ".item-model", itemModel);
     }
 
     public void deserialize(ConfigSection section) {
@@ -43,6 +45,7 @@ public class SlotInfo implements Cloneable {
         slot = section.get("slot") == null ? -1 : section.getInteger("slot");
         lore = section.getStringList("lore");
         displayName = section.getString("display-name");
+        itemModel = section.getString("item-model");
 
         type = ConvertUtils.getItemType(section.getString("type", "minecraft:stone"));
     }

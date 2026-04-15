@@ -17,6 +17,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -193,6 +194,9 @@ public class ConvertUtils {
             meta.displayName(mm.deserialize(info.getDisplayName(), placeholders).decoration(TextDecoration.ITALIC, false));
             final List<Component> lore = info.getLore().stream().map(str -> mm.deserialize(str, placeholders).decoration(TextDecoration.ITALIC, false)).toList();
             meta.lore(lore);
+            String itemModel = info.getItemModel();
+            if (itemModel != null)
+                meta.setItemModel(NamespacedKey.fromString(itemModel));
         });
         return new GuiItem(item, action);
     }
@@ -207,6 +211,9 @@ public class ConvertUtils {
             meta.displayName(mm.deserialize(info.getDisplayName(), TagResolver.resolver(placeholders)).decoration(TextDecoration.ITALIC, false));
             final List<Component> lore = info.getLore().stream().map(str -> mm.deserialize(str, TagResolver.resolver(placeholders)).decoration(TextDecoration.ITALIC, false)).toList();
             meta.lore(lore);
+            String itemModel = info.getItemModel();
+            if (itemModel != null)
+                meta.setItemModel(NamespacedKey.fromString(itemModel));
         });
         return new GuiItem(item, action);
     }
