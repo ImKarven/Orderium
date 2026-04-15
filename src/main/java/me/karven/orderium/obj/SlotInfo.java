@@ -18,6 +18,8 @@ public class SlotInfo implements Cloneable {
     private String displayName;
     private ItemType type;
 
+    public SlotInfo() {}
+
     public SlotInfo(int slot, List<String> lore, String displayName, ItemType type) {
         this.slot = slot;
         this.lore = lore;

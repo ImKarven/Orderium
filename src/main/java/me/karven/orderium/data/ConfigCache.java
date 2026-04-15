@@ -40,25 +40,25 @@ public class ConfigCache {
     private List<String> orderLore;
     private List<SortTypes> ordersSortsOrder;
     private final SlotInfo
-            refreshButton = new SlotInfo(-1, null, null, null),
-            yoButton = new SlotInfo(-1, null, null, null),
-            ordersSortButton = new SlotInfo(-1, null, null, null),
-            ordersBackButton = new SlotInfo(-1, null, null, null),
-            ordersNextButton = new SlotInfo(-1, null, null, null),
-            ordersSearchButton = new SlotInfo(-1, null, null, null);
+            refreshButton = new SlotInfo(),
+            yoButton = new SlotInfo(),
+            ordersSortButton = new SlotInfo(),
+            ordersBackButton = new SlotInfo(),
+            ordersNextButton = new SlotInfo(),
+            ordersSearchButton = new SlotInfo();
 
     private String yoGuiTitle;
     private List<String> yoLore;
     private final SlotInfo
-            newOrderButton = new SlotInfo(-1, null, null, null);
+            newOrderButton = new SlotInfo();
 
     private String chooseItemTitle;
     private List<SortTypes> chooseSortsOrder;
     private final SlotInfo
-            chooseBackButton = new SlotInfo(-1, null, null, null),
-            chooseNextButton = new SlotInfo(-1, null, null, null),
-            chooseSearchButton = new SlotInfo(-1, null, null, null),
-            chooseSortButton = new SlotInfo(-1, null, null, null);
+            chooseBackButton = new SlotInfo(),
+            chooseNextButton = new SlotInfo(),
+            chooseSearchButton = new SlotInfo(),
+            chooseSortButton = new SlotInfo();
 
     private int searchLine = -1;
     private BlockType signBlock;
@@ -71,7 +71,7 @@ public class ConfigCache {
     private String enchantActivePrefix;
     private String enchantInactivePrefix;
     private List<String> enchantLore;
-    private final SlotInfo confirmEnchantButton = new SlotInfo(-1, null, null, null);
+    private final SlotInfo confirmEnchantButton = new SlotInfo();
 
     private String newOrderDialogTitle;
     private String itemDescription;
@@ -577,6 +577,7 @@ public class ConfigCache {
         return Sound.sound(Key.key(config.getString("sounds." + name + ".sound")), Sound.Source.UI, config.getFloat("sounds." + name + ".volume"), config.getFloat("sounds." + name + ".pitch"));
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void checkFiles() {
         File parent = configFile.getParentFile();
         if (!parent.exists()) {
