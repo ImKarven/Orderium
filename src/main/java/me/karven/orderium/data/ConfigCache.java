@@ -434,8 +434,7 @@ public class ConfigCache {
 
         config.addDefault("config-version", 1);
 
-        config.save();
-        config.reload();
+        if (config.isNew()) config.save();
 
 //        storageMethod = StorageMethod.fromString(config.getString("storage.method"));
 //        remoteAddress = config.getString("storage.config.address");

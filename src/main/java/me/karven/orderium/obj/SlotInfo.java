@@ -34,7 +34,7 @@ public class SlotInfo implements Cloneable {
         if (!lore.isEmpty()) config.addDefault(section + ".lore", lore);
         config.addDefault(section + ".display-name", displayName);
         config.addDefault(section + ".type", type.getKey().toString());
-        config.addDefault(section + ".item-model", itemModel);
+        if (itemModel != null) config.addDefault(section + ".item-model", itemModel);
     }
 
     public void deserialize(ConfigSection section) {

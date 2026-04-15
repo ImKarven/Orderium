@@ -2,10 +2,14 @@ plugins {
     id 'java'
     id("xyz.jpenilla.run-paper") version "3.0.2"
     id 'com.gradleup.shadow' version '9.4.1'
-//    id("io.papermc.paperweight.userdev") version "2.0.0-beta.19"
+    id "com.modrinth.minotaur" version "2.+"
 }
 
-version = "1.3.5+1"
+def version = "1.3.5+2"
+def type = "release"
+def mcVersions = ["1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1", "26.1.1", "26.1.2"]
+
+project.setVersion(version)
 
 repositories {
     mavenCentral()
@@ -26,7 +30,6 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
     implementation("org.bstats:bstats-bukkit:3.1.0")
-//    paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
     compileOnly("org.projectlombok:lombok:1.18.42")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
         exclude group: "org.bukkit", module: "bukkit"
@@ -40,21 +43,13 @@ dependencies {
     implementation("com.zaxxer:HikariCP:7.0.2")
 }
 
-//paperweight {
-//    javaLauncher = javaToolchains.launcherFor {
-//        languageVersion = JavaLanguageVersion.of(21)
-//    }
-//}
-
 tasks {
     runServer {
-        // Configure the Minecraft version for our task.
-        // This is the only required configuration besides applying the plugin.
-        // Your plugin's jar (or shadowJar if present) will be used automatically.
         minecraftVersion("1.21.11")
     }
 
     shadowJar {
+        archiveClassifier = ''
         relocate("com.github.stefvanschie.inventoryframework", "orderium.if")
         relocate("com.zaxxer", "orderium.zaxxer")
         relocate("org.bstats", "orderium.bstats")
@@ -79,4 +74,17 @@ processResources {
     filesMatching('paper-plugin.yml') {
         expand props
     }
+}
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "orderium"
+    versionNumber = version as String
+    versionType = type
+    uploadFile = shadowJar
+    gameVersions = mcVersions
+    loaders = ["paper", "purpur", "folia"]
+    changelog = rootProject.file("minotaur" + File.separator + "CHANGELOG.md").text
+
+    syncBodyFrom = rootProject.file("minotaur" + File.separator + "DESCRIPTION.md").text
 }
