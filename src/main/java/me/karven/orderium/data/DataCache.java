@@ -70,17 +70,18 @@ public final class DataCache {
         mostPaid.addAll(orders);
     }
     public void updateOrder(Order order, double moneyPer, int amount, int delivered, int inStorage) {
+
+        mostMoneyPerItem.remove(order);
+        recentlyListed.remove(order);
+        mostDelivered.remove(order);
+        mostPaid.remove(order);
+
         order.moneyPer = moneyPer;
         order.amount = amount;
         order.delivered = delivered;
         order.inStorage = inStorage;
 
         // Re-add the order to not mess up the sorted collections after updating
-        mostMoneyPerItem.remove(order);
-        recentlyListed.remove(order);
-        mostDelivered.remove(order);
-        mostPaid.remove(order);
-
         mostMoneyPerItem.add(order);
         recentlyListed.add(order);
         mostDelivered.add(order);

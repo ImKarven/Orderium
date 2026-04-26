@@ -24,6 +24,9 @@ import java.util.UUID;
 import static me.karven.orderium.load.Orderium.plugin;
 
 @Getter
+
+// TODO: Replace `item` with OrderItem instead of ItemStack.
+// Problem: how to store it in database?
 public class Order implements me.karven.orderium.api.Order {
     public final int id;
     public final UUID owner;

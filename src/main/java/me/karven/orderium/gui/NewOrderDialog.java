@@ -9,8 +9,9 @@ import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.obj.Order;
+import me.karven.orderium.obj.orderitem.OrderItem;
+import me.karven.orderium.obj.orderitem.SearchableItem;
 import me.karven.orderium.utils.Log;
-import me.karven.orderium.utils.PDCUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
@@ -36,13 +37,12 @@ public class NewOrderDialog {
         ChooseItemGUI.choose(p, 0, 0);
     }
 
-    public static void newSession(Player p, ItemStack displayItem) {
-        displayItem.setItemMeta(PDCUtils.removeOrderiumPD(displayItem.getItemMeta()));
+    public static void newSession(Player p, OrderItem orderItem) {
         try {
             PlayerUtils.openDialog(p, createDialog(
                     mm.deserialize(cache.getNewOrderDialogTitle()),
                     mm.deserialize(cache.getItemDescription()),
-                    displayItem,
+                    orderItem,
                     mm.deserialize(cache.getAmountLabel()),
                     mm.deserialize(cache.getMoneyPerLabel()),
                     mm.deserialize(cache.getChangeItemButton()),
@@ -56,14 +56,14 @@ public class NewOrderDialog {
         }
     }
 
-    private static Dialog createDialog(Component title,  Component bodyText, ItemStack display, Component amountLabel, Component moneyPerLabel, Component changeItemLabel, Component changeItemHover, Component confirmLabel, Component confirmHover) {
+    private static Dialog createDialog(Component title,  Component bodyText, OrderItem orderItem, Component amountLabel, Component moneyPerLabel, Component changeItemLabel, Component changeItemHover, Component confirmLabel, Component confirmHover) {
         return Dialog.create(builder ->
             builder.empty()
                     .base(
                             DialogBase.builder(title)
                                     .canCloseWithEscape(true)
                                     .body(List.of(
-                                            DialogBody.item(display)
+                                            DialogBody.item(orderItem.getItemStack())
                                                     .description(DialogBody.plainMessage(bodyText, cache.getDescriptionWidth()))
                                                     .showDecorations(false)
                                                     .build()
@@ -95,7 +95,8 @@ public class NewOrderDialog {
                                         PlayerUtils.closeInv(p);
 
                                         // Create new order
-                                        final Order.Response response = Order.create(p, display, view.getText("money_per"), view.getText("amount"));
+                                        ItemStack item = orderItem instanceof SearchableItem searchableItem ? searchableItem.getParsedItemStack() : orderItem.getItemStack();
+                                        final Order.Response response = Order.create(p, item, view.getText("money_per"), view.getText("amount"));
 
                                         switch (response) {
                                             case INVALID -> p.sendRichMessage(cache.getInvalidInput());
