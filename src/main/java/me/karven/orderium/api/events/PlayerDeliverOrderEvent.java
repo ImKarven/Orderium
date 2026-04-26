@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Getter
 public class PlayerDeliverOrderEvent {
-    private PlayerDeliverOrderEvent() {};
+    private PlayerDeliverOrderEvent() {}
 
     // TODO: Allow user to retrieve amount of items being delivered
     public static class Pre extends OrderiumPlayerEvent implements Cancellable {

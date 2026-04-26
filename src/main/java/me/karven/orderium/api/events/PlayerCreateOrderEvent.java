@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Getter
 public class PlayerCreateOrderEvent {
-    private PlayerCreateOrderEvent() {};
+    private PlayerCreateOrderEvent() {}
 
     public static class Pre extends PlayerEvent implements Cancellable {
         private static final HandlerList HANDLER_LIST = new HandlerList();

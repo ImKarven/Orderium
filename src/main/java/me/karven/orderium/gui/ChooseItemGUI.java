@@ -11,7 +11,6 @@ import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.EnchantableItem;
 import me.karven.orderium.obj.orderitem.OrderItem;
-import me.karven.orderium.obj.orderitem.SearchableItem;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.PDCUtils;
@@ -134,7 +133,6 @@ public class ChooseItemGUI {
                 currPage.setOnGlobalClick(e -> e.setCancelled(true));
                 currPage.setOnGlobalDrag(e -> e.setCancelled(true));
             }
-            ItemStack item = orderItem instanceof SearchableItem searchableItem ? searchableItem.getParsedItemStack() : orderItem.getItemStack();
             final GuiItem guiItem = new GuiItem(orderItem.getItemStack());
             guiItem.setAction(e -> {
                 if (!(e.getWhoClicked() instanceof Player p)) return;

@@ -9,21 +9,11 @@ import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.val;
-import me.karven.orderium.data.ConfigCache;
-import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
-import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.SortTypes;
-import me.karven.orderium.obj.orderitem.OrderItem;
-import me.karven.orderium.utils.PlayerUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.NonNull;
-
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Random;
 
 import static me.karven.orderium.load.Orderium.plugin;
 
@@ -86,33 +76,33 @@ public class Bootstrapper implements PluginBootstrap {
                         })
                 );
 
-        builder
-                .then(
-                        Commands.literal("test_gen") // this command creates a random order
-                                .executes(ctx -> {
-                                    Player p = (Player) ctx.getSource().getExecutor();
-                                    assert p != null;
-                                    ConfigCache cache = plugin.getConfigs();
-                                    DataCache dataCache = plugin.getDataCache();
-                                    Random random = new Random();
-                                    Collection<OrderItem> items = dataCache.getItems(SortTypes.A_Z);
-                                    Optional<OrderItem> randomItem = items.stream()
-                                            .skip((int) (items.size() * Math.random()))
-                                            .findFirst();
-                                    if (randomItem.isEmpty()) return 1;
-                                    final Order.Response response = Order.create(p, randomItem.get().getItemStack(), random.nextDouble() * 10, random.nextInt(1, 10));
-
-                                    switch (response) {
-                                        case INVALID -> p.sendRichMessage(cache.getInvalidInput());
-                                        case FAIL -> p.sendRichMessage(cache.getNotEnoughMoney());
-                                        case SUCCESS -> {
-                                            p.sendRichMessage(cache.getOrderCreationSuccessful());
-                                            PlayerUtils.playSound(p, cache.getNewOrderSound());
-                                        }
-                                    }
-                                    return 1;
-                                })
-                );
+//        builder
+//                .then(
+//                        Commands.literal("test_gen") // this command creates a random order
+//                                .executes(ctx -> {
+//                                    Player p = (Player) ctx.getSource().getExecutor();
+//                                    assert p != null;
+//                                    ConfigCache cache = plugin.getConfigs();
+//                                    DataCache dataCache = plugin.getDataCache();
+//                                    Random random = new Random();
+//                                    Collection<OrderItem> items = dataCache.getItems(SortTypes.A_Z);
+//                                    Optional<OrderItem> randomItem = items.stream()
+//                                            .skip((int) (items.size() * Math.random()))
+//                                            .findFirst();
+//                                    if (randomItem.isEmpty()) return 1;
+//                                    final Order.Response response = Order.create(p, randomItem.get().getItemStack(), random.nextDouble() * 10, random.nextInt(1, 10));
+//
+//                                    switch (response) {
+//                                        case INVALID -> p.sendRichMessage(cache.getInvalidInput());
+//                                        case FAIL -> p.sendRichMessage(cache.getNotEnoughMoney());
+//                                        case SUCCESS -> {
+//                                            p.sendRichMessage(cache.getOrderCreationSuccessful());
+//                                            PlayerUtils.playSound(p, cache.getNewOrderSound());
+//                                        }
+//                                    }
+//                                    return 1;
+//                                })
+//                );
         return builder.build();
     }
 
