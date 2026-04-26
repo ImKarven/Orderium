@@ -207,7 +207,7 @@ public abstract class Storage {
 
     public abstract CompletableFuture<Collection<Order>> loadOrders();
 
-    public abstract CompletableFuture<Void> createOrder(UUID owner, ItemStack item, int amount, double moneyPer);
+    public abstract CompletableFuture<Order> createOrder(UUID owner, ItemStack item, int amount, double moneyPer);
 
     public abstract CompletableFuture<Double> cancelOrder(Order order);
 

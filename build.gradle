@@ -80,7 +80,7 @@ processResources {
 }
 
 modrinth {
-    token = System.getenv("MODRINTH_TOKEN")
+    token = findProperty("MODRINTH_TOKEN")
     projectId = "orderium"
     versionNumber = version as String
     versionType = type

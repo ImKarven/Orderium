@@ -52,7 +52,7 @@ public class DeliveryConfirmDialog {
                                     .action(DialogAction.customClick(
                                             (_, _) -> {
                                                 DialogListener.removeItems(p);
-                                                order.deliver(p, items);
+                                                order.deliver(p, items, false);
                                             },
                                             ClickCallback.Options.builder().build()
                                     ))

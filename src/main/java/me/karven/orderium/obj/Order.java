@@ -1,7 +1,6 @@
 package me.karven.orderium.obj;
 
 import lombok.Getter;
-import lombok.val;
 import me.karven.orderium.api.events.PlayerCancelOrderEvent;
 import me.karven.orderium.api.events.PlayerCollectItemsEvent;
 import me.karven.orderium.api.events.PlayerCreateOrderEvent;
@@ -58,9 +57,9 @@ public class Order implements me.karven.orderium.api.Order {
     public boolean isActive() { return delivered < amount && expiresAt > System.currentTimeMillis(); }
 
     /// Must be called in the player region
-    public void deliver(Player p, Iterable<ItemStack> items) {
-        val event = new PlayerDeliverOrderEvent(p, this);
-        event.callEvent();
+    public void deliver(Player p, Iterable<ItemStack> items, boolean isAsync) {
+        PlayerDeliverOrderEvent.Pre preEvent = new PlayerDeliverOrderEvent.Pre(p, this, isAsync);
+        if (!preEvent.callEvent()) return;
 
         plugin.getStorage().deliverOrder(p, this, items).thenAccept(receive -> {
             double moneyReceived = receive; // I don't like working with wrapped class at all so will use primitive
@@ -68,6 +67,9 @@ public class Order implements me.karven.orderium.api.Order {
             EconUtils.addMoney(p, moneyReceived);
             p.sendRichMessage(cache.getDelivered(), Placeholder.unparsed("money", ConvertUtils.formatNumber(moneyReceived)));
             PlayerUtils.playSound(p, cache.getDeliverSound());
+
+            PlayerDeliverOrderEvent.Post postEvent = new PlayerDeliverOrderEvent.Post(p, this, isAsync);
+            postEvent.callEvent();
 
             final Player ownerPlayer = Bukkit.getPlayer(owner);
             if (ownerPlayer == null || !ownerPlayer.isOnline()) return;
@@ -83,6 +85,7 @@ public class Order implements me.karven.orderium.api.Order {
         });
     }
 
+    /// Must be called in the player region
     public Response collect(String rawAmount) {
         final Player p = Bukkit.getPlayer(getOwnerUniqueId());
         if (p == null || !p.isOnline() || rawAmount == null) return Response.INVALID;
@@ -110,11 +113,12 @@ public class Order implements me.karven.orderium.api.Order {
             return Response.FAIL;
         }
 
-        val event = new PlayerCollectItemsEvent(p, this, amount);
-        if (!event.callEvent()) return Response.FAIL;
+        PlayerCollectItemsEvent.Pre preEvent = new PlayerCollectItemsEvent.Pre(p, amount, this, false);
+        if (!preEvent.callEvent()) return Response.CANCELLED;
 
         plugin.getStorage().collectItems(this, amount).thenAccept(success -> {
-            if (success.equals(Boolean.FALSE)) {
+            boolean succeeded = success;
+            if (!succeeded) {
                 p.sendRichMessage(cache.getInvalidInput());
                 return;
             }
@@ -122,6 +126,9 @@ public class Order implements me.karven.orderium.api.Order {
             PDCUtils.setCollected(p, collectedInMinute + amount);
 
             PlayerUtils.give(p, getItem().clone(), amount, true);
+
+            PlayerCollectItemsEvent.Post postEvent = new PlayerCollectItemsEvent.Post(p, amount, this, true);
+            postEvent.callEvent();
         });
 
         return Response.SCHEDULED;
@@ -129,16 +136,20 @@ public class Order implements me.karven.orderium.api.Order {
 
 
     public void cancel(Player p) {
-        val event = new PlayerCancelOrderEvent(p, this);
-        if (!event.callEvent()) return;
+        PlayerCancelOrderEvent.Pre preEvent = new PlayerCancelOrderEvent.Pre(p, this, false);
+        if (!preEvent.callEvent()) return;
 
         plugin.getStorage().cancelOrder(this).thenAccept(payBack -> {
-            if (payBack.equals(-1.0)) {
+            double reward = payBack;
+
+            if (reward == -1.0d) {
                 return;
             }
             this.expiresAt = System.currentTimeMillis() - 1;
-            YourOrderGUI.open(p);
-            EconUtils.addMoney(Bukkit.getOfflinePlayer(getOwnerUniqueId()), payBack);
+            YourOrderGUI.open(p, true);
+            EconUtils.addMoney(Bukkit.getOfflinePlayer(getOwnerUniqueId()), reward);
+            PlayerCancelOrderEvent.Post postEvent = new PlayerCancelOrderEvent.Post(p, this, true);
+            postEvent.callEvent();
         });
     }
 
@@ -191,6 +202,7 @@ public class Order implements me.karven.orderium.api.Order {
         plugin.getStorage().updateOrder(this, var, value);
     }
 
+    /// Must be called in the player region
     public static Response create(Player p, ItemStack item, String rawMoneyPer, String rawAmount) {
         if (rawAmount == null || rawMoneyPer == null) return Response.INVALID;
         final double dAmount = ConvertUtils.formatNumber(rawAmount);
@@ -201,8 +213,9 @@ public class Order implements me.karven.orderium.api.Order {
         return create(p, item, moneyPer, amount);
     }
 
+    /// Must be called in the player region
     public static Response create(Player owner, ItemStack item, double moneyPer, int amount) {
-        val event = new PlayerCreateOrderEvent(owner, item, moneyPer, amount);
+        PlayerCreateOrderEvent.Pre event = new PlayerCreateOrderEvent.Pre(owner, item, moneyPer, amount, false);
         if (!event.callEvent()) return Response.CANCELLED;
 
         if (!EconUtils.removeMoney(owner, moneyPer * amount)) {
@@ -210,7 +223,11 @@ public class Order implements me.karven.orderium.api.Order {
         }
         ItemStack strippedItem = item.clone();
         strippedItem.setItemMeta(PDCUtils.removeOrderiumPD(strippedItem.getItemMeta()));
-        plugin.getStorage().createOrder(owner.getUniqueId(), strippedItem, amount, moneyPer);
+        plugin.getStorage().createOrder(owner.getUniqueId(), strippedItem, amount, moneyPer)
+                .thenAccept(order -> {
+                    PlayerCreateOrderEvent.Post postEvent = new PlayerCreateOrderEvent.Post(owner, order, true);
+                    postEvent.callEvent();
+                });
         return Response.SUCCESS;
     }
 

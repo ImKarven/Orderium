@@ -2,6 +2,7 @@ package me.karven.orderium.data;
 
 import lombok.Getter;
 import lombok.val;
+import me.karven.orderium.api.events.OrderRemoveEvent;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
@@ -88,11 +89,17 @@ public final class DataCache {
         mostPaid.add(order);
     }
 
-    public void deleteOrder(Order order) {
+    public void deleteOrder(Order order, boolean isAsync) {
+        OrderRemoveEvent.Pre preEvent = new OrderRemoveEvent.Pre(order, isAsync);
+        if (!preEvent.callEvent()) return;
+
         mostMoneyPerItem.remove(order);
         recentlyListed.remove(order);
         mostDelivered.remove(order);
         mostPaid.remove(order);
+
+        OrderRemoveEvent.Post postEvent = new  OrderRemoveEvent.Post(order, isAsync);
+        postEvent.callEvent();
     }
 
     public void addOrder(Order order) {
@@ -102,7 +109,7 @@ public final class DataCache {
         mostPaid.add(order);
     }
 
-    public List<Order> getOrders(UUID ownerId) {
+    public List<Order> getOrders(UUID ownerId, boolean isAsync) {
         val toDel = new ArrayList<Order>();
         val ownerOrders = mostMoneyPerItem.stream().filter(order -> {
             if (!order.getOwnerUniqueId().equals(ownerId)) return false;
@@ -112,7 +119,7 @@ public final class DataCache {
             }
             return true;
         }).toList();
-        toDel.forEach(this::deleteOrder);
+        toDel.forEach(order -> deleteOrder(order, isAsync));
         return ownerOrders;
     }
 

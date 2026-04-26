@@ -17,9 +17,13 @@ import java.util.UUID;
 import static me.karven.orderium.load.Orderium.plugin;
 
 public class YourOrderGUI {
-    public static void open(Player p) {
+    public static void open(Player player) {
+        open(player, false);
+    }
+
+    public static void open(Player p, boolean isAsync) {
         final UUID pUUID = p.getUniqueId();
-        final List<Order> orders = plugin.getDataCache().getOrders(pUUID);
+        final List<Order> orders = plugin.getDataCache().getOrders(pUUID, isAsync);
         final ConfigCache cache = plugin.getConfigs();
         final MiniMessage mm = plugin.mm;
         final ChestGui gui = new ChestGui(3, ComponentHolder.of(mm.deserialize(cache.getYoGuiTitle())));

@@ -91,8 +91,8 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public CompletableFuture<Void> createOrder(UUID owner, ItemStack item, int amount, double moneyPer) {
-        val future = new CompletableFuture<Void>();
+    public CompletableFuture<Order> createOrder(UUID owner, ItemStack item, int amount, double moneyPer) {
+        CompletableFuture<Order> future = new CompletableFuture<>();
 
         DispatchUtil.async(() -> {
             try (
@@ -111,13 +111,14 @@ public class SQLStorage extends Storage {
                 val generated = create.getGeneratedKeys();
                 if (!(generated.next())) throw new RuntimeException("Failed to create order. No generated keys found");
 
-                plugin.getDataCache().addOrder(new Order(
+                Order order = new Order(
                         generated.getInt(1),
                         owner, item, moneyPer, amount,
                         0, 0, expiresAt
-                ));
+                );
+                plugin.getDataCache().addOrder(order);
 
-                future.complete(null);
+                future.complete(order);
             } catch (SQLException e) {
                 Log.error("Error while creating an order", e);
             }
@@ -157,7 +158,7 @@ public class SQLStorage extends Storage {
                 if (inStorage == 0) {
                     deleteOrder.setInt(1, orderId);
                     deleteOrder.executeUpdate();
-                    plugin.getDataCache().deleteOrder(order);
+                    plugin.getDataCache().deleteOrder(order, true);
                     future.complete(payBack);
                     return;
                 }
@@ -323,7 +324,7 @@ public class SQLStorage extends Storage {
                 if (inStorage - amount == 0 && (delivered == orderAmount || order.getExpiresAt() < System.currentTimeMillis())) {
                     deleteOrder.setInt(1, orderId);
                     deleteOrder.executeUpdate();
-                    plugin.getDataCache().deleteOrder(order);
+                    plugin.getDataCache().deleteOrder(order, true);
                 } else {
                     updateOrder.setInt(1, orderAmount);
                     updateOrder.setDouble(2, moneyPer);
@@ -371,7 +372,7 @@ public class SQLStorage extends Storage {
             ) {
                 deleteOrder.setInt(1, order.getId());
                 deleteOrder.executeUpdate();
-                plugin.getDataCache().deleteOrder(order);
+                plugin.getDataCache().deleteOrder(order, true);
                 future.complete(null);
             } catch (SQLException e) {
                 Log.error("Failed to delete order", e);
