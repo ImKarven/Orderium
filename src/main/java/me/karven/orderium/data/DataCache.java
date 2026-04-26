@@ -3,60 +3,56 @@ package me.karven.orderium.data;
 import lombok.Getter;
 import lombok.val;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.Pair;
 import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.obj.orderitem.BlacklistedItem;
+import me.karven.orderium.obj.orderitem.CustomItem;
+import me.karven.orderium.obj.orderitem.OrderItem;
+import me.karven.orderium.obj.orderitem.VanillaItem;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.Log;
-import me.karven.orderium.utils.PDCUtils;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.KeyPattern;
 import org.bukkit.Registry;
 import org.bukkit.block.BlockType;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class DataCache {
 
     private static final Registry<BlockType> BLOCK_REGISTRY = Registry.BLOCK;
-    private final TreeSet<ItemStack> itemsAZ = new TreeSet<>(AlgoUtils.getComparator(SortTypes.A_Z));
-    private final TreeSet<ItemStack> itemsZA = new TreeSet<>(AlgoUtils.getComparator(SortTypes.Z_A));
+    private final TreeSet<OrderItem> itemsAZ = new TreeSet<>(AlgoUtils.getComparator(SortTypes.A_Z));
+    private final TreeSet<OrderItem> itemsZA = new TreeSet<>(AlgoUtils.getComparator(SortTypes.Z_A));
 
     @Getter
-    private final List<Pair<byte[], String>> customItems = new ArrayList<>();
+    private final List<CustomItem> customItems = new ArrayList<>();
     @Getter
-    private final HashSet<ItemStack> blacklist = new HashSet<>();
+    private final Set<BlacklistedItem> blacklist = ConcurrentHashMap.newKeySet();
 
     private final TreeSet<Order> mostMoneyPerItem = new TreeSet<>(Comparator.comparingDouble(Order::getMoneyPer).reversed().thenComparing(Order::getId));
     private final TreeSet<Order> recentlyListed = new TreeSet<>(Comparator.comparingLong(Order::getExpiresAt).reversed().thenComparing(Order::getId));
     private final TreeSet<Order> mostDelivered = new TreeSet<>(Comparator.comparingInt(Order::getDelivered).reversed().thenComparing(Order::getId));
     private final TreeSet<Order> mostPaid = new TreeSet<>(Comparator.comparingDouble(Order::getPaid).reversed().thenComparing(Order::getId));
 
-    private void setBlacklistAndCustomItems(Collection<ItemStack> blacklist, Collection<Pair<byte[], String>> customItems) {
+    private void setBlacklistAndCustomItems(Collection<BlacklistedItem> blacklist, Collection<CustomItem> customItems) {
         this.blacklist.clear();
         this.customItems.clear();
         this.blacklist.addAll(blacklist);
         this.customItems.addAll(customItems);
     }
 
-    public void setItems(Collection<ItemStack> bukkitItems, Collection<ItemStack> blacklistedItems, Collection<Pair<byte[], String>> customItems) {
+    public void setItems(Collection<VanillaItem> vanillaItems, Collection<BlacklistedItem> blacklistedItems, Collection<CustomItem> customItems) {
         itemsAZ.clear();
         itemsZA.clear();
-        itemsAZ.addAll(bukkitItems);
-        itemsZA.addAll(bukkitItems);
+        itemsAZ.addAll(vanillaItems);
+        itemsZA.addAll(vanillaItems);
 
-        final List<ItemStack> parsedCustomItems = customItems.stream().map(item -> {
-            final ItemStack stack = ItemStack.deserializeBytes(item.first());
-            stack.editMeta(meta -> PDCUtils.setSearch(meta, item.second));
-            return stack;
-        }).toList();
+        itemsAZ.addAll(customItems);
+        itemsZA.addAll(customItems);
 
-        itemsAZ.addAll(parsedCustomItems);
-        itemsZA.addAll(parsedCustomItems);
-
-        for (ItemStack e : blacklistedItems) {
-            itemsAZ.remove(e);
-            itemsZA.remove(e);
+        for (BlacklistedItem e : blacklistedItems) {
+            itemsAZ.removeIf(orderItem -> orderItem.getItemStack().equals(e.getItemStack()));
+            itemsZA.removeIf(orderItem -> orderItem.getItemStack().equals(e.getItemStack()));
         }
 
         Log.info("Loaded " + itemsAZ.size() + " items.");
@@ -129,7 +125,7 @@ public final class DataCache {
         return mostMoneyPerItem;
     }
 
-    public TreeSet<ItemStack> getItems(SortTypes sortType) {
+    public TreeSet<OrderItem> getItems(SortTypes sortType) {
         switch (sortType) {
             case A_Z -> { return itemsAZ; }
             case Z_A -> { return itemsZA; }

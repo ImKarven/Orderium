@@ -6,9 +6,10 @@ import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.Pair;
 import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.obj.orderitem.BlacklistedItem;
+import me.karven.orderium.obj.orderitem.CustomItem;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.KeyPattern;
 import net.kyori.adventure.text.Component;
@@ -89,14 +90,13 @@ public class ConvertUtils {
         return orders;
     }
 
-    public static List<ItemStack> convertItems(ResultSet raw) {
-        final List<ItemStack> items = new ArrayList<>();
+    public static List<BlacklistedItem> convertBlacklistedItems(ResultSet raw) {
+        final List<BlacklistedItem> items = new ArrayList<>();
         if (raw == null) return items;
         try (raw) {
 
             while (raw.next()) {
-                final ItemStack item = ItemStack.deserializeBytes(raw.getBytes(1));
-                items.add(item);
+                items.add(new BlacklistedItem(raw.getBytes(1)));
             }
 
         } catch (SQLException e) {
@@ -106,14 +106,14 @@ public class ConvertUtils {
         return items;
     }
 
-    public static List<Pair<byte[], String>> convertSearchableItems(ResultSet raw) {
-        final List<Pair<byte[], String>> items = new ArrayList<>();
+    public static List<CustomItem> convertCustomItems(ResultSet raw) {
+        final List<CustomItem> items = new ArrayList<>();
         if (raw == null) return items;
         try (raw) {
             while (raw.next()) {
                 final byte[] itemBytes = raw.getBytes(1);
                 final String search = raw.getString(2);
-                items.add(new Pair<>(itemBytes, search));
+                items.add(new CustomItem(itemBytes, search.split(",")));
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to fetch searchable item from database", e);

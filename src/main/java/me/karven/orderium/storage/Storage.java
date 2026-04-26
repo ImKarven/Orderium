@@ -6,6 +6,9 @@ import lombok.val;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
+import me.karven.orderium.obj.orderitem.BlacklistedItem;
+import me.karven.orderium.obj.orderitem.CustomItem;
+import me.karven.orderium.obj.orderitem.VanillaItem;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.Log;
 import org.bukkit.Bukkit;
@@ -46,69 +49,69 @@ public abstract class Storage {
         plugin.getDataCache().setItems(itemsList, blacklistAndCustomItems.first, blacklistAndCustomItems.second);
     }
 
-    public void addBlacklist(ItemStack item) {
+    public void addBlacklist(BlacklistedItem item) {
         try (
                 val connection = modifiedItemDataSource.getConnection();
                 val addItem = connection.prepareStatement("INSERT INTO " + BLACKLIST_TABLE + " (item) VALUES (?)")
         ) {
-            addItem.setBytes(1, item.serializeAsBytes());
+            addItem.setBytes(1, item.getItemAsBytes());
             addItem.executeUpdate();
         } catch (SQLException e) {
             Log.error("Failed to add blacklist item", e);
         }
     }
 
-    public void addCustomItem(ItemStack item) {
+    public void addCustomItem(CustomItem item) {
         try (
                 val connection = modifiedItemDataSource.getConnection();
                 val addItem = connection.prepareStatement("INSERT INTO " + CUSTOM_ITEMS_TABLE + " (item, search) VALUES (?, ?)")
         ) {
-            addItem.setBytes(1, item.serializeAsBytes());
-            addItem.setString(2, "");
+            addItem.setBytes(1, item.getItemAsBytes());
+            addItem.setString(2, String.join(",", item.getSearches()));
             addItem.executeUpdate();
         } catch (SQLException e) {
             Log.error("Failed to add custom item", e);
         }
     }
 
-    public void removeBlacklist(ItemStack item) {
+    public void removeBlacklist(BlacklistedItem item) {
         try (
                 val connection = modifiedItemDataSource.getConnection();
                 val removeItem = connection.prepareStatement("DELETE FROM " + BLACKLIST_TABLE + " WHERE item = (?)")
         ) {
-            removeItem.setBytes(1, item.serializeAsBytes());
+            removeItem.setBytes(1, item.getItemAsBytes());
             removeItem.executeUpdate();
         } catch (SQLException e) {
             Log.error("Failed to remove blacklist item", e);
         }
     }
 
-    public void removeCustomItem(byte[] item) {
+    public void removeCustomItem(CustomItem item) {
         try (
                 val connection = modifiedItemDataSource.getConnection();
                 val removeCustomItem = connection.prepareStatement("DELETE FROM " + CUSTOM_ITEMS_TABLE + " WHERE item = (?)")
         ) {
-            removeCustomItem.setBytes(1, item);
+            removeCustomItem.setBytes(1, item.getItemAsBytes());
             removeCustomItem.executeUpdate();
         } catch (SQLException e) {
             Log.error("Failed to remove custom item", e);
         }
     }
 
-    public void updateCustomItemSearch(Pair<byte[], String> item) {
+    public void updateCustomItemSearch(CustomItem item) {
         try (
                 val connection = modifiedItemDataSource.getConnection();
                 val updateSearch = connection.prepareStatement("UPDATE " + CUSTOM_ITEMS_TABLE + " SET search = ? WHERE item = ?")
         ) {
-            updateSearch.setString(1, item.second);
-            updateSearch.setBytes(2, item.first);
+            updateSearch.setString(1, item.getParsedSearches());
+            updateSearch.setBytes(2, item.getItemAsBytes());
             updateSearch.executeUpdate();
         } catch (SQLException e) {
             Log.error("Failed to update custom item search", e);
         }
     }
 
-    private Pair<Collection<ItemStack>, Collection<Pair<byte[], String>>> loadBlacklistAndCustomItems() {
+    private Pair<Collection<BlacklistedItem>, Collection<CustomItem>> loadBlacklistAndCustomItems() {
         try (
                 val connection = modifiedItemDataSource.getConnection();
                 val createCustomItemsTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB, search VARCHAR(65535))");
@@ -120,8 +123,8 @@ public abstract class Storage {
             val getCustomItems = connection.prepareStatement("SELECT * FROM " + CUSTOM_ITEMS_TABLE);
             val getBlacklist = connection.prepareStatement("SELECT * FROM " + BLACKLIST_TABLE);
 
-            val blacklist = ConvertUtils.convertItems(getBlacklist.executeQuery());
-            val customItems = ConvertUtils.convertSearchableItems(getCustomItems.executeQuery());
+            val blacklist = ConvertUtils.convertBlacklistedItems(getBlacklist.executeQuery());
+            val customItems = ConvertUtils.convertCustomItems(getCustomItems.executeQuery());
 
             getCustomItems.close();
             getBlacklist.close();
@@ -137,7 +140,7 @@ public abstract class Storage {
     /**
      * @return the default items
      */
-    private Collection<ItemStack> loadItems() {
+    private Collection<VanillaItem> loadItems() {
 
         val itemConfig = new HikariConfig();
         itemConfig.setPoolName("items pool");
@@ -182,7 +185,7 @@ public abstract class Storage {
         }
 
         val ITEMS_TABLE_NAME = "items_" + plugin.VERSION;
-        val items = new HashSet<ItemStack>();
+        val items = new HashSet<VanillaItem>();
 
         try (
                 val connection = itemDataSource.getConnection();
@@ -191,7 +194,8 @@ public abstract class Storage {
             val raw = getItems.executeQuery();
 
             while (raw.next()) {
-                items.add(ItemStack.deserializeBytes(raw.getBytes(1)));
+                ItemStack itemStack = ItemStack.deserializeBytes(raw.getBytes(1));
+                items.add(new VanillaItem(itemStack, true));
             }
 
         } catch (SQLException e) {
@@ -201,7 +205,7 @@ public abstract class Storage {
         return items;
     }
 
-    public abstract Collection<Order> loadOrders();
+    public abstract CompletableFuture<Collection<Order>> loadOrders();
 
     public abstract CompletableFuture<Void> createOrder(UUID owner, ItemStack item, int amount, double moneyPer);
 
@@ -230,5 +234,7 @@ public abstract class Storage {
 
     public abstract CompletableFuture<Void> logTransaction(UUID player, double before, double amount, double after);
 
-    public abstract void createTables();
+    public abstract CompletableFuture<Void> createTables();
+
+    public abstract CompletableFuture<Void> performMigration();
 }

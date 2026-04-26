@@ -9,6 +9,8 @@ import io.papermc.paper.registry.RegistryKey;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.obj.orderitem.OrderItem;
+import me.karven.orderium.obj.orderitem.SearchableItem;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -30,11 +32,11 @@ public class AlgoUtils {
         cache = plugin.getConfigs();
     }
 
-    public static List<ItemStack> searchItem(String query, Collection<ItemStack> items) {
+    public static List<OrderItem> searchItem(String query, Collection<OrderItem> items) {
         final String q = fixQuery(query);
-        final List<ItemStack> result = new ArrayList<>();
-        for (ItemStack item : items) {
-            if (search(item, q)) result.add(item);
+        final List<OrderItem> result = new ArrayList<>();
+        for (OrderItem item : items) {
+            if (searchWrappedItem(item, q)) result.add(item);
         }
         return result;
     }
@@ -54,12 +56,22 @@ public class AlgoUtils {
 
     private static boolean search(Order order, String q) {
         String pName = Bukkit.getOfflinePlayer(order.getOwnerUniqueId()).getName();
-        if (pName == null) return search(order.getItem(), q);
+        if (pName == null) return searchLegacyItem(order.getItem(), q);
 
-        return search(order.getItem(), q) || fixQuery(pName).contains(q);
+        return searchLegacyItem(order.getItem(), q) || fixQuery(pName).contains(q);
     }
 
-    private static boolean search(final ItemStack item, String q) {
+    private static boolean searchWrappedItem(final OrderItem item, String q) {
+        if (item instanceof SearchableItem searchableItem) {
+            for (String search : searchableItem.getSearches()) {
+                if (search.contains(q)) return true;
+            }
+            return false;
+        }
+        return searchLegacyItem(item.getItemStack(), q);
+    }
+
+    private static boolean searchLegacyItem(final ItemStack item, String q) {
         if (PDCUtils.hasCustomSearch(item.getItemMeta())) {
             final String customSearch = PDCUtils.getSearch(item.getItemMeta());
             return customSearch.contains(q); // Not perfect with searches contain commas, but it is fast and simply works
@@ -115,7 +127,7 @@ public class AlgoUtils {
         return true;
     }
 
-    public static Comparator<ItemStack> getComparator(SortTypes sortType) {
+    public static Comparator<OrderItem> getComparator(SortTypes sortType) {
         switch (sortType) {
             case A_Z -> { return getComparator(false); }
             case Z_A -> { return getComparator(true); }
@@ -123,10 +135,13 @@ public class AlgoUtils {
         return null;
     }
 
-    public static Comparator<ItemStack> getComparator(boolean reverse) {
-        return (a, b) -> {
+    public static Comparator<OrderItem> getComparator(boolean reverse) {
+        return (itemA, itemB) -> {
+            ItemStack a = itemA.getItemStack();
+            ItemStack b = itemB.getItemStack();
+
             if (reverse) {
-                final ItemStack tmp = a;
+                ItemStack tmp = a;
                 a = b;
                 b = tmp;
             }

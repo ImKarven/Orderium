@@ -7,8 +7,11 @@ import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.data.ConfigCache;
-import me.karven.orderium.obj.OrderItem;
 import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.obj.orderitem.BlacklistedItem;
+import me.karven.orderium.obj.orderitem.EnchantableItem;
+import me.karven.orderium.obj.orderitem.OrderItem;
+import me.karven.orderium.obj.orderitem.SearchableItem;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.PDCUtils;
@@ -102,11 +105,11 @@ public class ChooseItemGUI {
             return;
         }
 
-        final List<ItemStack> items = AlgoUtils.searchItem(search, plugin.getDataCache().getItems(sortType));
+        final List<OrderItem> items = AlgoUtils.searchItem(search, plugin.getDataCache().getItems(sortType));
         createPages(pages, sortType, items);
     }
 
-    private static void createPages(List<ChestGui> pages, SortTypes sortType, Collection<ItemStack> items) {
+    private static void createPages(List<ChestGui> pages, SortTypes sortType, Collection<OrderItem> items) {
         final int pagesAmount = ConvertUtils.ceil_div(items.size(), 45);
 
         OutlinePane itemsPane = new OutlinePane(9, 5);
@@ -116,7 +119,7 @@ public class ChooseItemGUI {
         currPage.setOnGlobalClick(e -> e.setCancelled(true));
         currPage.setOnGlobalDrag(e -> e.setCancelled(true));
         int idx = 0, cnt = 0;
-        for (final ItemStack item : items) {
+        for (OrderItem orderItem : items) {
             if (cnt == 45) {
                 cnt = 0;
                 idx++;
@@ -131,26 +134,26 @@ public class ChooseItemGUI {
                 currPage.setOnGlobalClick(e -> e.setCancelled(true));
                 currPage.setOnGlobalDrag(e -> e.setCancelled(true));
             }
-            ItemStack cloned = item.clone();
-            final GuiItem guiItem = new GuiItem(cloned);
+            ItemStack item = orderItem instanceof SearchableItem searchableItem ? searchableItem.getParsedItemStack() : orderItem.getItemStack();
+            final GuiItem guiItem = new GuiItem(orderItem.getItemStack());
             guiItem.setAction(e -> {
                 if (!(e.getWhoClicked() instanceof Player p)) return;
                 if (e.getClick() != ClickType.RIGHT || !p.hasPermission("orderium.admin.blacklist")) {
 
                     if (
                             !cache.isEnchantItem() ||
-                            PDCUtils.hasCustomSearch(cloned.getItemMeta()) // Assume a custom item has no applicable enchantment
+                            !(orderItem instanceof EnchantableItem enchantableItem)
                     ) {
-                        NewOrderDialog.newSession(p, cloned.clone());
+                        NewOrderDialog.newSession(p, orderItem);
                         return;
                     }
-                    new EnchantGUI(p, new OrderItem(cloned.clone()), (enchantedItem) -> NewOrderDialog.newSession(p, enchantedItem));
+                    new EnchantGUI(p, enchantableItem, (enchantedItem) -> NewOrderDialog.newSession(p, enchantedItem));
                     return;
                 }
                 final ItemStack i = guiItem.getItem();
                 if (PDCUtils.isBlacklist(i.getItemMeta())) return;
 
-                plugin.getStorage().addBlacklist(item);
+                plugin.getStorage().addBlacklist(new BlacklistedItem(orderItem.getItemStack().serializeAsBytes()));
                 p.sendRichMessage("<green>Item added to blacklist. Reload to take effects");
                 i.editMeta(PDCUtils::setBlacklist);
             });

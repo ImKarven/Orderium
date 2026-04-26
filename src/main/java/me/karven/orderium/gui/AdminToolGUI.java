@@ -5,6 +5,7 @@ import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import com.google.common.collect.ImmutableList;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
@@ -15,7 +16,8 @@ import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import lombok.val;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.Pair;
+import me.karven.orderium.obj.orderitem.BlacklistedItem;
+import me.karven.orderium.obj.orderitem.CustomItem;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
@@ -27,10 +29,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static me.karven.orderium.load.Orderium.plugin;
@@ -61,9 +60,9 @@ public class AdminToolGUI {
         return e -> {
             ItemStack clicked = e.getCurrentItem();
             if (clicked == null || clicked.isEmpty()) return;
-
-            plugin.getStorage().addCustomItem(clicked);
-            plugin.getDataCache().getCustomItems().add(new Pair<>(clicked.serializeAsBytes(), ""));
+            CustomItem customItem = new CustomItem(clicked.serializeAsBytes());
+            plugin.getStorage().addCustomItem(customItem);
+            plugin.getDataCache().getCustomItems().add(customItem);
             createCustomItems();
             customItems.get(Math.min(i, customItems.size() - 1)).show(e.getWhoClicked());
         };
@@ -119,7 +118,7 @@ public class AdminToolGUI {
     public static void createBlacklist() {
         blacklist.clear();
 
-        final Set<ItemStack> items = plugin.getDataCache().getBlacklist();
+        final Set<BlacklistedItem> items = plugin.getDataCache().getBlacklist();
         pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
         ChestGui page = new ChestGui(6, "Blacklisted Items");
@@ -131,7 +130,7 @@ public class AdminToolGUI {
         page.setOnGlobalClick(e -> e.setCancelled(true));
         int cnt = 0, i = 0;
 
-        for (ItemStack item : items) {
+        for (BlacklistedItem blacklistedItem : items) {
             if (cnt == 45) {
                 cnt = 0;
                 i++;
@@ -148,11 +147,11 @@ public class AdminToolGUI {
                 page.setOnGlobalClick(e -> e.setCancelled(true));
             }
             final int currentPage = i;
-            itemsPane.addItem(new GuiItem(ConvertUtils.addLore(item.clone(), List.of(
+            itemsPane.addItem(new GuiItem(ConvertUtils.addLore(blacklistedItem.getItemStack(), List.of(
                     "",
                     "<white>Click to <red>remove<white> from blacklist"
             )), e -> {
-                plugin.getStorage().removeBlacklist(item);
+                plugin.getStorage().removeBlacklist(blacklistedItem);
                 createBlacklist();
                 blacklist.get(Math.min(currentPage, blacklist.size() - 1)).show(e.getWhoClicked());
             }));
@@ -169,7 +168,7 @@ public class AdminToolGUI {
     public static void createCustomItems() {
         customItems.clear();
 
-        final List<Pair<byte[], String>> items = plugin.getDataCache().getCustomItems();
+        final List<CustomItem> items = plugin.getDataCache().getCustomItems();
         pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
         ChestGui page = new ChestGui(6, "Custom Items");
@@ -183,7 +182,7 @@ public class AdminToolGUI {
 
         page.setOnBottomClick(addCustomItem(0));
 
-        for (Pair<byte[], String> item : items) {
+        for (CustomItem item : items) {
             if (cnt == 45) {
                 cnt = 0;
                 i++;
@@ -202,7 +201,7 @@ public class AdminToolGUI {
                 page.setOnBottomClick(addCustomItem(i));
             }
             final int currentPage = i;
-            ItemStack stack = ItemStack.deserializeBytes(item.first());
+            ItemStack stack = item.getItemStack();
             final GuiItem guiItem = new GuiItem(ConvertUtils.addLore(stack.clone(), List.of(
                     "",
                     "<white>Shift-right-click to <red>remove<white> from custom items list",
@@ -216,7 +215,7 @@ public class AdminToolGUI {
                     }
 
                     case SHIFT_RIGHT -> {
-                        plugin.getStorage().removeCustomItem(item.first());
+                        plugin.getStorage().removeCustomItem(item);
                         items.remove(item);
                         createCustomItems();
                         customItems.get(Math.min(currentPage, customItems.size() - 1)).show(e.getWhoClicked());
@@ -224,12 +223,12 @@ public class AdminToolGUI {
                     case LEFT -> {
                         final List<DialogBody> bodies = new LinkedList<>();
                         int j = 1;
-                        final String[] searches = item.second().split(",");
+                        final ImmutableList<String> searches = item.getSearches();
                         for (String s : searches) {
                             if (s.isEmpty()) continue;
                             bodies.add(DialogBody.plainMessage(Component.text(j++ + ". " + s)));
                         }
-                        String noneText = searches.length == 0 ? " None" : "";
+                        String noneText = searches.isEmpty() ? " None" : "";
                         bodies.addFirst(DialogBody.item(stack).description(DialogBody.plainMessage(Component.text("Search aliases of this custom item:" + noneText))).build());
 
                         final Dialog dialog = Dialog.create(builder -> builder.empty()
@@ -253,19 +252,17 @@ public class AdminToolGUI {
                                                     final String text = v.getText("text");
                                                     if (text == null) return;
                                                     switch (choice) {
-                                                        case "add" -> item.second += "," + text.trim().toLowerCase().replace(" ", "_");
+                                                        case "add" -> item.addAllSearches(Arrays.asList(text.trim().toLowerCase().replace(" ", "_").split(",")));
 
                                                         case "remove" -> {
                                                             val indices = text.trim().split(",");
                                                             final List<String> toRev = new ArrayList<>();
                                                             for (String index : indices) {
                                                                 try {
-                                                                    toRev.add(searches[Integer.parseInt(index)]);
-                                                                } catch (Exception ignored) {}
+                                                                    toRev.add(searches.get(Integer.parseInt(index)));
+                                                                } catch (Exception ignored) {} // User didn't input a valid index or number
                                                             }
-                                                            val searchList = new ArrayList<>(List.of(searches));
-                                                            searchList.removeAll(toRev);
-                                                            item.second = String.join(",", searchList);
+                                                            item.removeAllSearches(toRev);
                                                         }
 
                                                         case null, default -> {}

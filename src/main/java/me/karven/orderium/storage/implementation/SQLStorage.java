@@ -67,22 +67,27 @@ public class SQLStorage extends Storage {
             default -> CREATE_ORDER_TABLE = "CREATE TABLE IF NOT EXISTS " + ORDER_TABLE + " (id INTEGER PRIMARY KEY AUTO_INCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)";
         }
 
-        createTables();
-        plugin.getDataCache().setOrders(loadOrders());
+        createTables().thenAccept(_ -> {
+            loadOrders().thenAccept(plugin.getDataCache()::setOrders);
+        });
     }
 
     @Override
-    public Collection<Order> loadOrders() {
-        try (
-                val connection = data.getConnection();
-                val getOrders = connection.prepareStatement("SELECT * FROM " + ORDER_TABLE)
-        ) {
-            val raw = getOrders.executeQuery();
-            return ConvertUtils.convertOrders(raw);
-        } catch (SQLException e) {
-            Log.error("Failed to load orders", e);
-        }
-        return new ArrayList<>();
+    public CompletableFuture<Collection<Order>> loadOrders() {
+        CompletableFuture<Collection<Order>> future = new CompletableFuture<>();
+        DispatchUtil.async(() -> {
+            try (
+                    val connection = data.getConnection();
+                    val getOrders = connection.prepareStatement("SELECT * FROM " + ORDER_TABLE)
+            ) {
+                val raw = getOrders.executeQuery();
+                future.complete(ConvertUtils.convertOrders(raw));
+            } catch (SQLException e) {
+                Log.error("Failed to load orders", e);
+                future.complete(null);
+            }
+        });
+        return future;
     }
 
     @Override
@@ -399,7 +404,8 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public void createTables() {
+    public CompletableFuture<Void> createTables() {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         try (
                 val connection = data.getConnection();
                 val createOrderTable = connection.prepareStatement(CREATE_ORDER_TABLE);
@@ -407,9 +413,17 @@ public class SQLStorage extends Storage {
         ) {
             createOrderTable.executeUpdate();
             createTransactionTable.executeUpdate();
+            future.complete(null);
         } catch (SQLException e) {
             Log.error("Failed to create tables", e);
         }
+        return future;
+    }
+
+    @Override
+    public CompletableFuture<Void> performMigration() {
+        CompletableFuture<Void>  future = CompletableFuture.completedFuture(null);
+        return future;
     }
 
 

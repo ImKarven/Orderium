@@ -23,6 +23,7 @@ public class UpdateUtils {
     private static final String mcVer = Bukkit.getMinecraftVersion();
     private static String plVer;
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void init() {
         itemsFile = new File(plugin.getDataFolder(), "items.db");
         plVer = plugin.getPluginMeta().getVersion();
