@@ -62,13 +62,12 @@ public class AlgoUtils {
     }
 
     private static boolean searchWrappedItem(final OrderItem item, String q) {
-        if (item instanceof SearchableItem searchableItem) {
-            for (String search : searchableItem.getSearches()) {
-                if (search.contains(q)) return true;
-            }
-            return false;
+        if (!(item instanceof SearchableItem searchableItem)) return searchLegacyItem(item.getItemStack(), q);
+
+        for (String search : searchableItem.getSearches()) {
+            if (search.contains(q)) return true;
         }
-        return searchLegacyItem(item.getItemStack(), q);
+        return false;
     }
 
     private static boolean searchLegacyItem(final ItemStack item, String q) {

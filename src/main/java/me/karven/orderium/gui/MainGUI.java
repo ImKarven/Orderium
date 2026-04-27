@@ -50,7 +50,10 @@ public class MainGUI {
         this.sortIdx = sortIdx;
         this.player = p;
         final SortTypes sortType = cache.getOrdersSortsOrder().get(sortIdx);
-        orders = plugin.getDataCache().getSortedOrders(sortType);
+
+        Collection<Order> allOrders = plugin.getDataCache().getSortedOrders(sortType);
+        orders = allOrders.stream().filter(Order::isActive).toList();
+
         this.amount = ceil_div(orders.size(), 45);
         setupPages();
         open(p);
@@ -61,7 +64,9 @@ public class MainGUI {
         this.sortIdx = sortIdx;
         this.player = p;
         final SortTypes sortType = cache.getOrdersSortsOrder().get(sortIdx);
-        orders = AlgoUtils.searchOrder(search, plugin.getDataCache().getSortedOrders(sortType));
+
+        Collection<Order> allOrders = AlgoUtils.searchOrder(search, plugin.getDataCache().getSortedOrders(sortType));
+        orders = allOrders.stream().filter(Order::isActive).toList();
 
         this.amount = ceil_div(orders.size(), 45);
         setupPages();
@@ -76,7 +81,6 @@ public class MainGUI {
         addButtons(buttonsPane, curr);
 
         for (final Order order : orders) {
-            if (!order.isActive()) continue;
             if (cnt == 45) {
                 cnt = 0;
                 page.addPane(Slot.fromXY(0, 0), orderPane);
