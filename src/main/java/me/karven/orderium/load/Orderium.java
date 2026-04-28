@@ -41,6 +41,8 @@ public final class Orderium extends JavaPlugin {
     public DataCache getDataCache() { return dataCache; }
     public Economy getEcon() { return econ; }
 
+    public void setStorage(Storage storage) { this.storage = storage; }
+
     @Override
     public void onLoad() {
         PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(), PacketListenerPriority.NORMAL);
