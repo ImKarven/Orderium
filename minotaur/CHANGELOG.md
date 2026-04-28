@@ -1,1 +1,1 @@
-Fix: wrong page amount calculation
+Fix: errors with enchant GUI
