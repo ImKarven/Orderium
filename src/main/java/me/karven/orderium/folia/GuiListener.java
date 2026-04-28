@@ -3,7 +3,6 @@ package me.karven.orderium.folia;
 import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
 import com.github.stefvanschie.inventoryframework.gui.type.util.NamedGui;
-import lombok.val;
 import me.karven.orderium.utils.DispatchUtil;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.EventHandler;
@@ -32,7 +31,7 @@ public class GuiListener implements Listener {
             ifListener.onInventoryClick(event);
         } catch (UnsupportedOperationException e) {
 
-            val who = event.getWhoClicked();
+            HumanEntity who = event.getWhoClicked();
 
             DispatchUtil.entity(who, () -> {
                 PlayerInventory playerInventory = who.getInventory();

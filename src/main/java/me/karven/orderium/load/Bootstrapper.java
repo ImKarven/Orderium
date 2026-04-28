@@ -1,6 +1,7 @@
 package me.karven.orderium.load;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -8,7 +9,6 @@ import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import lombok.val;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
 import org.bukkit.entity.Player;
@@ -39,7 +39,7 @@ public class Bootstrapper implements PluginBootstrap {
     }
 
     private static LiteralCommandNode<CommandSourceStack> getOrderiumCmd(String alias) {
-        val builder = Commands.literal(alias);
+        LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal(alias);
         builder
                 .requires(predicate -> (predicate.getSender().hasPermission("orderium.admin")))
                 .then(Commands.literal("reload")

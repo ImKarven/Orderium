@@ -1,14 +1,15 @@
 package me.karven.orderium.listener;
 
 import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
-import lombok.val;
 import me.karven.orderium.gui.SignGUI;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
 import org.jetbrains.annotations.NotNull;
 
 /// This class helps things happen normally when the player disconnects
@@ -18,9 +19,9 @@ public class DisconnectListener implements Listener {
     // Properly give items back to the player in case they quit while still in the delivery GUI
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        val p = e.getPlayer();
+        Player p = e.getPlayer();
         SignGUI.completeSession(p, "");
-        val view = p.getOpenInventory();
+        InventoryView view = p.getOpenInventory();
         Gui gui = getGui(view.getTopInventory());
         if (gui != null)
         // Bukkit decides to not fire InventoryCloseEvent when quitting so we do that ourselves

@@ -2,8 +2,6 @@ package me.karven.orderium.load;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
-import lombok.Getter;
-import lombok.Setter;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.data.DataCache;
 import me.karven.orderium.folia.IFFolia;
@@ -25,7 +23,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.TimeUnit;
 
-@Getter
 public final class Orderium extends JavaPlugin {
     public static Orderium plugin;
     public static boolean isFolia;
@@ -33,12 +30,16 @@ public final class Orderium extends JavaPlugin {
     public final DisconnectListener DISCONNECT_LISTENER = new DisconnectListener();
 
     private ConfigCache configs;
-    @Setter
     private Storage storage;
     private DataCache dataCache;
     private Economy econ;
     public final MiniMessage mm = MiniMessage.miniMessage();
     public int VERSION = -1;
+
+    public ConfigCache getConfigs() { return configs; }
+    public Storage getStorage() { return storage; }
+    public DataCache getDataCache() { return dataCache; }
+    public Economy getEcon() { return econ; }
 
     @Override
     public void onLoad() {

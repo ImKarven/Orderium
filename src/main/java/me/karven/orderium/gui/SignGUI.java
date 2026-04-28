@@ -6,16 +6,17 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.util.Vector3i;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientUpdateSign;
 import io.papermc.paper.math.Position;
-import lombok.val;
 import me.karven.orderium.obj.SignInfo;
 import me.karven.orderium.utils.Log;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.BlockType;
 import org.bukkit.block.Sign;
 import org.bukkit.block.TileState;
 import org.bukkit.block.sign.Side;
+import org.bukkit.block.sign.SignSide;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 
@@ -46,10 +47,10 @@ public class SignGUI implements PacketListener {
         } else y += 5;
 
         Sign signState = (Sign) blockType.createBlockData().createBlockState();
-        val frontSide = signState.getSide(Side.FRONT);
+        SignSide frontSide = signState.getSide(Side.FRONT);
         for (int i = 0; i < 4; i++) frontSide.line(i, mm.deserialize(lines.get(i)));
-        val loc = new Location(p.getWorld(), x, y, z);
-        val position = Position.block(x, y, z);
+        Location loc = new Location(p.getWorld(), x, y, z);
+        Position position = Position.block(x, y, z);
         p.sendBlockChange(loc, signState.getBlockData());
         p.sendBlockUpdate(loc, signState);
         p.openVirtualSign(position, Side.FRONT);
@@ -81,8 +82,8 @@ public class SignGUI implements PacketListener {
         final String[] lines = wrapper.getTextLines();
         completeSession(player, lines[info.line() - 1]);
 
-        val world = player.getWorld();
-        val loc = pos.toLocation(world);
+        World world = player.getWorld();
+        Location loc = pos.toLocation(world);
 
         Bukkit.getRegionScheduler().run(plugin, loc, _ -> {
             player.sendBlockChange(loc, world.getBlockData(loc));

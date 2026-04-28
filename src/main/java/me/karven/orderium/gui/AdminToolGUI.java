@@ -14,7 +14,6 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
-import lombok.val;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.CustomItem;
@@ -168,7 +167,7 @@ public class AdminToolGUI {
     public static void createCustomItems() {
         customItems.clear();
 
-        final List<CustomItem> items = plugin.getDataCache().getCustomItems();
+        final Set<CustomItem> items = plugin.getDataCache().getCustomItems();
         pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
         ChestGui page = new ChestGui(6, "Custom Items");
@@ -255,9 +254,9 @@ public class AdminToolGUI {
                                                         case "add" -> item.addAllSearches(Arrays.asList(text.trim().toLowerCase().replace(" ", "_").split(",")));
 
                                                         case "remove" -> {
-                                                            val indices = text.trim().split(",");
+                                                            String[] indicesString = text.trim().split(",");
                                                             final List<String> toRev = new ArrayList<>();
-                                                            for (String index : indices) {
+                                                            for (String index : indicesString) {
                                                                 try {
                                                                     toRev.add(searches.get(Integer.parseInt(index)));
                                                                 } catch (Exception ignored) {} // User didn't input a valid index or number
@@ -292,22 +291,22 @@ public class AdminToolGUI {
     @SuppressWarnings("UnstableApiUsage")
     public static Dialog createEditOrder(Order order) {
 
-        val body = DialogBody.item(order.getItem()).description(DialogBody.plainMessage(Component.text("You're editing this order"))).build();
+        DialogBody body = DialogBody.item(order.getItem()).description(DialogBody.plainMessage(Component.text("You're editing this order"))).build();
 
-        val option = DialogInput.singleOption("option", Component.text("Action"), List.of(
+        DialogInput option = DialogInput.singleOption("option", Component.text("Action"), List.of(
                 SingleOptionDialogInput.OptionEntry.create("change_amount", Component.text("Change Amount"), true),
                 SingleOptionDialogInput.OptionEntry.create("change_delivered", Component.text("Change Delivered"), false),
                 SingleOptionDialogInput.OptionEntry.create("change_in_storage", Component.text("Change In Storage"), false),
                 SingleOptionDialogInput.OptionEntry.create("change_money_per", Component.text("Change Money Per"), false)
         )).build();
 
-        val value = DialogInput.text("value", Component.text("Value")).build();
+        DialogInput value = DialogInput.text("value", Component.text("Value")).build();
 
-        val confirm = ActionButton.builder(Component.text("Confirm", NamedTextColor.GREEN))
+        ActionButton confirm = ActionButton.builder(Component.text("Confirm", NamedTextColor.GREEN))
                 .action(DialogAction.customClick((view, player) -> {
                     if (!(player instanceof Player p)) return;
-                    val chosen = view.getText("option");
-                    val num = ConvertUtils.formatNumber(view.getText("value"));
+                    String chosen = view.getText("option");
+                    double num = ConvertUtils.formatNumber(view.getText("value"));
                     final int intNum = (int) num;
                     if (num == -1 || chosen == null || (!chosen.equals("change_money_per") && num != intNum)) {
                         p.sendRichMessage("<red>Invalid value");
@@ -328,7 +327,7 @@ public class AdminToolGUI {
                 }, ClickCallback.Options.builder().build()))
                 .build();
 
-        val cancel = ActionButton.builder(Component.text("Cancel", NamedTextColor.RED)).build();
+        ActionButton cancel = ActionButton.builder(Component.text("Cancel", NamedTextColor.RED)).build();
 
         return Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(Component.text("Edit this order"))

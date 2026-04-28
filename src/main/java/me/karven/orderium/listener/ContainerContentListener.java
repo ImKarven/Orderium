@@ -25,8 +25,8 @@ public class ContainerContentListener implements PacketListener {
             }
             
             case  PacketType.Play.Server.WINDOW_ITEMS -> {
-                WrapperPlayServerWindowItems containerCotentPacket = new WrapperPlayServerWindowItems(event);
-                for (ItemStack item : containerCotentPacket.getItems()) {
+                WrapperPlayServerWindowItems containerContentPacket = new WrapperPlayServerWindowItems(event);
+                for (ItemStack item : containerContentPacket.getItems()) {
                     stripItemPD(item);
                 }
             }

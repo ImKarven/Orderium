@@ -7,7 +7,7 @@ import com.github.stefvanschie.inventoryframework.pane.StaticPane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemContainerContents;
-import lombok.val;
+import io.papermc.paper.dialog.Dialog;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
@@ -17,6 +17,7 @@ import me.karven.orderium.utils.DispatchUtil;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
@@ -92,16 +93,16 @@ public class MainGUI {
                 addButtons(buttonsPane, ++curr);
             }
             orderPane.addItem(ConvertUtils.parseOrder(order, cache.getOrderLore(), e -> {
-                val who = e.getWhoClicked();
+                HumanEntity who = e.getWhoClicked();
                 if (e.getClick() == ClickType.RIGHT && who.hasPermission("orderium.admin.edit-orders")) {
-                    val dialog = AdminToolGUI.createEditOrder(order);
+                    Dialog dialog = AdminToolGUI.createEditOrder(order);
                     who.showDialog(dialog);
                 }
                 if (player.getUniqueId().equals(order.getOwnerUniqueId())) {
                     player.sendRichMessage(cache.getDeliverSelf());
                     return;
                 }
-                val deliverGUI = setupDeliverGUI(order);
+                ChestGui deliverGUI = setupDeliverGUI(order);
                 deliverGUI.show(who);
             }));
             cnt++;

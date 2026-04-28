@@ -5,6 +5,12 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * This event is fired when an order is deleted
+ * However, the order is never deleted in the storage currently
+ * It is only deleted in memory
+ * An order is only checked if it should be deleted when the owner enters your orders GUI
+ */
 public class OrderRemoveEvent {
     private OrderRemoveEvent() {} // For avoiding construction
 

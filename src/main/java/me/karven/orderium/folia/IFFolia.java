@@ -3,12 +3,12 @@ package me.karven.orderium.folia;
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.GuiListener;
 import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
-import lombok.val;
 import me.karven.orderium.load.Orderium;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.plugin.RegisteredListener;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
@@ -22,7 +22,7 @@ public class IFFolia extends Gui {
         super(plugin);
 
         GuiListener ifListener = null;
-        for (val listener : HandlerList.getRegisteredListeners(plugin)) {
+        for (RegisteredListener listener : HandlerList.getRegisteredListeners(plugin)) {
             if (!(listener.getListener() instanceof GuiListener guiListener)) continue;
             ifListener = guiListener;
             break;

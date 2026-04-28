@@ -1,7 +1,5 @@
 package me.karven.orderium.data;
 
-import lombok.Getter;
-import lombok.val;
 import me.karven.orderium.api.events.OrderRemoveEvent;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
@@ -18,22 +16,20 @@ import org.bukkit.block.BlockType;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class DataCache {
-
     private static final Registry<BlockType> BLOCK_REGISTRY = Registry.BLOCK;
     private final TreeSet<OrderItem> itemsAZ = new TreeSet<>(AlgoUtils.getComparator(SortTypes.A_Z));
     private final TreeSet<OrderItem> itemsZA = new TreeSet<>(AlgoUtils.getComparator(SortTypes.Z_A));
 
-    @Getter
-    private final List<CustomItem> customItems = new ArrayList<>();
-    @Getter
+    private final Set<CustomItem> customItems = ConcurrentHashMap.newKeySet();
     private final Set<BlacklistedItem> blacklist = ConcurrentHashMap.newKeySet();
 
-    private final TreeSet<Order> mostMoneyPerItem = new TreeSet<>(Comparator.comparingDouble(Order::getMoneyPer).reversed().thenComparing(Order::getId));
-    private final TreeSet<Order> recentlyListed = new TreeSet<>(Comparator.comparingLong(Order::getExpiresAt).reversed().thenComparing(Order::getId));
-    private final TreeSet<Order> mostDelivered = new TreeSet<>(Comparator.comparingInt(Order::getDelivered).reversed().thenComparing(Order::getId));
-    private final TreeSet<Order> mostPaid = new TreeSet<>(Comparator.comparingDouble(Order::getPaid).reversed().thenComparing(Order::getId));
+    private final NavigableSet<Order> mostMoneyPerItem = new ConcurrentSkipListSet<>(Comparator.comparingDouble(Order::getMoneyPer).reversed().thenComparing(Order::getId));
+    private final NavigableSet<Order> recentlyListed = new ConcurrentSkipListSet<>(Comparator.comparingLong(Order::getExpiresAt).reversed().thenComparing(Order::getId));
+    private final NavigableSet<Order> mostDelivered = new ConcurrentSkipListSet<>(Comparator.comparingInt(Order::getDelivered).reversed().thenComparing(Order::getId));
+    private final NavigableSet<Order> mostPaid = new ConcurrentSkipListSet<>(Comparator.comparingDouble(Order::getPaid).reversed().thenComparing(Order::getId));
 
     private void setBlacklistAndCustomItems(Collection<BlacklistedItem> blacklist, Collection<CustomItem> customItems) {
         this.blacklist.clear();
@@ -110,8 +106,8 @@ public final class DataCache {
     }
 
     public List<Order> getOrders(UUID ownerId, boolean isAsync) {
-        val toDel = new ArrayList<Order>();
-        val ownerOrders = mostMoneyPerItem.stream().filter(order -> {
+        List<Order> toDel = new ArrayList<>();
+        List<Order> ownerOrders = mostMoneyPerItem.stream().filter(order -> {
             if (!order.getOwnerUniqueId().equals(ownerId)) return false;
             if (order.shouldBeDeleted()) {
                 toDel.add(order);
@@ -123,7 +119,7 @@ public final class DataCache {
         return ownerOrders;
     }
 
-    public TreeSet<Order> getSortedOrders(SortTypes sortType) {
+    public NavigableSet<Order> getSortedOrders(SortTypes sortType) {
         switch (sortType) {
             case MOST_MONEY_PER_ITEM -> { return mostMoneyPerItem; }
             case RECENTLY_LISTED -> { return recentlyListed; }
@@ -140,6 +136,9 @@ public final class DataCache {
         }
         return itemsAZ;
     }
+
+    public Set<CustomItem> getCustomItems() { return customItems; }
+    public Set<BlacklistedItem> getBlacklist() { return blacklist; }
 
     public BlockType getBlockType(@KeyPattern String identifier) {
         return BLOCK_REGISTRY.get(Key.key(identifier));
