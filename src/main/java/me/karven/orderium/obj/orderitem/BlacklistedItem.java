@@ -1,9 +1,8 @@
 package me.karven.orderium.obj.orderitem;
 
-import me.karven.orderium.utils.Log;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 public class BlacklistedItem implements SerializedItem, OrderItem {
     private final byte[] itemAsBytes;
@@ -24,18 +23,14 @@ public class BlacklistedItem implements SerializedItem, OrderItem {
         return item;
     }
 
-    @Override
-    public @Nullable OrderItem clone() {
-        try {
-            return (OrderItem) super.clone();
-        } catch (CloneNotSupportedException e) {
-            Log.error("clone failed", e);
-        }
-        return null;
+    public @NotNull BlacklistedItem copy() {
+        BlacklistedItem clone = new BlacklistedItem(itemAsBytes);
+        clone.setItemStack(item);
+        return clone;
     }
 
     @Override
-    public void setItemStack(ItemStack itemStack) {
+    public void setItemStack(@NonNull ItemStack itemStack) {
         this.item = itemStack;
     }
 }

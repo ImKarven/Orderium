@@ -2,7 +2,6 @@ package me.karven.orderium.obj.orderitem;
 
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public interface OrderItem {
 
@@ -12,7 +11,5 @@ public interface OrderItem {
      */
     @NotNull ItemStack getItemStack();
 
-    @Nullable OrderItem clone();
-
-    void setItemStack(ItemStack itemStack);
+    void setItemStack(@NotNull ItemStack itemStack);
 }

@@ -9,7 +9,9 @@ import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.obj.orderitem.EnchantableItem;
 import me.karven.orderium.obj.orderitem.OrderItem;
+import me.karven.orderium.obj.orderitem.VanillaItem;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.Log;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -41,6 +43,10 @@ public class EnchantGUI {
      * @param action the action to perform after enchantments are applied, will be null if the player exits the GUI
      */
     public EnchantGUI(Player player, EnchantableItem item, Consumer<OrderItem> action) {
+        if (!(item instanceof VanillaItem vanillaItem)) {
+            Log.error("Failed to process enchant GUI", new IllegalArgumentException("Unsupported item"));
+            return;
+        }
         Collection<Enchantment> enchantable = item.getEnchantable();
         if (enchantable.isEmpty()) {
             action.accept(item);
@@ -59,8 +65,8 @@ public class EnchantGUI {
 
         StaticPane topPane = new StaticPane(9, 1);
         Consumer<InventoryClickEvent> confirmAction = _ -> {
-            OrderItem copy = item.clone();
-            if (copy != null) copy.setItemStack(enchantedItem);
+            OrderItem copy = vanillaItem.copy();
+            copy.setItemStack(enchantedItem);
             action.accept(copy);
         };
         GuiItem displayItem = new GuiItem(item.getItemStack());

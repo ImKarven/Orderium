@@ -1,11 +1,9 @@
 package me.karven.orderium.obj.orderitem;
 
 import com.google.common.collect.ImmutableList;
-import me.karven.orderium.utils.Log;
 import me.karven.orderium.utils.PDCUtils;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
@@ -29,7 +27,7 @@ public class CustomItem implements SearchableItem, SerializedItem {
         this.searches.addAll(Arrays.asList(searches));
     }
 
-    public CustomItem(byte @NotNull [] itemAsBytes, List<@NotNull String> searches) {
+    public CustomItem(byte @NotNull [] itemAsBytes, @NotNull List<@NotNull String> searches) {
         this(itemAsBytes);
         this.searches.addAll(searches);
     }
@@ -97,18 +95,14 @@ public class CustomItem implements SearchableItem, SerializedItem {
         return item.clone();
     }
 
-    @Override
-    public @Nullable OrderItem clone() {
-        try {
-            return (OrderItem) super.clone();
-        } catch (CloneNotSupportedException e) {
-            Log.error("clone failed", e);
-        }
-        return null;
+    public @NotNull CustomItem copy() {
+        CustomItem clone = new CustomItem(itemAsBytes, searches);
+        clone.setItemStack(item);
+        return clone;
     }
 
     @Override
-    public void setItemStack(ItemStack itemStack) {
+    public void setItemStack(@NonNull ItemStack itemStack) {
         this.item = itemStack;
     }
 }

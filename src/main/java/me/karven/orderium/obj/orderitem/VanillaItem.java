@@ -3,12 +3,10 @@ package me.karven.orderium.obj.orderitem;
 import com.google.common.collect.ImmutableList;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
-import me.karven.orderium.utils.Log;
 import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
@@ -61,18 +59,14 @@ public class VanillaItem implements EnchantableItem {
         return item;
     }
 
-    @Override
-    public @Nullable OrderItem clone() {
-        try {
-            return (OrderItem) super.clone();
-        } catch (CloneNotSupportedException e) {
-            Log.error("clone failed", e);
-        }
-        return null;
+    public @NotNull VanillaItem copy() {
+        VanillaItem clone = new VanillaItem(item.clone(), false);
+        clone.setEnchantable(enchantable);
+        return clone;
     }
 
     @Override
-    public void setItemStack(ItemStack itemStack) {
+    public void setItemStack(@NonNull ItemStack itemStack) {
         this.item = itemStack;
     }
 }
