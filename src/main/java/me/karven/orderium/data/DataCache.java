@@ -20,8 +20,8 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class DataCache {
     private static final Registry<BlockType> BLOCK_REGISTRY = Registry.BLOCK;
-    private final TreeSet<OrderItem> itemsAZ = new TreeSet<>(AlgoUtils.getComparator(SortTypes.A_Z));
-    private final TreeSet<OrderItem> itemsZA = new TreeSet<>(AlgoUtils.getComparator(SortTypes.Z_A));
+    private final NavigableSet<OrderItem> itemsAZ = new ConcurrentSkipListSet<>(AlgoUtils.getComparator(SortTypes.A_Z));
+    private final NavigableSet<OrderItem> itemsZA = new ConcurrentSkipListSet<>(AlgoUtils.getComparator(SortTypes.Z_A));
 
     private final Set<CustomItem> customItems = ConcurrentHashMap.newKeySet();
     private final Set<BlacklistedItem> blacklist = ConcurrentHashMap.newKeySet();
@@ -129,7 +129,7 @@ public final class DataCache {
         return mostMoneyPerItem;
     }
 
-    public TreeSet<OrderItem> getItems(SortTypes sortType) {
+    public NavigableSet<OrderItem> getItems(SortTypes sortType) {
         switch (sortType) {
             case A_Z -> { return itemsAZ; }
             case Z_A -> { return itemsZA; }
