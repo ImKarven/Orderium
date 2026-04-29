@@ -12,8 +12,17 @@ public class PDCUtils {
     private static final NamespacedKey collectedKey = new NamespacedKey("orderium", "collected"); // String namespace isn't perfect but it works
     private static final NamespacedKey blacklistKey = new NamespacedKey("orderium", "blacklist");
     private static final NamespacedKey searchKey = new NamespacedKey("orderium", "search");
+    private static final NamespacedKey idKey =  new NamespacedKey("orderium", "item-id");
 
-    public static final List<NamespacedKey> KEYS = List.of(collectedKey, blacklistKey, searchKey);
+    public static final List<NamespacedKey> KEYS = List.of(collectedKey, blacklistKey, searchKey, idKey);
+
+    public static void setID(ItemMeta meta, int id) {
+        meta.getPersistentDataContainer().set(collectedKey, PersistentDataType.INTEGER, id);
+    }
+
+    public static int getID(ItemMeta meta) {
+        return meta.getPersistentDataContainer().getOrDefault(collectedKey, PersistentDataType.INTEGER, -1);
+    }
 
     public static void setCollected(Player p, int amount) {
         DispatchUtil.entity(p, () -> p.getPersistentDataContainer().set(collectedKey, PersistentDataType.INTEGER, amount));
