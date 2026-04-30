@@ -1,14 +1,11 @@
 package me.karven.orderium.gui;
 
-import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHolder;
-import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
-import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
-import com.github.stefvanschie.inventoryframework.pane.StaticPane;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemContainerContents;
 import io.papermc.paper.dialog.Dialog;
 import me.karven.orderium.data.ConfigCache;
+import me.karven.orderium.guiframework.InteractLocation;
+import me.karven.orderium.guiframework.InventoryGUI;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.utils.AlgoUtils;
@@ -31,7 +28,7 @@ import static me.karven.orderium.load.Orderium.plugin;
 import static me.karven.orderium.utils.ConvertUtils.ceil_div;
 
 public class MainGUI {
-    private final List<ChestGui> pages = new ArrayList<>();
+    private final List<InventoryGUI> pages = new ArrayList<>();
     private final Collection<Order> orders;
     private final Player player;
     private final int amount;
@@ -76,23 +73,18 @@ public class MainGUI {
 
     private void setupPages() {
         int curr = 0, cnt = 0;
-        ChestGui page = initPage();
-        OutlinePane orderPane = new OutlinePane(9, 5);
-        StaticPane buttonsPane = new StaticPane(9, 1);
-        addButtons(buttonsPane, curr);
+
+        InventoryGUI page = initPage();
+        addButtons(page, curr);
 
         for (final Order order : orders) {
             if (cnt == 45) {
                 cnt = 0;
-                page.addPane(Slot.fromXY(0, 0), orderPane);
-                page.addPane(Slot.fromXY(0, 5), buttonsPane);
                 pages.add(page);
                 page = initPage();
-                orderPane = new OutlinePane(9, 5);
-                buttonsPane = new StaticPane(9, 1);
-                addButtons(buttonsPane, ++curr);
+                addButtons(page, ++curr);
             }
-            orderPane.addItem(ConvertUtils.parseOrder(order, cache.getOrderLore(), e -> {
+            page.addItem(ConvertUtils.fetchOrder(order, cache.getOrderLore(), e -> {
                 HumanEntity who = e.getWhoClicked();
                 if (e.getClick() == ClickType.RIGHT && who.hasPermission("orderium.admin.edit-orders")) {
                     Dialog dialog = AdminToolGUI.createEditOrder(order);
@@ -102,26 +94,24 @@ public class MainGUI {
                     player.sendRichMessage(cache.getDeliverSelf());
                     return;
                 }
-                ChestGui deliverGUI = setupDeliverGUI(order);
-                deliverGUI.show(who);
-            }));
+                InventoryGUI deliverGUI = setupDeliverGUI(order);
+                deliverGUI.open(who);
+            }), cnt);
             cnt++;
         }
-        page.addPane(Slot.fromXY(0, 0), orderPane);
-        page.addPane(Slot.fromXY(0, 5), buttonsPane);
         pages.add(page);
     }
 
-    private ChestGui initPage() {
-        ChestGui page = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getMainGuiTitle())));
-        page.setOnGlobalClick(e -> e.setCancelled(true));
-        page.setOnGlobalDrag(e -> e.setCancelled(true));
+    private InventoryGUI initPage() {
+        InventoryGUI page = new InventoryGUI(6, mm.deserialize(cache.getMainGuiTitle()));
+        page.setOnClick(event -> event.setCancelled(true), InteractLocation.GLOBAL);
+        page.setOnDrag(event -> event.setCancelled(true), InteractLocation.GLOBAL);
         return page;
     }
 
-    private ChestGui setupDeliverGUI(Order order) {
+    private InventoryGUI setupDeliverGUI(Order order) {
         final ItemStack comparer = order.getItem();
-        final ChestGui deliverGUI = new ChestGui(cache.getDeliverRows(), ComponentHolder.of(mm.deserialize(cache.getMainGuiTitle())));
+        final InventoryGUI deliverGUI = new InventoryGUI(cache.getDeliverRows(), mm.deserialize(cache.getMainGuiTitle()));
 
         deliverGUI.setOnClose(e -> {
             if (!(e.getPlayer() instanceof Player p)) return;
@@ -180,54 +170,53 @@ public class MainGUI {
                 type == Material.MAGENTA_SHULKER_BOX || type == Material.PINK_SHULKER_BOX;
     }
 
-    private void addButtons(StaticPane buttonsPane, int curr) {
+    private void addButtons(InventoryGUI gui, int curr) {
         if (curr > 0)
-            buttonsPane.addItem(ConvertUtils.parseButton(
+            gui.addItem(ConvertUtils.parseNewButton(
                     cache.getOrdersBackButton(),
                     e -> PlayerUtils.clickBack(e, pages.get(curr - 1))
-        ), cache.getOrdersBackButton().getSlot(), 0);
+        ), cache.getOrdersBackButton().getSlot() + 45);
 
         if (curr + 1 < amount)
-            buttonsPane.addItem(ConvertUtils.parseButton(
+            gui.addItem(ConvertUtils.parseNewButton(
                     cache.getOrdersNextButton(),
                     e -> PlayerUtils.clickNext(e, pages.get(curr + 1))
-        ), cache.getOrdersNextButton().getSlot(), 0);
+        ), cache.getOrdersNextButton().getSlot() + 45);
 
-        buttonsPane.addItem(ConvertUtils.parseButton(cache.getRefreshButton(), _ -> {
-
+        gui.addItem(ConvertUtils.parseNewButton(cache.getRefreshButton(), _ -> {
             if (search.isEmpty()) new MainGUI(player, sortIdx);
             else new MainGUI(player, sortIdx, search);
 
             PlayerUtils.playSound(player, cache.getRefreshSound());
 
-        }), cache.getRefreshButton().getSlot(), 0);
+        }), cache.getRefreshButton().getSlot() + 45);
 
-        buttonsPane.addItem(ConvertUtils.parseSortButton(cache.getOrdersSortButton(), cache.getOrdersSortsOrder().get(sortIdx), _ -> {
+        gui.addItem(ConvertUtils.parseSortButton(cache.getOrdersSortButton(), cache.getOrdersSortsOrder().get(sortIdx), _ -> {
 
             if (search.isEmpty()) new MainGUI(player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1);
             else new MainGUI(player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1, search);
 
             PlayerUtils.playSound(player, cache.getSortSound());
 
-        }), cache.getOrdersSortButton().getSlot(), 0);
+        }), cache.getOrdersSortButton().getSlot() + 45);
 
-        buttonsPane.addItem(ConvertUtils.parseButton(
+        gui.addItem(ConvertUtils.parseNewButton(
                 cache.getOrdersSearchButton(),
                 _ -> SignGUI.newSession(
                     player,
                     (s) -> DispatchUtil.entity(player, () -> new MainGUI(player, sortIdx, s)),
                     cache.getLines(), cache.getSignBlock(), cache.getSearchLine()
                 )
-        ), cache.getOrdersSearchButton().getSlot(), 0);
+        ), cache.getOrdersSearchButton().getSlot() + 45);
 
-        buttonsPane.addItem(ConvertUtils.parseButton(
+        gui.addItem(ConvertUtils.parseNewButton(
                 cache.getYoButton(),
                 _ -> YourOrderGUI.open(player)
-        ), cache.getYoButton().getSlot(), 0);
+        ), cache.getYoButton().getSlot() + 45);
     }
 
 
     private void open(Player p) {
-        PlayerUtils.openGui(p, pages.getFirst());
+        PlayerUtils.openGUI(p, pages.getFirst(), true);
     }
 }

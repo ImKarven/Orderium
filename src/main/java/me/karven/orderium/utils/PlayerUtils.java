@@ -1,14 +1,15 @@
 package me.karven.orderium.utils;
 
-import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
 import io.papermc.paper.dialog.Dialog;
 import lombok.val;
 import me.karven.orderium.data.ConfigCache;
+import me.karven.orderium.guiframework.InventoryGUI;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -87,11 +88,13 @@ public class PlayerUtils {
         p.playSound(s);
     }
 
-    public static void openGui(Player p, ChestGui gui) {
-        DispatchUtil.entity(p, () -> {
-            gui.show(p);
-            DispatchUtil.entity(p, p::updateInventory);
-        });
+    public static void openGUI(@NotNull Player player, @NotNull InventoryGUI gui, boolean safe) {
+        if (!safe) {
+            gui.open(player);
+            return;
+        }
+
+        DispatchUtil.entity(player, () -> gui.open(player));
     }
 
     public static void openDialog(Player p, Dialog dialog) {
@@ -102,15 +105,15 @@ public class PlayerUtils {
         DispatchUtil.entity(p, () -> p.closeInventory());
     }
 
-    public static void clickNext(InventoryClickEvent e, ChestGui nextPage) {
+    public static void clickNext(InventoryClickEvent e, InventoryGUI nextPage) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
-        PlayerUtils.openGui(p, nextPage);
+        PlayerUtils.openGUI(p, nextPage, false);
         PlayerUtils.playSound(p, cache.getNextPageSound());
     }
 
-    public static void clickBack(InventoryClickEvent e, ChestGui previousPage) {
+    public static void clickBack(InventoryClickEvent e, InventoryGUI previousPage) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
-        PlayerUtils.openGui(p, previousPage);
+        PlayerUtils.openGUI(p, previousPage, false);
         PlayerUtils.playSound(p, cache.getPreviousPageSound());
     }
 }

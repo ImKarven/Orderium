@@ -34,7 +34,7 @@ public class NewOrderDialog {
     }
 
     public static void start(Player p) {
-        ChooseItemGUI.choose(p, 0, 0);
+        PlayerUtils.openGUI(p, ChooseItemGUI.choose(0, 0), false);
     }
 
     public static void newSession(Player p, OrderItem orderItem) {

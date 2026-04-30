@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import me.karven.orderium.utils.PDCUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -14,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -21,11 +23,12 @@ import java.util.function.Consumer;
 public class InventoryGUI implements InventoryHolder {
     private final int rows;
     private Component title;
-    private final Inventory handle;
+    private Inventory handle;
     private final ConcurrentHashMap<Integer, InventoryItem> items = new ConcurrentHashMap<>();
     private Consumer<InventoryClickEvent> onTopClick = null;
     private Consumer<InventoryClickEvent> onBottomClick = null;
     private Consumer<InventoryClickEvent> onGlobalClick = null;
+    private Consumer<InventoryClickEvent> onOutsideClick = null;
     private Consumer<InventoryDragEvent> onTopDrag = null;
     private Consumer<InventoryDragEvent> onBottomDrag = null;
     private Consumer<InventoryDragEvent> onGlobalDrag = null;
@@ -39,6 +42,9 @@ public class InventoryGUI implements InventoryHolder {
         this.handle = Bukkit.createInventory(this, rows * 9, title);
     }
 
+    public void open(@NotNull HumanEntity player) {
+        player.openInventory(handle);
+    }
 
     public @NotNull Component getTitle() { return title; }
     public void setTitle(@NotNull Component title) { this.title = title; }
@@ -71,6 +77,7 @@ public class InventoryGUI implements InventoryHolder {
             case TOP -> onTopClick;
             case BOTTOM -> onBottomClick;
             case GLOBAL -> onGlobalClick;
+            case OUTSIDE -> onOutsideClick;
         };
     }
 
@@ -79,6 +86,7 @@ public class InventoryGUI implements InventoryHolder {
             case TOP -> onTopDrag;
             case BOTTOM ->  onBottomDrag;
             case GLOBAL -> onGlobalDrag;
+            default -> throw new IllegalArgumentException("InteractLocation must not be OUTSIDE for drag events");
         };
     }
 
@@ -87,6 +95,7 @@ public class InventoryGUI implements InventoryHolder {
             case TOP -> onTopClick = onClick;
             case BOTTOM -> onBottomClick = onClick;
             case GLOBAL -> onGlobalClick = onClick;
+            case OUTSIDE -> onOutsideClick = onClick;
         }
     }
 
@@ -115,6 +124,7 @@ public class InventoryGUI implements InventoryHolder {
             case TOP -> onTopClick;
             case BOTTOM -> onBottomClick;
             case GLOBAL -> onGlobalClick;
+            case OUTSIDE -> onOutsideClick;
         };
         if (action == null) return;
         action.accept(event);
@@ -125,8 +135,20 @@ public class InventoryGUI implements InventoryHolder {
             case TOP -> onTopDrag;
             case BOTTOM -> onBottomDrag;
             case GLOBAL -> onGlobalDrag;
+            case OUTSIDE -> throw new IllegalArgumentException("InteractLocation must not be OUTSIDE for drag events");
         };
         if (action == null) return;
         action.accept(event);
+    }
+
+    public void update() {
+        ItemStack[] content = handle.getContents();
+        List<HumanEntity> viewers = handle.getViewers();
+        handle = Bukkit.createInventory(this, rows, title);
+        handle.setContents(content);
+
+        for (HumanEntity player : viewers) {
+            player.openInventory(handle);
+        }
     }
 }

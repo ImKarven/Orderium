@@ -1,10 +1,10 @@
 package me.karven.orderium.utils;
 
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
 import me.karven.orderium.data.ConfigCache;
+import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
@@ -137,8 +137,12 @@ public class ConvertUtils {
         return item;
     }
 
-    public static GuiItem parseOrder(Order order, List<String> rawLore, Consumer<InventoryClickEvent> action) {
-        return new GuiItem(parseOrder(order, rawLore), action);
+    public static InventoryItem parseOrder(Order order, List<String> rawLore, Consumer<InventoryClickEvent> action) {
+        return new InventoryItem(parseOrder(order, rawLore), action);
+    }
+
+    public static InventoryItem fetchOrder(Order order, List<String> rawLore, Consumer<InventoryClickEvent> action) {
+        return new InventoryItem(parseOrder(order, rawLore), action);
     }
 
     public static ItemStack parseOrder(Order order, List<String> rawLore) {
@@ -188,7 +192,7 @@ public class ConvertUtils {
         );
     }
 
-    public static GuiItem parseButton(SlotInfo info, Consumer<InventoryClickEvent> action, TagResolver... placeholders) {
+    public static InventoryItem parseNewButton(SlotInfo info, Consumer<InventoryClickEvent> action, TagResolver... placeholders) {
         final ItemStack item = info.getType().createItemStack();
         item.editMeta(meta -> {
             meta.displayName(mm.deserialize(info.getDisplayName(), placeholders).decoration(TextDecoration.ITALIC, false));
@@ -198,10 +202,10 @@ public class ConvertUtils {
             if (itemModel != null)
                 meta.setItemModel(NamespacedKey.fromString(itemModel));
         });
-        return new GuiItem(item, action);
+        return new InventoryItem(item, action);
     }
 
-    public static GuiItem parseSortButton(SlotInfo info, SortTypes type, Consumer<InventoryClickEvent> action) {
+    public static InventoryItem parseSortButton(SlotInfo info, SortTypes type, Consumer<InventoryClickEvent> action) {
         final ItemStack item = info.getType().createItemStack();
         List<TagResolver> placeholders = new ArrayList<>(List.of(cache.getSortPlaceholders()));
         @Subst("ignored")
@@ -215,7 +219,7 @@ public class ConvertUtils {
             if (itemModel != null)
                 meta.setItemModel(NamespacedKey.fromString(itemModel));
         });
-        return new GuiItem(item, action);
+        return new InventoryItem(item, action);
     }
 
     public static int ceil_div(int a, int b) {

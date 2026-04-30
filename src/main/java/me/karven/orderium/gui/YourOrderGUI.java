@@ -1,10 +1,8 @@
 package me.karven.orderium.gui;
 
-import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHolder;
-import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
-import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.data.ConfigCache;
+import me.karven.orderium.guiframework.InteractLocation;
+import me.karven.orderium.guiframework.InventoryGUI;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.PlayerUtils;
@@ -26,23 +24,22 @@ public class YourOrderGUI {
         final List<Order> orders = plugin.getDataCache().getOrders(pUUID, isAsync);
         final ConfigCache cache = plugin.getConfigs();
         final MiniMessage mm = plugin.mm;
-        final ChestGui gui = new ChestGui(3, ComponentHolder.of(mm.deserialize(cache.getYoGuiTitle())));
-        gui.setOnGlobalClick(e -> e.setCancelled(true));
-        gui.setOnGlobalDrag(e -> e.setCancelled(true));
-        final OutlinePane ordersPane = new OutlinePane(9, 3);
+        final InventoryGUI gui = new InventoryGUI(3, mm.deserialize(cache.getYoGuiTitle()));
+        gui.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
+        gui.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
         final List<String> rawLore = cache.getYoLore();
+        int slot = 0;
         for (Order order : orders) {
-            ordersPane.addItem(ConvertUtils.parseOrder(order, rawLore, _ -> {
+            gui.addItem(ConvertUtils.parseOrder(order, rawLore, _ -> {
                 PlayerUtils.closeInv(p);
                 ManageOrderDialog.show(order, p);
-            }));
+            }), slot++);
         }
 
         if (orders.size() < 27) {
-            ordersPane.addItem(ConvertUtils.parseButton(cache.getNewOrderButton(), _ -> NewOrderDialog.start(p)));
+            gui.addItem(ConvertUtils.parseNewButton(cache.getNewOrderButton(), _ -> NewOrderDialog.start(p)), slot);
         }
 
-        gui.addPane(Slot.fromXY(0, 0), ordersPane);
-        PlayerUtils.openGui(p, gui);
+        PlayerUtils.openGUI(p, gui, isAsync);
     }
 }
