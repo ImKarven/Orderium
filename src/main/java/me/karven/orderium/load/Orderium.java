@@ -4,7 +4,6 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.data.DataCache;
-import me.karven.orderium.folia.IFFolia;
 import me.karven.orderium.gui.*;
 import me.karven.orderium.guiframework.GUIListener;
 import me.karven.orderium.listener.ContainerContentListener;
@@ -69,7 +68,6 @@ public final class Orderium extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(GUI_LISTENER, this);
 
-        new IFFolia(this);
         dataCache = new DataCache();
         configs = new ConfigCache();
         Storage.init();

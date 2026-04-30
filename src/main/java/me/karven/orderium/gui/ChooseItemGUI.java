@@ -133,12 +133,12 @@ public class ChooseItemGUI {
                     new EnchantGUI(p, enchantableItem, (enchantedItem) -> NewOrderDialog.newSession(p, enchantedItem));
                     return;
                 }
-                final ItemStack i = guiItem.getItem();
-                if (PDCUtils.isBlacklist(i.getItemMeta())) return;
-
-                plugin.getStorage().addBlacklist(new BlacklistedItem(orderItem.getItemStack().serializeAsBytes()));
+                final ItemStack guiItemStack = guiItem.getItem();
+                if (PDCUtils.isBlacklist(guiItemStack.getItemMeta())) return;
+                ItemStack orderItemStack = orderItem.getItemStack();
+                plugin.getStorage().addBlacklist(new BlacklistedItem(orderItemStack.serializeAsBytes(), orderItemStack));
                 p.sendRichMessage("<green>Item added to blacklist. Reload to take effects");
-                i.editMeta(PDCUtils::setBlacklist);
+                guiItemStack.editMeta(PDCUtils::setBlacklist);
             });
             gui.addItem(guiItem, cnt);
 

@@ -6,6 +6,7 @@ import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.guiframework.InventoryGUI;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -88,7 +89,7 @@ public class PlayerUtils {
         p.playSound(s);
     }
 
-    public static void openGUI(@NotNull Player player, @NotNull InventoryGUI gui, boolean safe) {
+    public static void openGUI(@NotNull HumanEntity player, @NotNull InventoryGUI gui, boolean safe) {
         if (!safe) {
             gui.open(player);
             return;

@@ -3,7 +3,10 @@ package me.karven.orderium.utils;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -68,5 +71,16 @@ public class PDCUtils {
         final CompletableFuture<Integer> future = new CompletableFuture<>();
         DispatchUtil.entity(p, () -> future.complete(getCollected(p)));
         return future;
+    }
+
+    /**
+     * Remove all persistent data registered by Orderium from this holder
+     * @param holder the holder; can be player, item meta, etc
+     */
+    public static void clear(@NotNull PersistentDataHolder holder) {
+        PersistentDataContainer pdc = holder.getPersistentDataContainer();
+        for (NamespacedKey key : KEYS) {
+            pdc.remove(key);
+        }
     }
 }

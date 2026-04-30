@@ -28,7 +28,7 @@ public class VanillaItem implements EnchantableItem {
         Registry<Enchantment> enchantmentRegistry = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
 
         for (Enchantment enchantment : enchantmentRegistry) {
-            if (!enchantment.canEnchantItem(item)) continue;
+            if (!enchantment.canEnchantItem(item) || enchantment.isCursed()) continue;
             enchantable.add(enchantment);
         }
     }
@@ -56,7 +56,7 @@ public class VanillaItem implements EnchantableItem {
 
     @Override
     public @NonNull ItemStack getItemStack() {
-        return item;
+        return item.clone();
     }
 
     public @NotNull VanillaItem copy() {

@@ -32,6 +32,11 @@ public class CustomItem implements SearchableItem, SerializedItem {
         this.searches.addAll(searches);
     }
 
+    public CustomItem(byte @NotNull [] itemAsBytes, @NotNull ItemStack item, @NotNull List<@NotNull String> searches) {
+        this(itemAsBytes, searches);
+        this.item = item;
+    }
+
     @Override
     public void addSearch(@NonNull String key) {
         searches.add(key);
@@ -96,9 +101,7 @@ public class CustomItem implements SearchableItem, SerializedItem {
     }
 
     public @NotNull CustomItem copy() {
-        CustomItem clone = new CustomItem(itemAsBytes, searches);
-        clone.setItemStack(item);
-        return clone;
+        return new CustomItem(itemAsBytes, item.clone(), searches);
     }
 
     @Override

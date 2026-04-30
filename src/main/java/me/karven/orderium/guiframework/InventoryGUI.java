@@ -144,7 +144,7 @@ public class InventoryGUI implements InventoryHolder {
     public void update() {
         ItemStack[] content = handle.getContents();
         List<HumanEntity> viewers = handle.getViewers();
-        handle = Bukkit.createInventory(this, rows, title);
+        handle = Bukkit.createInventory(this, rows * 9, title);
         handle.setContents(content);
 
         for (HumanEntity player : viewers) {

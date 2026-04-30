@@ -8,9 +8,13 @@ public class BlacklistedItem implements SerializedItem, OrderItem {
     private final byte[] itemAsBytes;
     private ItemStack item;
 
-    public BlacklistedItem(byte @NotNull [] itemAsBytes) {
+    public BlacklistedItem(byte @NotNull [] itemAsBytes, @NotNull ItemStack item) {
         this.itemAsBytes = itemAsBytes;
-        this.item = ItemStack.deserializeBytes(itemAsBytes);
+        this.item = item;
+    }
+
+    public BlacklistedItem(byte @NotNull [] itemAsBytes) {
+        this(itemAsBytes, ItemStack.deserializeBytes(itemAsBytes));
     }
 
     @Override
@@ -20,13 +24,11 @@ public class BlacklistedItem implements SerializedItem, OrderItem {
 
     @Override
     public @NotNull ItemStack getItemStack() {
-        return item;
+        return item.clone();
     }
 
     public @NotNull BlacklistedItem copy() {
-        BlacklistedItem clone = new BlacklistedItem(itemAsBytes);
-        clone.setItemStack(item);
-        return clone;
+        return new BlacklistedItem(itemAsBytes, item.clone());
     }
 
     @Override
