@@ -258,7 +258,7 @@ public class AdminToolGUI {
                                                             final List<String> toRev = new ArrayList<>();
                                                             for (String index : indicesString) {
                                                                 try {
-                                                                    toRev.add(searches.get(Integer.parseInt(index)));
+                                                                    toRev.add(searches.get(Integer.parseInt(index) - 1));
                                                                 } catch (Exception ignored) {} // User didn't input a valid index or number
                                                             }
                                                             item.removeAllSearches(toRev);

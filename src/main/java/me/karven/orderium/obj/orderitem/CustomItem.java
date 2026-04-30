@@ -60,7 +60,7 @@ public class CustomItem implements SearchableItem, SerializedItem {
 
     @Override
     public @NotNull String getParsedSearches() {
-        return String.join(", ", searches);
+        return String.join(",", searches);
     }
 
     @Override
