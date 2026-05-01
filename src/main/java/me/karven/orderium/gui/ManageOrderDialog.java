@@ -82,7 +82,7 @@ public class ManageOrderDialog {
                 .type(DialogType.confirmation(
                         ActionButton.builder(mm.deserialize(cache.getCancelOrderConfirmLabel()))
                                 .tooltip(mm.deserialize(cache.getCancelOrderConfirmHover()))
-                                .action(DialogAction.customClick((_, player) -> {
+                                .action(DialogAction.customClick((view, player) -> {
                                     if (!(player instanceof Player p)) return;
                                     order.cancel(p);
                                 }, ClickCallback.Options.builder().build()))
@@ -107,14 +107,14 @@ public class ManageOrderDialog {
                         List.of(
                                 ActionButton.builder(mm.deserialize(cache.getCollectItemsLabel()))
                                         .tooltip(mm.deserialize(cache.getCollectItemsHover()))
-                                        .action(DialogAction.customClick((_, player) -> {
+                                        .action(DialogAction.customClick((view, player) -> {
                                             if (!(player instanceof Player p)) return;
                                             PlayerUtils.openDialog(p, collectItemsDialog);
                                         }, ClickCallback.Options.builder().build()))
                                         .build(),
                                 ActionButton.builder(mm.deserialize(cache.getCancelOrderLabel()))
                                         .tooltip(mm.deserialize(cache.getCancelOrderHover()))
-                                        .action(DialogAction.customClick((_, player) -> {
+                                        .action(DialogAction.customClick((view, player) -> {
                                             if (!(player instanceof Player p)) return;
                                             PlayerUtils.openDialog(p, cancelOrderDialog);
                                         }, ClickCallback.Options.builder().build()))

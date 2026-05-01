@@ -4,8 +4,8 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.data.DataCache;
-import me.karven.orderium.folia.IFFolia;
 import me.karven.orderium.gui.*;
+import me.karven.orderium.guiframework.GUIListener;
 import me.karven.orderium.listener.ContainerContentListener;
 import me.karven.orderium.listener.DialogListener;
 import me.karven.orderium.listener.DisconnectListener;
@@ -28,6 +28,7 @@ public final class Orderium extends JavaPlugin {
     public static boolean isFolia;
     public final DialogListener DIALOG_LISTENER = new DialogListener();
     public final DisconnectListener DISCONNECT_LISTENER = new DisconnectListener();
+    public final GUIListener GUI_LISTENER = new GUIListener();
 
     private ConfigCache configs;
     private Storage storage;
@@ -65,7 +66,8 @@ public final class Orderium extends JavaPlugin {
         }
         saveResource("modified_items.db", false);
 
-        new IFFolia(this);
+        Bukkit.getPluginManager().registerEvents(GUI_LISTENER, this);
+
         dataCache = new DataCache();
         configs = new ConfigCache();
         Storage.init();
@@ -90,7 +92,7 @@ public final class Orderium extends JavaPlugin {
         }
 
         if (configs.isCheckForUpdates()) {
-            Bukkit.getAsyncScheduler().runNow(this, _ -> {
+            Bukkit.getAsyncScheduler().runNow(this, task -> {
                final String newVer = UpdateUtils.checkForUpdates();
                if (newVer == null) return;
                Log.warn("A new version of Orderium (" + newVer + ") is available");
@@ -101,7 +103,7 @@ public final class Orderium extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(DISCONNECT_LISTENER, this);
         Bukkit.getPluginManager().registerEvents(DIALOG_LISTENER, this);
 
-        Bukkit.getAsyncScheduler().runAtFixedRate(this, _ -> {
+        Bukkit.getAsyncScheduler().runAtFixedRate(this, task -> {
 
             for (Player p : Bukkit.getOnlinePlayers()) {
                 DispatchUtil.entity(p, () -> PDCUtils.removeCollected(p));

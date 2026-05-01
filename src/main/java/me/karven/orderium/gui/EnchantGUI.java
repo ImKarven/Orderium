@@ -1,17 +1,15 @@
 package me.karven.orderium.gui;
 
-import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHolder;
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
-import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
-import com.github.stefvanschie.inventoryframework.pane.StaticPane;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.data.ConfigCache;
+import me.karven.orderium.guiframework.InteractLocation;
+import me.karven.orderium.guiframework.InventoryGUI;
+import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.obj.orderitem.EnchantableItem;
 import me.karven.orderium.obj.orderitem.OrderItem;
 import me.karven.orderium.obj.orderitem.VanillaItem;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.Log;
+import me.karven.orderium.utils.PDCUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -57,27 +55,27 @@ public class EnchantGUI {
         int length = enchantable.size();
         // Create the GUI. Use more rows if more than 9 enchantments
         int enchantmentsRows = Math.min(4, length / 9 + 1); // amount of rows for enchantment books
-        ChestGui gui = new ChestGui(2 + enchantmentsRows, ComponentHolder.of(mm.deserialize(cache.getEnchantItemTitle())));
-        gui.setOnGlobalClick(event -> event.setCancelled(true));
-        gui.setOnGlobalDrag(event -> event.setCancelled(true));
+        InventoryGUI gui = new InventoryGUI(2 + enchantmentsRows, mm.deserialize(cache.getEnchantItemTitle()));
+        gui.setOnClick(event -> event.setCancelled(true), InteractLocation.GLOBAL);
+        gui.setOnDrag(event -> event.setCancelled(true), InteractLocation.GLOBAL);
 
         ItemStack enchantedItem = item.getItemStack();
 
-        StaticPane topPane = new StaticPane(9, 1);
-        Consumer<InventoryClickEvent> confirmAction = _ -> {
+        Consumer<InventoryClickEvent> confirmAction = event -> {
             OrderItem copy = vanillaItem.copy();
+            enchantedItem.editMeta(PDCUtils::clear);
             copy.setItemStack(enchantedItem);
             action.accept(copy);
         };
-        GuiItem displayItem = new GuiItem(item.getItemStack());
-        GuiItem confirmItem = ConvertUtils.parseButton(cache.getConfirmEnchantButton(), confirmAction);
+        InventoryItem displayItem = new InventoryItem(enchantedItem);
+        InventoryItem confirmItem = ConvertUtils.parseNewButton(cache.getConfirmEnchantButton(), confirmAction);
 
-        topPane.addItem(displayItem, 0, 0);
-        topPane.addItem(confirmItem, cache.getConfirmEnchantButton().getSlot(), 0);
+        gui.addItem(displayItem, 0);
+        gui.addItem(confirmItem, cache.getConfirmEnchantButton().getSlot());
 
-        OutlinePane enchantmentsPane = new OutlinePane(9, enchantmentsRows);
         Component activePrefix = mm.deserialize(cache.getEnchantActivePrefix());
         Component inactivePrefix = mm.deserialize(cache.getEnchantInactivePrefix());
+        int slot = 18;
         for (Enchantment enchantment : enchantable) {
             Component enchantmentName = enchantment.description().decoration(TextDecoration.ITALIC, false);
             ItemStack bookItem = ItemStack.of(Material.ENCHANTED_BOOK);
@@ -86,10 +84,10 @@ public class EnchantGUI {
                meta.displayName(inactivePrefix.append(enchantmentName));
                meta.lore(cache.getEnchantLore().stream().map(raw -> mm.deserialize(raw).decoration(TextDecoration.ITALIC, false)).toList());
             });
-            GuiItem guiItem = new GuiItem(bookItem);
+            InventoryItem guiItem = new InventoryItem(bookItem);
 
             TriConsumer<Integer, Integer, Integer> changeLevel = (start, end, increment) -> {
-                int newLevel = enchantsWithLevel.compute(enchantment, (_, currentLevel) -> {
+                int newLevel = enchantsWithLevel.compute(enchantment, (enchant, currentLevel) -> {
                     if (currentLevel == null || currentLevel == 0) return start;
                     if (currentLevel.equals(end)) return 0;
                     return currentLevel + increment;
@@ -113,14 +111,11 @@ public class EnchantGUI {
                     case LEFT -> changeLevel.accept(1, enchantment.getMaxLevel(), 1); // Increase level
                 }
             };
-            guiItem.setAction(clickAction);
-            enchantmentsPane.addItem(guiItem);
+            guiItem.setOnClick(clickAction);
+            gui.addItem(guiItem, slot++);
         }
 
-        gui.addPane(Slot.fromXY(0, 0), topPane);
-        gui.addPane(Slot.fromXY(0, 2), enchantmentsPane);
-
-        PlayerUtils.openGui(player, gui);
+        PlayerUtils.openGUI(player, gui, false);
     }
 
     /**

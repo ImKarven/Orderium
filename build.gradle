@@ -42,7 +42,6 @@ dependencies {
     testCompileOnly("org.projectlombok:lombok:1.18.42")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.42")
     implementation("com.github.thatsmusic99:ConfigurationMaster-API:v2.0.0-rc.3")
-    implementation("com.github.stefvanschie.inventoryframework:IF:0.12.0")
     implementation("com.zaxxer:HikariCP:7.0.2")
 }
 
@@ -53,13 +52,12 @@ tasks {
 
     shadowJar {
         archiveClassifier = ''
-        relocate("com.github.stefvanschie.inventoryframework", "orderium.if")
         relocate("com.zaxxer", "orderium.zaxxer")
         relocate("org.bstats", "orderium.bstats")
     }
 }
 
-def targetJavaVersion = 25
+def targetJavaVersion = 21
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

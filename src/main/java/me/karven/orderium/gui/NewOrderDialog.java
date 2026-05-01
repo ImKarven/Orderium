@@ -34,7 +34,7 @@ public class NewOrderDialog {
     }
 
     public static void start(Player p) {
-        ChooseItemGUI.choose(p, 0, 0);
+        PlayerUtils.openGUI(p, ChooseItemGUI.choose(0, 0), false);
     }
 
     public static void newSession(Player p, OrderItem orderItem) {
@@ -112,6 +112,9 @@ public class NewOrderDialog {
                             ActionButton.builder(changeItemLabel)
                                     .tooltip(changeItemHover)
                                     .width(cache.getButtonWidth())
+                                    .action(DialogAction.customClick((view, player) -> {
+                                        if (player instanceof Player p) NewOrderDialog.start(p);
+                                    }, ClickCallback.Options.builder().uses(1).build()))
                                     .build()
                     ))
         );

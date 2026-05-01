@@ -1,12 +1,9 @@
 package me.karven.orderium.gui;
 
-import com.github.stefvanschie.inventoryframework.adventuresupport.ComponentHolder;
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
-import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
-import com.github.stefvanschie.inventoryframework.pane.StaticPane;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.karven.orderium.data.ConfigCache;
+import me.karven.orderium.guiframework.InteractLocation;
+import me.karven.orderium.guiframework.InventoryGUI;
+import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.EnchantableItem;
@@ -27,8 +24,8 @@ import java.util.List;
 import static me.karven.orderium.load.Orderium.plugin;
 
 public class ChooseItemGUI {
-    private static final List<ChestGui> AZ = new ArrayList<>();
-    private static final List<ChestGui> ZA = new ArrayList<>();
+    private static final List<InventoryGUI> AZ = new ArrayList<>();
+    private static final List<InventoryGUI> ZA = new ArrayList<>();
     private static MiniMessage mm;
     private static ConfigCache cache;
 
@@ -43,7 +40,7 @@ public class ChooseItemGUI {
         createPages(ZA, SortTypes.Z_A);
     }
 
-    private static List<ChestGui> getPages(SortTypes sortType) {
+    private static List<InventoryGUI> getPages(SortTypes sortType) {
         switch (sortType) {
             case A_Z -> { return AZ; }
             case Z_A -> { return ZA; }
@@ -51,54 +48,55 @@ public class ChooseItemGUI {
         return AZ;
     }
 
-    public static void choose(Player p, int sortIdx, int pageIdx) {
-        PlayerUtils.openGui(p, getPages(cache.getChooseSortsOrder().get(sortIdx)).get(pageIdx));
+    public static InventoryGUI choose(int sortIdx, int pageIdx) {
+        return getPages(cache.getChooseSortsOrder().get(sortIdx)).get(pageIdx);
     }
 
-    public static void choose(Player p, int sortIdx, String search) {
-        final List<ChestGui> pages = new ArrayList<>();
+    public static InventoryGUI choose(int sortIdx, String search) {
+        final List<InventoryGUI> pages = new ArrayList<>();
         createPages(pages, cache.getChooseSortsOrder().get(sortIdx), search);
-        PlayerUtils.openGui(p, pages.getFirst());
+        return pages.getFirst();
     }
 
-    private static void addButtons(StaticPane buttons, List<ChestGui> pages, SortTypes sortType, final int idx, final int pagesAmount) {
+    private static void addButtons(InventoryGUI gui, List<InventoryGUI> pages, SortTypes sortType, final int idx, final int pagesAmount) {
         final List<SortTypes> sortOrder = cache.getChooseSortsOrder();
         final int sortIdx = sortOrder.indexOf(sortType);
-        if (idx > 0) buttons.addItem(ConvertUtils.parseButton(
+
+        if (idx > 0) gui.addItem(ConvertUtils.parseNewButton(
                 cache.getChooseBackButton(),
                 e -> PlayerUtils.clickBack(e, pages.get(idx - 1))
-        ), cache.getChooseBackButton().getSlot(), 0);
+        ), cache.getChooseBackButton().getSlot() + 45);
 
-        if (idx + 1 < pagesAmount) buttons.addItem(ConvertUtils.parseButton(
+        if (idx + 1 < pagesAmount) gui.addItem(ConvertUtils.parseNewButton(
                 cache.getChooseNextButton(),
                 e -> PlayerUtils.clickNext(e, pages.get(idx + 1))
-        ), cache.getChooseNextButton().getSlot(), 0);
+        ), cache.getChooseNextButton().getSlot() + 45);
 
-        buttons.addItem(ConvertUtils.parseSortButton(cache.getChooseSortButton(), sortType, e -> {
+        gui.addItem(ConvertUtils.parseSortButton(cache.getChooseSortButton(), sortType, e -> {
             if (!(e.getWhoClicked() instanceof Player p)) return;
             final int nextIdx = sortIdx == sortOrder.size() - 1 ? 0 : sortIdx + 1;
-            choose(p, nextIdx, idx);
+            PlayerUtils.openGUI(p, choose(nextIdx, idx), false);
             PlayerUtils.playSound(p, cache.getSortSound());
-        }), cache.getChooseSortButton().getSlot(), 0);
+        }), cache.getChooseSortButton().getSlot() + 45);
 
-        buttons.addItem(ConvertUtils.parseButton(cache.getChooseSearchButton(), e -> {
+        gui.addItem(ConvertUtils.parseNewButton(cache.getChooseSearchButton(), e -> {
             if (!(e.getWhoClicked() instanceof Player p)) return;
             SignGUI.newSession(
                     p,
-                    (s) -> p.getScheduler().run(plugin, _ -> ChooseItemGUI.choose(p, sortIdx, s), null),
+                    (s) -> PlayerUtils.openGUI(p, ChooseItemGUI.choose(sortIdx, s), true),
                     cache.getLines(),
                     cache.getSignBlock(),
                     cache.getSearchLine()
             );
 
-        }), cache.getChooseSearchButton().getSlot(), 0);
+        }), cache.getChooseSearchButton().getSlot() + 45);
     }
 
-    private static void createPages(List<ChestGui> pages, SortTypes sortType) {
+    private static void createPages(List<InventoryGUI> pages, SortTypes sortType) {
         createPages(pages, sortType, plugin.getDataCache().getItems(sortType));
     }
 
-    private static void createPages(List<ChestGui> pages, SortTypes sortType, String search) {
+    private static void createPages(List<InventoryGUI> pages, SortTypes sortType, String search) {
         if (search.isEmpty()) {
             createPages(pages, sortType);
             return;
@@ -108,33 +106,20 @@ public class ChooseItemGUI {
         createPages(pages, sortType, items);
     }
 
-    private static void createPages(List<ChestGui> pages, SortTypes sortType, Collection<OrderItem> items) {
+    private static void createPages(List<InventoryGUI> pages, SortTypes sortType, Collection<OrderItem> items) {
         final int pagesAmount = ConvertUtils.ceil_div(items.size(), 45);
 
-        OutlinePane itemsPane = new OutlinePane(9, 5);
-        StaticPane buttonsPane = new StaticPane(9, 1);
-        addButtons(buttonsPane, pages, sortType, 0, pagesAmount);
-        ChestGui currPage = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
-        currPage.setOnGlobalClick(e -> e.setCancelled(true));
-        currPage.setOnGlobalDrag(e -> e.setCancelled(true));
+        InventoryGUI gui = initPage(pages, sortType, 0, pagesAmount);
         int idx = 0, cnt = 0;
         for (OrderItem orderItem : items) {
             if (cnt == 45) {
                 cnt = 0;
                 idx++;
-                currPage.addPane(Slot.fromXY(0, 0), itemsPane);
-                currPage.addPane(Slot.fromXY(0, 5), buttonsPane);
-                pages.add(currPage);
-
-                itemsPane = new OutlinePane(9, 5);
-                buttonsPane = new StaticPane(9, 1);
-                addButtons(buttonsPane, pages, sortType, idx, pagesAmount);
-                currPage = new ChestGui(6, ComponentHolder.of(mm.deserialize(cache.getChooseItemTitle())));
-                currPage.setOnGlobalClick(e -> e.setCancelled(true));
-                currPage.setOnGlobalDrag(e -> e.setCancelled(true));
+                pages.add(gui);
+                gui = initPage(pages, sortType, idx, pagesAmount);
             }
-            final GuiItem guiItem = new GuiItem(orderItem.getItemStack());
-            guiItem.setAction(e -> {
+            final InventoryItem guiItem = new InventoryItem(orderItem.getItemStack());
+            guiItem.setOnClick(e -> {
                 if (!(e.getWhoClicked() instanceof Player p)) return;
                 if (e.getClick() != ClickType.RIGHT || !p.hasPermission("orderium.admin.blacklist")) {
 
@@ -148,20 +133,25 @@ public class ChooseItemGUI {
                     new EnchantGUI(p, enchantableItem, (enchantedItem) -> NewOrderDialog.newSession(p, enchantedItem));
                     return;
                 }
-                final ItemStack i = guiItem.getItem();
-                if (PDCUtils.isBlacklist(i.getItemMeta())) return;
-
-                plugin.getStorage().addBlacklist(new BlacklistedItem(orderItem.getItemStack().serializeAsBytes()));
+                final ItemStack guiItemStack = guiItem.getItem();
+                if (PDCUtils.isBlacklist(guiItemStack.getItemMeta())) return;
+                ItemStack orderItemStack = orderItem.getItemStack();
+                plugin.getStorage().addBlacklist(new BlacklistedItem(orderItemStack.serializeAsBytes(), orderItemStack));
                 p.sendRichMessage("<green>Item added to blacklist. Reload to take effects");
-                i.editMeta(PDCUtils::setBlacklist);
+                guiItemStack.editMeta(PDCUtils::setBlacklist);
             });
-            itemsPane.addItem(guiItem);
+            gui.addItem(guiItem, cnt);
 
             cnt++;
         }
+        pages.add(gui);
+    }
 
-        currPage.addPane(Slot.fromXY(0, 0), itemsPane);
-        currPage.addPane(Slot.fromXY(0, 5), buttonsPane);
-        pages.add(currPage);
+    private static InventoryGUI initPage(List<InventoryGUI> pages, SortTypes sortType, int idx, int pagesAmount) {
+        InventoryGUI gui = new InventoryGUI(6, mm.deserialize(cache.getChooseItemTitle()));
+        addButtons(gui, pages, sortType, idx, pagesAmount);
+        gui.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
+        gui.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
+        return gui;
     }
 }

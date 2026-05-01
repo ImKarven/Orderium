@@ -1,16 +1,13 @@
 package me.karven.orderium.listener;
 
-import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
 import me.karven.orderium.gui.SignGUI;
+import me.karven.orderium.guiframework.InventoryGUI;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
-import org.jetbrains.annotations.NotNull;
 
 /// This class helps things happen normally when the player disconnects
 @SuppressWarnings("UnstableApiUsage")
@@ -20,26 +17,14 @@ public class DisconnectListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
-        SignGUI.completeSession(p, "");
+        SignGUI.completeSession(p, ""); // Close the sign GUI manually if the player is in one
+
+        if (DialogListener.pendingItems().containsKey(p))
+            DialogListener.onCancel(p); // Close the dialog manually if the player is in one
+
         InventoryView view = p.getOpenInventory();
-        Gui gui = getGui(view.getTopInventory());
-        if (gui != null)
-        // Bukkit decides to not fire InventoryCloseEvent when quitting so we do that ourselves
-            gui.callOnClose(new InventoryCloseEvent(view));
+        if (view.getTopInventory().getHolder() instanceof InventoryGUI gui)
+            gui.callOnClose(new InventoryCloseEvent(view)); // Close the inventory GUI manually if the player is in one
 
-        if (!DialogListener.pendingItems().containsKey(p)) return;
-        DialogListener.onCancel(p);
-    }
-
-
-    private Gui getGui(@NotNull Inventory inventory) {
-        Gui gui = Gui.getGui(inventory);
-
-        if (gui != null) return gui;
-
-        InventoryHolder holder = inventory.getHolder();
-        if (holder instanceof Gui gui2) return gui2;
-
-        return null;
     }
 }

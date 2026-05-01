@@ -1,10 +1,5 @@
 package me.karven.orderium.gui;
 
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
-import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
-import com.github.stefvanschie.inventoryframework.pane.StaticPane;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import com.google.common.collect.ImmutableList;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -14,6 +9,9 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
+import me.karven.orderium.guiframework.InteractLocation;
+import me.karven.orderium.guiframework.InventoryGUI;
+import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.CustomItem;
@@ -29,17 +27,14 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 import static me.karven.orderium.load.Orderium.plugin;
 
 public class AdminToolGUI {
-
-    private static final List<ChestGui> blacklist = new ArrayList<>();
-    private static final List<ChestGui> customItems = new ArrayList<>();
-
-    // Using shared page amount but it's fine I guess
-    private static int pageAmount;
+    private static final List<InventoryGUI> blacklist = new CopyOnWriteArrayList<>();
+    private static final List<InventoryGUI> customItems = new CopyOnWriteArrayList<>();
 
     private static final Consumer<InventoryClickEvent> viewWiki = e -> {
         e.getWhoClicked().closeInventory();
@@ -52,8 +47,8 @@ public class AdminToolGUI {
     private static final ItemStack readmeBlacklist = ItemStack.of(Material.KNOWLEDGE_BOOK);
     private static final ItemStack readmeCustomItems = ItemStack.of(Material.KNOWLEDGE_BOOK);
 
-    private static final GuiItem itemRmBlacklist = new GuiItem(readmeBlacklist, viewWiki);
-    private static final GuiItem itemRmCustomItems = new GuiItem(readmeCustomItems, viewWiki);
+    private static final InventoryItem itemRmBlacklist = new InventoryItem(readmeBlacklist, viewWiki);
+    private static final InventoryItem itemRmCustomItems = new InventoryItem(readmeCustomItems, viewWiki);
 
     private static Consumer<InventoryClickEvent> addCustomItem(int i) {
         return e -> {
@@ -63,7 +58,7 @@ public class AdminToolGUI {
             plugin.getStorage().addCustomItem(customItem);
             plugin.getDataCache().getCustomItems().add(customItem);
             createCustomItems();
-            customItems.get(Math.min(i, customItems.size() - 1)).show(e.getWhoClicked());
+            PlayerUtils.openGUI(e.getWhoClicked(), customItems.get(Math.min(i, customItems.size() - 1)), false);
         };
 
     }
@@ -118,48 +113,39 @@ public class AdminToolGUI {
         blacklist.clear();
 
         final Set<BlacklistedItem> items = plugin.getDataCache().getBlacklist();
-        pageAmount = ConvertUtils.ceil_div(items.size(), 45);
+        int pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
-        ChestGui page = new ChestGui(6, "Blacklisted Items");
-        OutlinePane itemsPane = new OutlinePane(9, 5);
-        StaticPane buttonsPane = new StaticPane(9, 1);
-        addBlacklistButtons(0, buttonsPane);
+        InventoryGUI page = new InventoryGUI(6, Component.text("Blacklisted Items"));
+        addBlacklistButtons(0, pageAmount, page);
 
-        page.setOnGlobalDrag(e -> e.setCancelled(true));
-        page.setOnGlobalClick(e -> e.setCancelled(true));
+        page.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
+        page.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
         int cnt = 0, i = 0;
 
         for (BlacklistedItem blacklistedItem : items) {
             if (cnt == 45) {
                 cnt = 0;
                 i++;
-                page.addPane(Slot.fromXY(0, 0), itemsPane);
-                page.addPane(Slot.fromXY(0, 5), buttonsPane);
                 blacklist.add(page);
 
-                page = new ChestGui(6, "Blacklisted Items");
-                itemsPane = new OutlinePane(9, 5);
-                buttonsPane = new StaticPane(9, 1);
-                addBlacklistButtons(i, buttonsPane);
+                page = new InventoryGUI(6, Component.text("Blacklisted Items"));
+                addBlacklistButtons(i, pageAmount, page);
 
-                page.setOnGlobalDrag(e -> e.setCancelled(true));
-                page.setOnGlobalClick(e -> e.setCancelled(true));
+                page.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
+                page.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
             }
             final int currentPage = i;
-            itemsPane.addItem(new GuiItem(ConvertUtils.addLore(blacklistedItem.getItemStack(), List.of(
+            page.addItem(new InventoryItem(ConvertUtils.addLore(blacklistedItem.getItemStack(), List.of(
                     "",
                     "<white>Click to <red>remove<white> from blacklist"
             )), e -> {
+                items.remove(blacklistedItem);
                 plugin.getStorage().removeBlacklist(blacklistedItem);
+
                 createBlacklist();
-                blacklist.get(Math.min(currentPage, blacklist.size() - 1)).show(e.getWhoClicked());
-            }));
-
-            cnt++;
+                PlayerUtils.openGUI(e.getWhoClicked(), blacklist.get(Math.min(currentPage, blacklist.size() - 1)), false);
+            }), cnt++);
         }
-
-        page.addPane(Slot.fromXY(0, 0), itemsPane);
-        page.addPane(Slot.fromXY(0, 5), buttonsPane);
         blacklist.add(page);
     }
 
@@ -168,40 +154,34 @@ public class AdminToolGUI {
         customItems.clear();
 
         final Set<CustomItem> items = plugin.getDataCache().getCustomItems();
-        pageAmount = ConvertUtils.ceil_div(items.size(), 45);
+        int pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
-        ChestGui page = new ChestGui(6, "Custom Items");
-        OutlinePane itemsPane = new OutlinePane(9, 5);
-        StaticPane buttonsPane = new StaticPane(9, 1);
-        addCustomItemsButtons(0, buttonsPane);
+        InventoryGUI page = new InventoryGUI(6, Component.text("Custom Items"));
+        addCustomItemsButtons(0, pageAmount, page);
 
-        page.setOnGlobalDrag(e -> e.setCancelled(true));
-        page.setOnGlobalClick(e -> e.setCancelled(true));
+        page.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
+        page.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
+
+        page.setOnClick(addCustomItem(0), InteractLocation.BOTTOM);
+
         int cnt = 0, i = 0;
-
-        page.setOnBottomClick(addCustomItem(0));
-
         for (CustomItem item : items) {
             if (cnt == 45) {
                 cnt = 0;
                 i++;
-                page.addPane(Slot.fromXY(0, 0), itemsPane);
-                page.addPane(Slot.fromXY(0, 5), buttonsPane);
                 customItems.add(page);
 
-                page = new ChestGui(6, "Custom Items");
-                itemsPane = new OutlinePane(9, 5);
-                buttonsPane = new StaticPane(9, 1);
-                addCustomItemsButtons(i, buttonsPane);
+                page = new InventoryGUI(6, Component.text("Custom Items"));
+                addCustomItemsButtons(i, pageAmount, page);
 
-                page.setOnGlobalDrag(e -> e.setCancelled(true));
-                page.setOnGlobalClick(e -> e.setCancelled(true));
+                page.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
+                page.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
 
-                page.setOnBottomClick(addCustomItem(i));
+                page.setOnClick(addCustomItem(i), InteractLocation.BOTTOM);
             }
             final int currentPage = i;
             ItemStack stack = item.getItemStack();
-            final GuiItem guiItem = new GuiItem(ConvertUtils.addLore(stack.clone(), List.of(
+            final InventoryItem guiItem = new InventoryItem(ConvertUtils.addLore(stack.clone(), List.of(
                     "",
                     "<white>Shift-right-click to <red>remove<white> from custom items list",
                     "<white>Left-click to <yellow>edit<white> this item",
@@ -217,7 +197,7 @@ public class AdminToolGUI {
                         plugin.getStorage().removeCustomItem(item);
                         items.remove(item);
                         createCustomItems();
-                        customItems.get(Math.min(currentPage, customItems.size() - 1)).show(e.getWhoClicked());
+                        PlayerUtils.openGUI(e.getWhoClicked(), customItems.get(Math.min(currentPage, customItems.size() - 1)), false);
                     }
                     case LEFT -> {
                         final List<DialogBody> bodies = new LinkedList<>();
@@ -246,7 +226,7 @@ public class AdminToolGUI {
                                 )
                                 .type(DialogType.confirmation(
                                         ActionButton.builder(Component.text("Confirm", NamedTextColor.GREEN))
-                                                .action(DialogAction.customClick((v, _) -> {
+                                                .action(DialogAction.customClick((v, audience) -> {
                                                     final String choice = v.getText("choice");
                                                     final String text = v.getText("text");
                                                     if (text == null) return;
@@ -278,13 +258,8 @@ public class AdminToolGUI {
                 }
             });
 
-            itemsPane.addItem(guiItem);
-
-            cnt++;
+            page.addItem(guiItem, cnt++);
         }
-
-        page.addPane(Slot.fromXY(0, 0), itemsPane);
-        page.addPane(Slot.fromXY(0, 5), buttonsPane);
         customItems.add(page);
     }
 
@@ -340,24 +315,24 @@ public class AdminToolGUI {
     }
 
     public static void openBlacklist(Player p) {
-        blacklist.getFirst().show(p);
+        PlayerUtils.openGUI(p, blacklist.getFirst(), true);
     }
 
     public static void openCustomItems(Player p) {
-        customItems.getFirst().show(p);
+        PlayerUtils.openGUI(p, customItems.getFirst(), true);
     }
 
-    private static void addBlacklistButtons(int i, final StaticPane pane) {
-        if (i > 0) pane.addItem(new GuiItem(previous, e -> blacklist.get(Math.min(i - 1, blacklist.size() - 1)).show(e.getWhoClicked())), 0, 0);
-        if (i < pageAmount - 1) pane.addItem(new GuiItem(next, e -> blacklist.get(Math.min(i + 1, blacklist.size() - 1)).show(e.getWhoClicked())), 8, 0);
+    private static void addBlacklistButtons(int i, int pageAmount, final InventoryGUI gui) {
+        if (i > 0) gui.addItem(new InventoryItem(previous, e -> PlayerUtils.openGUI(e.getWhoClicked(), blacklist.get(Math.min(i - 1, blacklist.size() - 1)), false)), 45);
+        if (i < pageAmount - 1) gui.addItem(new InventoryItem(next, e -> PlayerUtils.openGUI(e.getWhoClicked(), blacklist.get(Math.min(i + 1, blacklist.size() - 1)), false)), 53);
 
-        pane.addItem(itemRmBlacklist, 4, 0);
+        gui.addItem(itemRmBlacklist, 49);
     }
 
-    private static void addCustomItemsButtons(int i, final StaticPane pane) {
-        if (i > 0) pane.addItem(new GuiItem(previous, e -> customItems.get(Math.min(i - 1, customItems.size() - 1)).show(e.getWhoClicked())), 0, 0);
-        if (i < pageAmount - 1) pane.addItem(new GuiItem(next, e -> customItems.get(Math.min(i + 1, customItems.size() - 1)).show(e.getWhoClicked())), 8, 0);
+    private static void addCustomItemsButtons(int i, int pageAmount, final InventoryGUI gui) {
+        if (i > 0) gui.addItem(new InventoryItem(previous, e -> PlayerUtils.openGUI(e.getWhoClicked(), customItems.get(Math.min(i - 1, customItems.size() - 1)), false)), 45);
+        if (i < pageAmount - 1) gui.addItem(new InventoryItem(next, e -> PlayerUtils.openGUI(e.getWhoClicked(), customItems.get(Math.min(i + 1, customItems.size() - 1)), false)), 53);
 
-        pane.addItem(itemRmCustomItems, 4, 0);
+        gui.addItem(itemRmCustomItems, 49);
     }
 }
