@@ -28,16 +28,9 @@ public class InventoryItem {
         if (onClick != null) onClick.accept(event);
     }
 
-    public void addToGUI(InventoryGUI gui, int slot) {
-        gui.getItems().put(this.id, this);
-        gui.getInventory().setItem(slot, item);
-    }
-
     public InventoryItem(ItemStack item) {
         this.id = incrementAndGetID();
-        item.editMeta(meta -> {
-            PDCUtils.setID(meta, id);
-        });
+        item.editMeta(meta -> PDCUtils.setID(meta, id));
         this.item = item;
     }
 

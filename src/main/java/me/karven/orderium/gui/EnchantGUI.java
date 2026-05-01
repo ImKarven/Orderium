@@ -9,6 +9,7 @@ import me.karven.orderium.obj.orderitem.OrderItem;
 import me.karven.orderium.obj.orderitem.VanillaItem;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.Log;
+import me.karven.orderium.utils.PDCUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -62,6 +63,7 @@ public class EnchantGUI {
 
         Consumer<InventoryClickEvent> confirmAction = _ -> {
             OrderItem copy = vanillaItem.copy();
+            enchantedItem.editMeta(PDCUtils::clear);
             copy.setItemStack(enchantedItem);
             action.accept(copy);
         };
