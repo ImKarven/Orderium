@@ -128,7 +128,7 @@ public class MainGUI {
 
             if (amount == 0) {
                 PlayerUtils.give(p, items, false);
-                p.getScheduler().run(plugin, _ -> p.updateInventory(), null);
+                p.getScheduler().run(plugin, task -> p.updateInventory(), null);
                 return;
             }
 
@@ -183,7 +183,7 @@ public class MainGUI {
                     e -> PlayerUtils.clickNext(e, pages.get(curr + 1))
         ), cache.getOrdersNextButton().getSlot() + 45);
 
-        gui.addItem(ConvertUtils.parseNewButton(cache.getRefreshButton(), _ -> {
+        gui.addItem(ConvertUtils.parseNewButton(cache.getRefreshButton(), event -> {
             if (search.isEmpty()) new MainGUI(player, sortIdx);
             else new MainGUI(player, sortIdx, search);
 
@@ -191,7 +191,7 @@ public class MainGUI {
 
         }), cache.getRefreshButton().getSlot() + 45);
 
-        gui.addItem(ConvertUtils.parseSortButton(cache.getOrdersSortButton(), cache.getOrdersSortsOrder().get(sortIdx), _ -> {
+        gui.addItem(ConvertUtils.parseSortButton(cache.getOrdersSortButton(), cache.getOrdersSortsOrder().get(sortIdx), event -> {
 
             if (search.isEmpty()) new MainGUI(player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1);
             else new MainGUI(player, sortIdx + 1 == cache.getOrdersSortsOrder().size() ? 0 : sortIdx + 1, search);
@@ -202,7 +202,7 @@ public class MainGUI {
 
         gui.addItem(ConvertUtils.parseNewButton(
                 cache.getOrdersSearchButton(),
-                _ -> SignGUI.newSession(
+                event -> SignGUI.newSession(
                     player,
                     (s) -> DispatchUtil.entity(player, () -> new MainGUI(player, sortIdx, s)),
                     cache.getLines(), cache.getSignBlock(), cache.getSearchLine()
@@ -211,7 +211,7 @@ public class MainGUI {
 
         gui.addItem(ConvertUtils.parseNewButton(
                 cache.getYoButton(),
-                _ -> YourOrderGUI.open(player)
+                event -> YourOrderGUI.open(player)
         ), cache.getYoButton().getSlot() + 45);
     }
 

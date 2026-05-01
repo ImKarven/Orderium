@@ -92,7 +92,7 @@ public final class Orderium extends JavaPlugin {
         }
 
         if (configs.isCheckForUpdates()) {
-            Bukkit.getAsyncScheduler().runNow(this, _ -> {
+            Bukkit.getAsyncScheduler().runNow(this, task -> {
                final String newVer = UpdateUtils.checkForUpdates();
                if (newVer == null) return;
                Log.warn("A new version of Orderium (" + newVer + ") is available");
@@ -103,7 +103,7 @@ public final class Orderium extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(DISCONNECT_LISTENER, this);
         Bukkit.getPluginManager().registerEvents(DIALOG_LISTENER, this);
 
-        Bukkit.getAsyncScheduler().runAtFixedRate(this, _ -> {
+        Bukkit.getAsyncScheduler().runAtFixedRate(this, task -> {
 
             for (Player p : Bukkit.getOnlinePlayers()) {
                 DispatchUtil.entity(p, () -> PDCUtils.removeCollected(p));

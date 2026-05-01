@@ -168,7 +168,7 @@ public class ConfigCache {
     }
 
     public void reload(Runnable cb) {
-        Bukkit.getAsyncScheduler().runNow(plugin, _ -> {
+        Bukkit.getAsyncScheduler().runNow(plugin, task -> {
             try {
                 loadCfg();
                 plugin.setStorage(plugin.createStorage());

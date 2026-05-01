@@ -57,7 +57,7 @@ tasks {
     }
 }
 
-def targetJavaVersion = 25
+def targetJavaVersion = 21
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

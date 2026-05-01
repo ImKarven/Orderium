@@ -61,7 +61,7 @@ public class EnchantGUI {
 
         ItemStack enchantedItem = item.getItemStack();
 
-        Consumer<InventoryClickEvent> confirmAction = _ -> {
+        Consumer<InventoryClickEvent> confirmAction = event -> {
             OrderItem copy = vanillaItem.copy();
             enchantedItem.editMeta(PDCUtils::clear);
             copy.setItemStack(enchantedItem);
@@ -87,7 +87,7 @@ public class EnchantGUI {
             InventoryItem guiItem = new InventoryItem(bookItem);
 
             TriConsumer<Integer, Integer, Integer> changeLevel = (start, end, increment) -> {
-                int newLevel = enchantsWithLevel.compute(enchantment, (_, currentLevel) -> {
+                int newLevel = enchantsWithLevel.compute(enchantment, (enchant, currentLevel) -> {
                     if (currentLevel == null || currentLevel == 0) return start;
                     if (currentLevel.equals(end)) return 0;
                     return currentLevel + increment;

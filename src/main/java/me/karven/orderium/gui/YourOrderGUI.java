@@ -30,14 +30,14 @@ public class YourOrderGUI {
         final List<String> rawLore = cache.getYoLore();
         int slot = 0;
         for (Order order : orders) {
-            gui.addItem(ConvertUtils.parseOrder(order, rawLore, _ -> {
+            gui.addItem(ConvertUtils.parseOrder(order, rawLore, event -> {
                 PlayerUtils.closeInv(p);
                 ManageOrderDialog.show(order, p);
             }), slot++);
         }
 
         if (orders.size() < 27) {
-            gui.addItem(ConvertUtils.parseNewButton(cache.getNewOrderButton(), _ -> NewOrderDialog.start(p)), slot);
+            gui.addItem(ConvertUtils.parseNewButton(cache.getNewOrderButton(), event -> NewOrderDialog.start(p)), slot);
         }
 
         PlayerUtils.openGUI(p, gui, isAsync);

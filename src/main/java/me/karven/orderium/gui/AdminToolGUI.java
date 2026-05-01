@@ -226,7 +226,7 @@ public class AdminToolGUI {
                                 )
                                 .type(DialogType.confirmation(
                                         ActionButton.builder(Component.text("Confirm", NamedTextColor.GREEN))
-                                                .action(DialogAction.customClick((v, _) -> {
+                                                .action(DialogAction.customClick((v, audience) -> {
                                                     final String choice = v.getText("choice");
                                                     final String text = v.getText("text");
                                                     if (text == null) return;

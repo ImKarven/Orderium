@@ -39,8 +39,8 @@ public class PlayerUtils {
         }
         val location = p.getLocation();
         val world = location.getWorld();
-        p.getScheduler().run(plugin, _ -> p.give(items, true), () ->
-                Bukkit.getRegionScheduler().run(plugin, location, _ ->
+        p.getScheduler().run(plugin, task -> p.give(items, true), () ->
+                Bukkit.getRegionScheduler().run(plugin, location, task ->
                         items.forEach(item ->
                                 world.dropItem(location, item)
                         )
