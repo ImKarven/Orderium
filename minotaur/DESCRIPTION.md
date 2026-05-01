@@ -17,9 +17,8 @@ Orderium needs these dependencies to operate:
 
 ## Supported Versions and Softwares
 Orderium supports version **1.21.7 and above** and **Paper or its fork**.
-<br>Folia is *supported* but it is extremely experimental and might not work properly.
 <br>Bedrock players joining through GeyserMC is not supported.
-<br>MultiPaper or any other multi-servers setups are not supported if you want to sync the orders between quadrons.
+<br>Syncing data between multiple servers is not supported
 
 ## Informations
 If you have trouble using the plugin, take a look at [the Wiki](https://github.com/ImKarven/Orderium/wiki).

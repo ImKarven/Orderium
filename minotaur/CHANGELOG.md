@@ -1,1 +1,5 @@
-Fix: errors with enchant GUI
+- Fix various bugs
+- Better Folia compatibility
+- Reduced plugin jar file size
+- Some optimizations
+- Java requirement is now 21
