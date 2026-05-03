@@ -1,12 +1,18 @@
-# Orderium
-Orderium is a plugin that allows players on your server to create and deliver orders from each other for money and supplies.
+![Orderium](http://wsrv.nl/?url=https://raw.githubusercontent.com/ImKarven/Orderium/refs/heads/master/assets/Orderium.png)
+[![paper](https://badges.penpow.dev/badges/supported/paper/cozy.svg)](https://papermc.io/software/paper/)
+[![purpur](https://badges.penpow.dev/badges/supported/purpur/cozy.svg)](https://purpurmc.org/)
+[![folia](https://badges.penpow.dev/badges/supported/folia/cozy.svg)](https://papermc.io/software/folia/)
+[![github](https://badges.penpow.dev/badges/available/github/cozy.svg)](https://github.com/ImKarven/Orderium)
+[![ghpages](https://badges.penpow.dev/badges/documentation/github-pages-docs/cozy.svg)](https://github.com/ImKarven/Orderium/wiki)
+[![ghissues](https://badges.penpow.dev/badges/social/github-issues/cozy.svg)](https://github.com/ImKarven/Orderium/issues)
+[![discord-singular](https://badges.penpow.dev/badges/social/discord-singular/cozy.svg)](https://devdiscord.karven.qzz.io/)
+
+Orderium is a plugin that allows players on your server to request items from other players and give them money as a reward. (Basically an auction house plugin but reversed)
 <br>It is inspired by [DonutSMP](https://store.donutsmp.net/).
 ## Features
-- Create orders for a specific item
+- Create orders for a specific item and deliver them to get money
+- Add custom items from plugins like ItemsAdder, Nexo, CraftEngine, etc
 - Blacklist certain items you don't like
-- Add your custom items
-- Deliver orders and earn money
-- Use modern APIs from Paper
 - Highly configurable settings
 
 ## Requirements
@@ -15,12 +21,15 @@ Orderium needs these dependencies to operate:
 - An economy plugin
 - [packetevents](https://modrinth.com/plugin/packetevents/versions)
 
-## Supported Versions and Softwares
-Orderium supports version **1.21.7 and above** and **Paper or its fork**.
-<br>Bedrock players joining through GeyserMC is not supported.
-<br>Syncing data between multiple servers is not supported
+### Compatibility
+- **Compatible versions**: 1.21.7+
+- **Compatible software**: Paper and its forks, including Folia
 
-## Informations
-If you have trouble using the plugin, take a look at [the Wiki](https://github.com/ImKarven/Orderium/wiki).
-<br>If you have any issues or found any bugs, create an issue on the [Issue Tracker](https://github.com/ImKarven/Orderium/issues)
-<br>If you found any exploits or dupe glitches, formerly report the vulnerability by sending an email to karven@atomicmail.io.
+### Incompatible setups
+- GeyserMC
+- Cross-server data syncing
+
+## Contact
+Contact me for anything else related to this plugin, including vulnerability reports.
+
+Email: karven@atomicmail.io
