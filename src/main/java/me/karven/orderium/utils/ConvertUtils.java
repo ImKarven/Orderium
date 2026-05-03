@@ -265,7 +265,7 @@ public class ConvertUtils {
         if (s == null || s.isEmpty()) return -1;
         try {
             final double num = Double.parseDouble(s);
-            if (num < 1) return -1;
+            if (num < cache.getMinPrice()) return -1;
             return num;
         } catch (Exception e) {
             if (s.length() == 1) return -1;
@@ -277,7 +277,7 @@ public class ConvertUtils {
         final String suffix = s.substring(s.length() - 1).toUpperCase();
         if (!unit.containsKey(suffix)) return -1;
         num *= unit.get(suffix);
+        if (num < cache.getMinPrice()) return -1;
         return num;
     }
-
 }

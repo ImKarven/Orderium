@@ -10,6 +10,7 @@ import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.obj.StorageMethod;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.Log;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -33,8 +34,8 @@ public class ConfigCache {
     private final File configFile;
     private ConfigFile config;
 
-    private boolean bStats = true;
-    private boolean checkForUpdates = true;
+    private boolean bStats;
+    private boolean checkForUpdates;
 
     private String mainGuiTitle;
     private List<String> orderLore;
@@ -60,12 +61,12 @@ public class ConfigCache {
             chooseSearchButton = new SlotInfo(),
             chooseSortButton = new SlotInfo();
 
-    private int searchLine = -1;
+    private int searchLine;
     private BlockType signBlock;
     private List<String> lines;
 
     private String deliverTitle;
-    private int deliverRows = 6;
+    private int deliverRows;
 
     private String enchantItemTitle;
     private String enchantActivePrefix;
@@ -81,9 +82,9 @@ public class ConfigCache {
     private String changeItemTooltip;
     private String confirmButton;
     private String confirmTooltip;
-    private int descriptionWidth = -1;
-    private int inputWidth = -1;
-    private int buttonWidth = -1;
+    private int descriptionWidth;
+    private int inputWidth;
+    private int buttonWidth;
 
     private String confirmDeliveryTitle;
     private String confirmDeliveryBody;
@@ -138,14 +139,15 @@ public class ConfigCache {
     private String dbPassword;
     private String tablePref;
 
-    private boolean logTransactions = true;
-    private long expiresAfter = -1;
+    private boolean logTransactions;
+    private long expiresAfter;
+    private double minPrice;
     private String sortPrefix;
-    private int maxCollectPerMinute = 1000;
-    private int maxCollect = 1000;
+    private int maxCollectPerMinute;
+    private int maxCollect;
     private TagResolver[] sortPlaceholders;
-    private boolean enchantItem = false;
-    private boolean shulkerDelivering = true;
+    private boolean enchantItem;
+    private boolean shulkerDelivering;
 
     private final List<DataComponentType.Valued<?>> similarityCheck = new ArrayList<>();
 
@@ -210,6 +212,7 @@ public class ConfigCache {
         config.addDefault("check-for-updates", true, "Whether to check for updates or not");
         config.addDefault("log-transactions", true, "Whether to log money changes of players or not");
         config.addDefault("expires-after", 7L * 24L * 60L * 60L * 1000L, "After this amount of millisecond(s), the order will be expired");
+        config.addDefault("minimum-price", 0.1, "The minimum amount of money per item the player can create order with");
         config.addDefault("sort-prefix", "<aqua>", "This will be put at the beginning of the sort type that is being selected");
         config.addDefault("max-collect", 1000, "Maximum amount of items to collect, this shouldn't be confused with max-collect-per-minute");
         config.addDefault("max-collect-per-minute", 1000,
@@ -431,10 +434,21 @@ public class ConfigCache {
         config.addDefault("gui.cancel-order.cancel-tooltip", "Click to cancel the cancellation of this order");
         config.addDefault("gui.cancel-order.confirm-button", "<green>Confirm");
         config.addDefault("gui.cancel-order.confirm-tooltip", "Click to confirm the cancellation of this order");
+        config.addDefault("config-version", 2);
 
-        config.addDefault("config-version", 1);
+        // TODO: Have a better structure for migrating config
+        final int previousConfigVersion = config.getInteger("config-version", -1);
+        final int currentConfigVersion = 2;
+        if (previousConfigVersion != -1) {
+            if (previousConfigVersion > currentConfigVersion) {
+                Log.warn("You are downgrading the plugin. This is not supported");
+            }
+            config.set("config-version", 2);
 
-        if (config.isNew()) config.save();
+            if (previousConfigVersion < 2) {
+                config.save();
+            }
+        } else config.save();
 
 //        storageMethod = StorageMethod.fromString(config.getString("storage.method"));
 //        remoteAddress = config.getString("storage.config.address");
@@ -449,6 +463,7 @@ public class ConfigCache {
         checkForUpdates = config.getBoolean("check-for-updates");
         logTransactions = config.getBoolean("log-transactions");
         expiresAfter = config.getLong("expires-after");
+        minPrice = config.getDouble("minimum-price");
         sortPrefix = config.getString("sort-prefix");
         maxCollect = config.getInteger("max-collect");
         maxCollectPerMinute = config.getInteger(("max-collect-per-minute"));
