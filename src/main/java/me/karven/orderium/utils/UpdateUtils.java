@@ -37,24 +37,6 @@ public class UpdateUtils {
             Log.error("An error occurred while creating plugin's directory", e);
         }
     }
-
-    public static boolean downloadItems() {
-        return true;
-//        Log.info("Downloading items list...");
-//        try (val in = new BufferedInputStream(URI.create(itemsURL).toURL().openStream());
-//             val out = new FileOutputStream(itemsFile)) {
-//            byte[] buffer = new byte[1024];
-//            int readBytes;
-//            while ((readBytes = in.read(buffer, 0, 1024)) != -1) {
-//                out.write(buffer, 0, readBytes);
-//            }
-//            Log.info("Successfully downloaded items list");
-//            return true;
-//        } catch (Exception e) {
-//            Log.error("Failed to download items list", e);
-//            return false;
-//        }
-    }
     /// Check for updates
     /// Returns the newer version if available, otherwise returns null
     public static String checkForUpdates() {

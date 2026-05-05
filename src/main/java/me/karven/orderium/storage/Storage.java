@@ -143,6 +143,7 @@ public abstract class Storage {
     }
 
     /**
+     * Use minecraft internals to get the items
      * @return the default items
      */
     private Collection<VanillaItem> loadItems() {
@@ -162,68 +163,6 @@ public abstract class Storage {
             items.add(new VanillaItem(mcItem.asBukkitCopy(), true));
         }
         return items;
-//
-//        val itemConfig = new HikariConfig();
-//        itemConfig.setPoolName("items pool");
-//        itemConfig.setJdbcUrl("jdbc:sqlite:" + dataDir + File.separator + "items.db");
-//        val itemDataSource = new HikariDataSource(itemConfig);
-//
-//        final List<Integer> dataVersions = new ArrayList<>();
-//
-//        try (
-//                val connection = itemDataSource.getConnection();
-//                val getDataVersions = connection.prepareStatement("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
-//        ) {
-//            val raw = getDataVersions.executeQuery();
-//
-//            while (raw.next()) {
-//                final String sName = raw.getString("name");
-//                if (!sName.startsWith("items_")) continue;
-//                try {
-//                    dataVersions.add(Integer.parseInt(sName.replace("items_", "")));
-//                } catch (Exception ignored) {}
-//            }
-//        } catch (SQLException e) {
-//            Log.error("Failed to load data versions", e);
-//        }
-//        @SuppressWarnings("deprecation")
-//        val dataVer = Bukkit.getUnsafe().getDataVersion();
-//        val RELEASE_1_21_7_DATA_VERSION = 4438;
-//        if (dataVer < RELEASE_1_21_7_DATA_VERSION) {
-//            throw new RuntimeException("Server running version older than 1.21.7, which is not supported.");
-//        }
-//        int maxVer = -1;
-//        for (int ver : dataVersions) {
-//            if (ver > maxVer && ver <= dataVer) maxVer = ver;
-//            if (dataVer == ver) {
-//                plugin.VERSION = ver;
-//                break;
-//            }
-//        }
-//        if (plugin.VERSION == -1) {
-//            Log.warn("No data version in the item database matches your server data version! Using the latest compatible one...");
-//            plugin.VERSION = maxVer;
-//        }
-//
-//        val ITEMS_TABLE_NAME = "items_" + plugin.VERSION;
-//        val items = new HashSet<VanillaItem>();
-//
-//        try (
-//                val connection = itemDataSource.getConnection();
-//                val getItems = connection.prepareStatement("SELECT * FROM " + ITEMS_TABLE_NAME)
-//                ) {
-//            val raw = getItems.executeQuery();
-//
-//            while (raw.next()) {
-//                ItemStack itemStack = ItemStack.deserializeBytes(raw.getBytes(1));
-//                items.add(new VanillaItem(itemStack, true));
-//            }
-//
-//        } catch (SQLException e) {
-//            Log.error("Failed to load items", e);
-//        }
-//        itemDataSource.close();
-//        return items;
     }
 
     public abstract CompletableFuture<Collection<Order>> loadOrders();
