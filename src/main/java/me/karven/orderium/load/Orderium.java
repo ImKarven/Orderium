@@ -35,7 +35,6 @@ public final class Orderium extends JavaPlugin {
     private DataCache dataCache;
     private Economy econ;
     public final MiniMessage mm = MiniMessage.miniMessage();
-    public int VERSION = -1;
 
     public ConfigCache getConfigs() { return configs; }
     public Storage getStorage() { return storage; }
@@ -61,11 +60,6 @@ public final class Orderium extends JavaPlugin {
             return;
         }
         UpdateUtils.init();
-        if (!UpdateUtils.downloadItems()) {
-            saveResource("items.db", false);
-        }
-        saveResource("modified_items.db", false);
-
         Bukkit.getPluginManager().registerEvents(GUI_LISTENER, this);
 
         dataCache = new DataCache();
