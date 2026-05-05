@@ -4,10 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.bukkit.Bukkit;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 
@@ -37,20 +39,21 @@ public class UpdateUtils {
     }
 
     public static boolean downloadItems() {
-        Log.info("Downloading items list...");
-        try (val in = new BufferedInputStream(URI.create(itemsURL).toURL().openStream());
-             val out = new FileOutputStream(itemsFile)) {
-            byte[] buffer = new byte[1024];
-            int readBytes;
-            while ((readBytes = in.read(buffer, 0, 1024)) != -1) {
-                out.write(buffer, 0, readBytes);
-            }
-            Log.info("Successfully downloaded items list");
-            return true;
-        } catch (Exception e) {
-            Log.error("Failed to download items list", e);
-            return false;
-        }
+        return true;
+//        Log.info("Downloading items list...");
+//        try (val in = new BufferedInputStream(URI.create(itemsURL).toURL().openStream());
+//             val out = new FileOutputStream(itemsFile)) {
+//            byte[] buffer = new byte[1024];
+//            int readBytes;
+//            while ((readBytes = in.read(buffer, 0, 1024)) != -1) {
+//                out.write(buffer, 0, readBytes);
+//            }
+//            Log.info("Successfully downloaded items list");
+//            return true;
+//        } catch (Exception e) {
+//            Log.error("Failed to download items list", e);
+//            return false;
+//        }
     }
     /// Check for updates
     /// Returns the newer version if available, otherwise returns null

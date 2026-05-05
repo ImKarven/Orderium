@@ -64,7 +64,7 @@ public final class Orderium extends JavaPlugin {
         if (!UpdateUtils.downloadItems()) {
             saveResource("items.db", false);
         }
-        saveResource("modified_items.db", false);
+//        saveResource("modified_items.db", false);
 
         Bukkit.getPluginManager().registerEvents(GUI_LISTENER, this);
 
