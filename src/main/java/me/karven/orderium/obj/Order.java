@@ -1,6 +1,5 @@
 package me.karven.orderium.obj;
 
-import lombok.Getter;
 import me.karven.orderium.api.events.PlayerCancelOrderEvent;
 import me.karven.orderium.api.events.PlayerCollectItemsEvent;
 import me.karven.orderium.api.events.PlayerCreateOrderEvent;
@@ -21,8 +20,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.UUID;
 
 import static me.karven.orderium.load.Orderium.plugin;
-
-@Getter
 
 // TODO: Replace `item` with OrderItem instead of ItemStack.
 // Problem: how to store it in database?
@@ -166,8 +163,43 @@ public class Order implements me.karven.orderium.api.Order {
     public double getPaid() { return moneyPer * delivered; }
 
     @Override
+    public int getId() {
+        return this.id;
+    }
+
+    @Override
     public UUID getOwnerUniqueId() {
         return owner;
+    }
+
+    @Override
+    public ItemStack getItem() {
+        return this.item;
+    }
+
+    @Override
+    public double getMoneyPer() {
+        return this.moneyPer;
+    }
+
+    @Override
+    public int getAmount() {
+        return this.amount;
+    }
+
+    @Override
+    public int getDelivered() {
+        return this.delivered;
+    }
+
+    @Override
+    public int getInStorage() {
+        return this.inStorage;
+    }
+
+    @Override
+    public long getExpiresAt() {
+        return this.expiresAt;
     }
 
     @Override

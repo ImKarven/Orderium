@@ -2,7 +2,6 @@ package me.karven.orderium.storage;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.val;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
@@ -21,6 +20,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -43,21 +44,21 @@ public abstract class Storage {
     }
 
     protected Storage() {
-        val modifiedItemsConfig = new HikariConfig();
+        HikariConfig modifiedItemsConfig = new HikariConfig();
         modifiedItemsConfig.setPoolName("modified items pool");
         modifiedItemsConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "modified_items.db");
         this.modifiedItemDataSource = new HikariDataSource(modifiedItemsConfig);
 
-        val itemsList = loadItems();
-        val blacklistAndCustomItems = loadBlacklistAndCustomItems();
+        Collection<VanillaItem> itemsList = loadItems();
+        Pair<Collection<BlacklistedItem>, Collection<CustomItem>> blacklistAndCustomItems = loadBlacklistAndCustomItems();
 
         plugin.getDataCache().setItems(itemsList, blacklistAndCustomItems.first, blacklistAndCustomItems.second);
     }
 
     public void addBlacklist(BlacklistedItem item) {
         try (
-                val connection = modifiedItemDataSource.getConnection();
-                val addItem = connection.prepareStatement("INSERT INTO " + BLACKLIST_TABLE + " (item) VALUES (?)")
+                Connection connection = modifiedItemDataSource.getConnection();
+                PreparedStatement addItem = connection.prepareStatement("INSERT INTO " + BLACKLIST_TABLE + " (item) VALUES (?)")
         ) {
             addItem.setBytes(1, item.getItemAsBytes());
             addItem.executeUpdate();
@@ -68,8 +69,8 @@ public abstract class Storage {
 
     public void addCustomItem(CustomItem item) {
         try (
-                val connection = modifiedItemDataSource.getConnection();
-                val addItem = connection.prepareStatement("INSERT INTO " + CUSTOM_ITEMS_TABLE + " (item, search) VALUES (?, ?)")
+                Connection connection = modifiedItemDataSource.getConnection();
+                PreparedStatement addItem = connection.prepareStatement("INSERT INTO " + CUSTOM_ITEMS_TABLE + " (item, search) VALUES (?, ?)")
         ) {
             addItem.setBytes(1, item.getItemAsBytes());
             addItem.setString(2, String.join(",", item.getSearches()));
@@ -81,8 +82,8 @@ public abstract class Storage {
 
     public void removeBlacklist(BlacklistedItem item) {
         try (
-                val connection = modifiedItemDataSource.getConnection();
-                val removeItem = connection.prepareStatement("DELETE FROM " + BLACKLIST_TABLE + " WHERE item = (?)")
+                Connection connection = modifiedItemDataSource.getConnection();
+                PreparedStatement removeItem = connection.prepareStatement("DELETE FROM " + BLACKLIST_TABLE + " WHERE item = (?)")
         ) {
             removeItem.setBytes(1, item.getItemAsBytes());
             removeItem.executeUpdate();
@@ -93,8 +94,8 @@ public abstract class Storage {
 
     public void removeCustomItem(CustomItem item) {
         try (
-                val connection = modifiedItemDataSource.getConnection();
-                val removeCustomItem = connection.prepareStatement("DELETE FROM " + CUSTOM_ITEMS_TABLE + " WHERE item = (?)")
+                Connection connection = modifiedItemDataSource.getConnection();
+                PreparedStatement removeCustomItem = connection.prepareStatement("DELETE FROM " + CUSTOM_ITEMS_TABLE + " WHERE item = (?)")
         ) {
             removeCustomItem.setBytes(1, item.getItemAsBytes());
             removeCustomItem.executeUpdate();
@@ -105,8 +106,8 @@ public abstract class Storage {
 
     public void updateCustomItemSearch(CustomItem item) {
         try (
-                val connection = modifiedItemDataSource.getConnection();
-                val updateSearch = connection.prepareStatement("UPDATE " + CUSTOM_ITEMS_TABLE + " SET search = ? WHERE item = ?")
+                Connection connection = modifiedItemDataSource.getConnection();
+                PreparedStatement updateSearch = connection.prepareStatement("UPDATE " + CUSTOM_ITEMS_TABLE + " SET search = ? WHERE item = ?")
         ) {
             updateSearch.setString(1, item.getParsedSearches());
             updateSearch.setBytes(2, item.getItemAsBytes());
@@ -118,18 +119,18 @@ public abstract class Storage {
 
     private Pair<Collection<BlacklistedItem>, Collection<CustomItem>> loadBlacklistAndCustomItems() {
         try (
-                val connection = modifiedItemDataSource.getConnection();
-                val createCustomItemsTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB, search VARCHAR(65535))");
-                val createBlacklistTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)")
+                Connection connection = modifiedItemDataSource.getConnection();
+                PreparedStatement createCustomItemsTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB, search VARCHAR(65535))");
+                PreparedStatement createBlacklistTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)")
         ) {
             createCustomItemsTable.executeUpdate();
             createBlacklistTable.executeUpdate();
 
-            val getCustomItems = connection.prepareStatement("SELECT * FROM " + CUSTOM_ITEMS_TABLE);
-            val getBlacklist = connection.prepareStatement("SELECT * FROM " + BLACKLIST_TABLE);
+            PreparedStatement getCustomItems = connection.prepareStatement("SELECT * FROM " + CUSTOM_ITEMS_TABLE);
+            PreparedStatement getBlacklist = connection.prepareStatement("SELECT * FROM " + BLACKLIST_TABLE);
 
-            val blacklist = ConvertUtils.convertBlacklistedItems(getBlacklist.executeQuery());
-            val customItems = ConvertUtils.convertCustomItems(getCustomItems.executeQuery());
+            Collection<BlacklistedItem> blacklist = ConvertUtils.convertBlacklistedItems(getBlacklist.executeQuery());
+            Collection<CustomItem> customItems = ConvertUtils.convertCustomItems(getCustomItems.executeQuery());
 
             getCustomItems.close();
             getBlacklist.close();

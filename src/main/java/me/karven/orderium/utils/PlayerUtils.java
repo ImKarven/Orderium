@@ -1,11 +1,12 @@
 package me.karven.orderium.utils;
 
 import io.papermc.paper.dialog.Dialog;
-import lombok.val;
 import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.guiframework.InventoryGUI;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -37,8 +38,8 @@ public class PlayerUtils {
             p.give(items, true);
             return;
         }
-        val location = p.getLocation();
-        val world = location.getWorld();
+        Location location = p.getLocation();
+        World world = location.getWorld();
         p.getScheduler().run(plugin, task -> p.give(items, true), () ->
                 Bukkit.getRegionScheduler().run(plugin, location, task ->
                         items.forEach(item ->

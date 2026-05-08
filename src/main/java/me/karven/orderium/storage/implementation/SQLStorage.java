@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemContainerContents;
-import lombok.val;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.StorageMethod;
 import me.karven.orderium.storage.Storage;
@@ -14,8 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -54,7 +52,7 @@ public class SQLStorage extends Storage {
 
     private SQLStorage(StorageMethod method, String jdbcUrl, String username, String password) {
         super();
-        val conf = new HikariConfig();
+        HikariConfig conf = new HikariConfig();
         conf.setPoolName("orders data pool");
         conf.setJdbcUrl(jdbcUrl);
         if (username != null) conf.setUsername(username);
@@ -77,10 +75,10 @@ public class SQLStorage extends Storage {
         CompletableFuture<Collection<Order>> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
             try (
-                    val connection = data.getConnection();
-                    val getOrders = connection.prepareStatement("SELECT * FROM " + ORDER_TABLE)
+                    Connection connection = data.getConnection();
+                    PreparedStatement getOrders = connection.prepareStatement("SELECT * FROM " + ORDER_TABLE)
             ) {
-                val raw = getOrders.executeQuery();
+                ResultSet raw = getOrders.executeQuery();
                 future.complete(ConvertUtils.convertOrders(raw));
             } catch (SQLException e) {
                 Log.error("Failed to load orders", e);
@@ -96,10 +94,10 @@ public class SQLStorage extends Storage {
 
         DispatchUtil.async(() -> {
             try (
-                    val connection = data.getConnection();
-                    val create = connection.prepareStatement(CREATE_ORDER, Statement.RETURN_GENERATED_KEYS)
+                    Connection connection = data.getConnection();
+                    PreparedStatement create = connection.prepareStatement(CREATE_ORDER, Statement.RETURN_GENERATED_KEYS)
             ) {
-                val expiresAt = System.currentTimeMillis() + configs.getExpiresAfter();
+                long expiresAt = System.currentTimeMillis() + configs.getExpiresAfter();
                 create.setLong(1, owner.getMostSignificantBits());
                 create.setLong(2, owner.getLeastSignificantBits());
                 create.setBytes(3, item.serializeAsBytes());
@@ -108,7 +106,7 @@ public class SQLStorage extends Storage {
                 create.setLong(6, expiresAt);
                 create.executeUpdate();
 
-                val generated = create.getGeneratedKeys();
+                ResultSet generated = create.getGeneratedKeys();
                 if (!(generated.next())) throw new RuntimeException("Failed to create order. No generated keys found");
 
                 Order order = new Order(
@@ -129,27 +127,27 @@ public class SQLStorage extends Storage {
 
     @Override
     public CompletableFuture<Double> cancelOrder(Order order) {
-        val future = new CompletableFuture<Double>();
+        CompletableFuture<Double> future = new CompletableFuture<>();
 
         DispatchUtil.async(() -> {
             try (
-                    val connection = data.getConnection();
-                    val getOrder = connection.prepareStatement(GET_ORDER);
-                    val cancelOrder = connection.prepareStatement(CANCEL_ORDER);
-                    val deleteOrder = connection.prepareStatement(DELETE_ORDER)
+                    Connection connection = data.getConnection();
+                    PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
+                    PreparedStatement cancelOrder = connection.prepareStatement(CANCEL_ORDER);
+                    PreparedStatement deleteOrder = connection.prepareStatement(DELETE_ORDER)
             ) {
-                val orderId = order.getId();
+                int orderId = order.getId();
                 getOrder.setInt(1, orderId);
-                val raw = getOrder.executeQuery();
+                ResultSet raw = getOrder.executeQuery();
                 if (!raw.next()) {
                     future.complete(-1.0);
                     return;
                 }
-                val delivered = raw.getInt("delivered");
-                val orderAmount = raw.getInt("amount");
-                val inStorage = raw.getInt("in_storage");
-                val moneyPer = raw.getDouble("money_per");
-                val expiresAt = raw.getLong("expires_at");
+                int delivered = raw.getInt("delivered");
+                int orderAmount = raw.getInt("amount");
+                int inStorage = raw.getInt("in_storage");
+                double moneyPer = raw.getDouble("money_per");
+                long expiresAt = raw.getLong("expires_at");
                 if (expiresAt < System.currentTimeMillis()) {
                     future.complete(-1.0);
                     return;
@@ -183,29 +181,29 @@ public class SQLStorage extends Storage {
      */
     @Override
     public CompletableFuture<Double> deliverOrder(Player deliverer, Order order, Iterable<ItemStack> items) {
-        val future = new CompletableFuture<Double>();
+        CompletableFuture<Double> future = new CompletableFuture<>();
 
         DispatchUtil.async(() -> {
             try (
-                    val connection = data.getConnection();
-                    val getOrder = connection.prepareStatement(GET_ORDER);
-                    val updateOrder = connection.prepareStatement(UPDATE_ORDER)
+                    Connection connection = data.getConnection();
+                    PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
+                    PreparedStatement updateOrder = connection.prepareStatement(UPDATE_ORDER)
             ) {
                 connection.setAutoCommit(false);
-                val orderId = order.getId();
+                int orderId = order.getId();
                 getOrder.setInt(1, orderId);
-                val raw = getOrder.executeQuery();
+                ResultSet raw = getOrder.executeQuery();
                 if (!raw.next()) {
                     connection.commit();
                     future.complete(null);
                     return;
                 }
-                val delivered = raw.getInt("delivered");
-                val orderAmount = raw.getInt("amount");
-                val inStorage = raw.getInt("in_storage");
-                val moneyPer = raw.getDouble("money_per");
+                int delivered = raw.getInt("delivered");
+                int orderAmount = raw.getInt("amount");
+                int inStorage = raw.getInt("in_storage");
+                double moneyPer = raw.getDouble("money_per");
 
-                var deliverable = orderAmount - delivered;
+                int deliverable = orderAmount - delivered;
 
                 for (ItemStack item : items) {
                     if (!AlgoUtils.isSimilar(item, order.getItem())) {
@@ -215,7 +213,7 @@ public class SQLStorage extends Storage {
                         PlayerUtils.give(deliverer, item, true);
                         continue;
                     }
-                    val itemAmount = item.getAmount();
+                    int itemAmount = item.getAmount();
                     if (deliverable >= itemAmount) {
                         deliverable -= itemAmount;
                         continue;
@@ -224,7 +222,7 @@ public class SQLStorage extends Storage {
                     PlayerUtils.give(deliverer, item, true);
                     deliverable = 0;
                 }
-                val newDelivered = orderAmount - deliverable;
+                int newDelivered = orderAmount - deliverable;
                 updateOrder.setInt(1, orderAmount);
                 updateOrder.setDouble(2, moneyPer);
                 updateOrder.setInt(3, newDelivered);
@@ -267,7 +265,7 @@ public class SQLStorage extends Storage {
                 declinedItems.add(item);
                 continue;
             }
-            val itemAmount = item.getAmount();
+            int itemAmount = item.getAmount();
             if (deliverable >= itemAmount) {
                 deliverable -= itemAmount;
                 declinedItems.add(ItemStack.empty());
@@ -294,28 +292,28 @@ public class SQLStorage extends Storage {
 
     @Override
     public CompletableFuture<Boolean> collectItems(Order order, int amount) {
-        val future = new CompletableFuture<Boolean>();
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
 
         DispatchUtil.async(() -> {
             try (
-                    val connection = data.getConnection();
-                    val getOrder = connection.prepareStatement(GET_ORDER);
-                    val updateOrder = connection.prepareStatement(UPDATE_ORDER);
-                    val deleteOrder = connection.prepareStatement(DELETE_ORDER)
+                    Connection connection = data.getConnection();
+                    PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
+                    PreparedStatement updateOrder = connection.prepareStatement(UPDATE_ORDER);
+                    PreparedStatement deleteOrder = connection.prepareStatement(DELETE_ORDER)
             ) {
-                val orderId = order.getId();
+                int orderId = order.getId();
                 connection.setAutoCommit(false);
                 getOrder.setInt(1, orderId);
-                val raw = getOrder.executeQuery();
+                ResultSet raw = getOrder.executeQuery();
                 if (!raw.next()) {
                     connection.commit();
                     future.complete(false);
                     return;
                 }
-                val delivered = raw.getInt("delivered");
-                val orderAmount = raw.getInt("amount");
-                val inStorage = raw.getInt("in_storage");
-                val moneyPer = raw.getDouble("money_per");
+                int delivered = raw.getInt("delivered");
+                int orderAmount = raw.getInt("amount");
+                int inStorage = raw.getInt("in_storage");
+                double moneyPer = raw.getDouble("money_per");
                 if (inStorage < amount) {
                     connection.commit();
                     future.complete(false);
@@ -345,13 +343,13 @@ public class SQLStorage extends Storage {
     }
 
     public CompletableFuture<Void> updateOrder(Order order, String var, Object value) {
-        val future = new CompletableFuture<Void>();
+        CompletableFuture<Void> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
             try (
-                    val connection = data.getConnection();
-                    val updateOrder = connection.prepareStatement("UPDATE " + ORDER_TABLE + " SET " + var + " = ? WHERE id = ?")
+                    Connection connection = data.getConnection();
+                    PreparedStatement updateOrder = connection.prepareStatement("UPDATE " + ORDER_TABLE + " SET " + var + " = ? WHERE id = ?")
             ) {
-                val orderId = order.getId();
+                int orderId = order.getId();
                 updateOrder.setObject(1, value);
                 updateOrder.setInt(2, orderId);
                 updateOrder.executeUpdate();
@@ -364,11 +362,11 @@ public class SQLStorage extends Storage {
     }
 
     public CompletableFuture<Void> deleteOrder(Order order) {
-        val future = new CompletableFuture<Void>();
+        CompletableFuture<Void> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
             try (
-                    val connection = data.getConnection();
-                    val deleteOrder = connection.prepareStatement(DELETE_ORDER)
+                    Connection connection = data.getConnection();
+                    PreparedStatement deleteOrder = connection.prepareStatement(DELETE_ORDER)
             ) {
                 deleteOrder.setInt(1, order.getId());
                 deleteOrder.executeUpdate();
@@ -383,11 +381,11 @@ public class SQLStorage extends Storage {
 
     @Override
     public CompletableFuture<Void> logTransaction(UUID player, double before, double amount, double after) {
-        val future = new CompletableFuture<Void>();
+        CompletableFuture<Void> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
            try (
-                   val connection = data.getConnection();
-                   val logTransaction = connection.prepareStatement(LOG_TRANSACTION)
+                   Connection connection = data.getConnection();
+                   PreparedStatement logTransaction = connection.prepareStatement(LOG_TRANSACTION)
            ) {
                logTransaction.setLong(1, System.currentTimeMillis());
                logTransaction.setLong(2, player.getMostSignificantBits());
@@ -408,9 +406,9 @@ public class SQLStorage extends Storage {
     public CompletableFuture<Void> createTables() {
         CompletableFuture<Void> future = new CompletableFuture<>();
         try (
-                val connection = data.getConnection();
-                val createOrderTable = connection.prepareStatement(CREATE_ORDER_TABLE);
-                val createTransactionTable = connection.prepareStatement(CREATE_TRANSACTION_TABLE)
+                Connection connection = data.getConnection();
+                PreparedStatement createOrderTable = connection.prepareStatement(CREATE_ORDER_TABLE);
+                PreparedStatement createTransactionTable = connection.prepareStatement(CREATE_TRANSACTION_TABLE)
         ) {
             createOrderTable.executeUpdate();
             createTransactionTable.executeUpdate();

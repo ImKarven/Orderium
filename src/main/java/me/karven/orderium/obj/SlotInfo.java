@@ -2,22 +2,31 @@ package me.karven.orderium.obj;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
-import lombok.Getter;
-import lombok.Setter;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.Log;
 import org.bukkit.inventory.ItemType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-@Getter
-@Setter
 public class SlotInfo implements Cloneable {
     private int slot = -1;
     private List<String> lore;
     private String displayName;
     private ItemType type;
     private String itemModel = null;
+
+    public void setLore(@NotNull List<@NotNull String> lore) { this.lore = lore; }
+    public void setSlot(int slot) { this.slot = slot; }
+    public void setDisplayName(@NotNull String displayName) { this.displayName = displayName; }
+    public void setType(@NotNull ItemType type) { this.type = type; }
+    public void setItemModel(@NotNull String itemModel) { this.itemModel = itemModel; }
+
+    public List<@NotNull String> getLore() { return lore; }
+    public int getSlot() { return slot; }
+    public String getDisplayName() { return displayName; }
+    public ItemType getType() { return type; }
+    public String getItemModel() { return itemModel; }
 
     public SlotInfo() {}
 
