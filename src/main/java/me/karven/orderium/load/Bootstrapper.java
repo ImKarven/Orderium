@@ -9,6 +9,7 @@ import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.karven.orderium.data.ConfigCache;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
 import me.karven.orderium.utils.PlayerUtils;
@@ -113,8 +114,9 @@ public class Bootstrapper implements PluginBootstrap {
     @Override
     public void bootstrap(@NonNull BootstrapContext ctx) {
         ctx.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, e -> {
-            e.registrar().register(getOrderCmd("orders"));
-            e.registrar().register(getOrderCmd("order"));
+            for (final String orderAlias : ConfigCache.INSTANCE.orderCommandAliases) {
+                e.registrar().register(getOrderCmd(orderAlias));
+            }
             e.registrar().register(getOrderiumCmd("orderium"));
         });
     }

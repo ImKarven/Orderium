@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class DataCache {
+    public static final DataCache INSTANCE = new DataCache();
     private static final Registry<BlockType> BLOCK_REGISTRY = Registry.BLOCK;
     private final NavigableSet<OrderItem> itemsAZ = new ConcurrentSkipListSet<>(AlgoUtils.getComparator(SortTypes.A_Z));
     private final NavigableSet<OrderItem> itemsZA = new ConcurrentSkipListSet<>(AlgoUtils.getComparator(SortTypes.Z_A));

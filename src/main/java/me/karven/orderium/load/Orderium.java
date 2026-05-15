@@ -20,6 +20,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.TimeUnit;
 
@@ -30,13 +32,13 @@ public final class Orderium extends JavaPlugin {
     public final DisconnectListener DISCONNECT_LISTENER = new DisconnectListener();
     public final GUIListener GUI_LISTENER = new GUIListener();
 
-    private ConfigCache configs;
+    private final @NotNull ConfigCache configs = ConfigCache.INSTANCE;
     private Storage storage;
-    private DataCache dataCache;
+    private final DataCache dataCache = DataCache.INSTANCE;
     private Economy econ;
     public final MiniMessage mm = MiniMessage.miniMessage();
 
-    public ConfigCache getConfigs() { return configs; }
+    public @NonNull ConfigCache getConfigs() { return configs; }
     public Storage getStorage() { return storage; }
     public DataCache getDataCache() { return dataCache; }
     public Economy getEcon() { return econ; }
@@ -62,8 +64,7 @@ public final class Orderium extends JavaPlugin {
         UpdateUtils.init();
         Bukkit.getPluginManager().registerEvents(GUI_LISTENER, this);
 
-        dataCache = new DataCache();
-        configs = new ConfigCache();
+//        configs = new ConfigCache();
         Storage.init();
         storage = createStorage();
         AlgoUtils.init();

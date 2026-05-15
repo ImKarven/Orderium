@@ -18,17 +18,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.block.BlockType;
 import org.bukkit.inventory.ItemType;
 import org.intellij.lang.annotations.Subst;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 import static me.karven.orderium.load.Orderium.plugin;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ConfigCache {
+    public static final ConfigCache INSTANCE = new ConfigCache();
     private final File configFile;
     private ConfigFile config;
 
@@ -147,67 +148,65 @@ public class ConfigCache {
     public boolean enchantItem;
     public boolean shulkerDelivering;
 
+    public final List<@NotNull String> orderCommandAliases = new ArrayList<>();
+
     public final List<DataComponentType.Valued<?>> similarityCheck = new ArrayList<>();
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public ConfigCache() {
-        this.configFile = new File(plugin.getDataFolder(), "config.yml");
-        if (!reload()) {
-            plugin.getLogger().severe("Failed to load config.");
+        // The constructor runs before the server even exists (when the class is loaded) so we must not use the API here
+        final File pluginFolder = new File("plugins");
+        final File dataFolder = new File(pluginFolder, "Orderium");
+        if (!dataFolder.exists() || !dataFolder.isDirectory()) dataFolder.mkdirs();
+        this.configFile = new File(dataFolder, "config.yml");
+        if (!loadCfg()) {
+            Log.warn("Failed to load config.");
         }
-    }
-
-    public boolean reload() {
-
-        try {
-            loadCfg();
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to fetch item from database", e);
-            return false;
-        }
-        return true;
     }
 
     public void reload(Runnable cb) {
         Bukkit.getAsyncScheduler().runNow(plugin, task -> {
             try {
                 loadCfg();
+
                 plugin.setStorage(plugin.createStorage());
                 ChooseItemGUI.init();
 
                 AdminToolGUI.createBlacklist();
                 AdminToolGUI.createCustomItems();
             } catch (Exception e) {
-                plugin.getLogger().log(Level.SEVERE, "Failed to reload", e);
+                Log.error("Failed to reload", e);
             }
             cb.run();
         });
     }
 
-    public void loadCfg() throws Exception {
+    private void migrateConfig() {
+        final int previousConfigVersion = config.getInteger("config-version", -1);
+        final int currentConfigVersion = 2;
+        config.addDefault("config-version", currentConfigVersion);
+        if (currentConfigVersion < previousConfigVersion) {
+            Log.warn("You are downgrading Orderium. This may cause issues and is not supported.");
+            return;
+        }
+            if (previousConfigVersion == -1) ConfigMigration.migrateV1(config);
+        if (previousConfigVersion == 1) ConfigMigration.migrateV2(config);
+        if (previousConfigVersion == 2) ConfigMigration.migrateV3(config);
+
+        config.addComment("config-version", "DO NOT TOUCH THIS FIELD!");
+    }
+
+    public boolean loadCfg() {
         checkFiles();
         try {
             this.config = ConfigFile.loadConfig(configFile);
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to load config file", e);
-            return;
+            Log.error("Failed to load config file", e);
+            return false;
         }
         // CONFIG
         setDefaults();
-
-        // TODO: Have a better structure for migrating config
-        final int previousConfigVersion = config.getInteger("config-version", -1);
-        final int currentConfigVersion = 2;
-        config.addDefault("config-version", currentConfigVersion);
-        if (previousConfigVersion != -1) {
-            if (previousConfigVersion > currentConfigVersion) {
-                Log.warn("You are downgrading the plugin. This is not supported");
-            }
-            config.set("config-version", 2);
-
-            if (previousConfigVersion < 2) {
-                config.save();
-            }
-        } else config.save();
+        migrateConfig();
 
 
 //        storageMethod = StorageMethod.fromString(config.getString("storage.method"));
@@ -247,11 +246,14 @@ public class ConfigCache {
         for (final String s : rawDataComponents) {
             final DataComponentType.Valued<?> dataComponentType = ConvertUtils.getDataComponentType(s);
             if (dataComponentType == null) {
-                plugin.getLogger().severe("Failed to get data component type with identifier " + s);
+                Log.warn("Failed to get data component type with identifier " + s);
                 continue;
             }
             similarityCheck.add(dataComponentType);
         }
+
+        orderCommandAliases.clear();
+        orderCommandAliases.addAll(config.getStringList("order-command-aliases"));
 
         orderCreationSuccessful = config.getString("messages.create-order-success");
         invalidInput = config.getString("messages.invalid-input");
@@ -292,7 +294,7 @@ public class ConfigCache {
 
         searchLine = config.getInteger("gui.search-sign.search-line");
         lines = config.getStringList("gui.search-sign.lines");
-        signBlock = plugin.getDataCache().getBlockType(config.getString("gui.search-sign.type"));
+        signBlock = DataCache.INSTANCE.getBlockType(config.getString("gui.search-sign.type"));
 
         deliverTitle = config.getString("gui.delivery.title");
         deliverRows = config.getInteger("gui.delivery.rows");
@@ -344,6 +346,8 @@ public class ConfigCache {
         cancelOrderCancelHover = config.getString("gui.cancel-order.cancel-tooltip");
         cancelOrderConfirmLabel = config.getString("gui.cancel-order.confirm-button");
         cancelOrderConfirmHover = config.getString("gui.cancel-order.confirm-tooltip");
+
+        return true;
     }
 
     private void setDefaults() {
@@ -410,6 +414,13 @@ public class ConfigCache {
         );
 
         config.addDefault("shulker-delivering", true, "Whether to allow players to deliver orders with items in shulker boxes");
+
+        config.addDefault("order-command-aliases", List.of("order", "orders"),
+                """
+                        Execute any of these commands (aliases) open the main GUI
+                        You need to restart the server to take effects
+                        """
+        );
 
         // MESSAGES
         config.addDefault("messages.create-order-success", "<gray>Your order has been created");
@@ -602,7 +613,7 @@ public class ConfigCache {
         try {
             configFile.createNewFile();
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to create plugin files", e);
+            Log.error("Failed to create plugin files", e);
         }
     }
 }

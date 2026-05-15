@@ -8,10 +8,10 @@ import java.util.logging.Logger;
 import static me.karven.orderium.load.Orderium.plugin;
 
 public class Log {
-    private static Logger logger;
+    private static final Logger logger = Logger.getLogger("Orderium");
 
     public static void init() {
-        Log.logger = plugin.getLogger();
+//        Log.logger = plugin.getLogger();
     }
 
     public static void error(String message, Throwable exception) {
