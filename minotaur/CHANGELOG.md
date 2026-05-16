@@ -1,1 +1,3 @@
-- Add minimum price to config
+- Items are now obtained from the server (nms)
+- Default blacklisted items are removed
+- Added aliases for the `orders` command
