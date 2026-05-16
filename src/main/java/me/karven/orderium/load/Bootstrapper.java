@@ -16,13 +16,28 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Predicate;
+
 import static me.karven.orderium.data.ConfigCache.cache;
 import static me.karven.orderium.load.Orderium.plugin;
 
 @SuppressWarnings({"UnstableApiUsage", "unused"})
 public class Bootstrapper implements PluginBootstrap {
 
+    private static @NotNull Predicate<CommandSourceStack> permission(@NotNull String permission) {
+        return predicate ->
+                predicate.getExecutor() != null &&
+                predicate.getExecutor().hasPermission("orderium." + permission);
+    }
+
+    private static @NotNull Predicate<CommandSourceStack> playerAndPermission(@NotNull String permission) {
+        return predicate ->
+                predicate.getExecutor() instanceof final Player player &&
+                player.hasPermission("orderium." + permission);
+    }
+
     private static LiteralCommandNode<CommandSourceStack> getOrderCmd(String alias) {
+
         return Commands.literal(alias)
                 .requires(predicate -> predicate.getExecutor() instanceof Player)
                 .executes(ctx -> {
@@ -43,24 +58,23 @@ public class Bootstrapper implements PluginBootstrap {
                 .build();
     }
 
-    private static LiteralCommandNode<CommandSourceStack> getOrderiumCmd(String alias) {
-        LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal(alias);
+    private static LiteralCommandNode<CommandSourceStack> getOrderiumCmd() {
+        LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("orderium");
+
         builder
-                .requires(predicate -> (predicate.getSender().hasPermission("orderium.admin")))
+                .requires(permission("admin"))
                 .then(Commands.literal("reload")
-                        .requires(predicate -> predicate.getSender().hasPermission("orderium.admin.reload"))
+                        .requires(permission("admin.reload"))
                         .executes(ctx -> {
-                            cache.reload(() -> ctx.getSource().getSender().sendRichMessage("<green>Orderium reloaded"));
+                            assert ctx.getSource().getExecutor() != null;
+                            cache.reload(() -> ctx.getSource().getExecutor().sendRichMessage("<green>Orderium reloaded"));
                             return 1;
                         })
                 )
                 .then(Commands.literal("blacklist")
-                        .requires(predicate ->
-                                predicate.getExecutor() != null &&
-                                predicate.getExecutor().hasPermission("orderium.admin.blacklist") &&
-                                predicate.getExecutor() instanceof Player)
+                        .requires(playerAndPermission("admin.blacklist"))
                         .executes(ctx -> {
-                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 0;
+                            if (!(ctx.getSource().getExecutor() instanceof final Player p)) return 2;
 
                             PlayerUtils.openGUI(p, AdminToolGUI.getBlacklistGUI(), true);
 
@@ -68,46 +82,16 @@ public class Bootstrapper implements PluginBootstrap {
                         })
                 )
                 .then(Commands.literal("custom_items")
-                        .requires(predicate ->
-                                predicate.getExecutor() != null &&
-                                        predicate.getExecutor().hasPermission("orderium.admin.custom-items") &&
-                                        predicate.getExecutor() instanceof Player)
+                        .requires(playerAndPermission("admin.custom-items"))
                         .executes(ctx -> {
-                            if (!(ctx.getSource().getExecutor() instanceof Player p)) return 0;
+                            if (!(ctx.getSource().getExecutor() instanceof final Player p)) return 2;
 
                             PlayerUtils.openGUI(p, AdminToolGUI.getCustomItemsGUI(), true);
 
                             return 1;
                         })
-                );
-
-//        builder
-//                .then(
-//                        Commands.literal("test_gen") // this command creates a random order
-//                                .executes(ctx -> {
-//                                    Player p = (Player) ctx.getSource().getExecutor();
-//                                    assert p != null;
-//                                    ConfigCache cache = plugin.getConfigs();
-//                                    DataCache dataCache = plugin.getDataCache();
-//                                    Random random = new Random();
-//                                    Collection<OrderItem> items = dataCache.getItems(SortTypes.A_Z);
-//                                    Optional<OrderItem> randomItem = items.stream()
-//                                            .skip((int) (items.size() * Math.random()))
-//                                            .findFirst();
-//                                    if (randomItem.isEmpty()) return 1;
-//                                    final Order.Response response = Order.create(p, randomItem.get().getItemStack(), random.nextDouble() * 10, random.nextInt(1, 10));
-//
-//                                    switch (response) {
-//                                        case INVALID -> p.sendRichMessage(cache.getInvalidInput());
-//                                        case FAIL -> p.sendRichMessage(cache.getNotEnoughMoney());
-//                                        case SUCCESS -> {
-//                                            p.sendRichMessage(cache.getOrderCreationSuccessful());
-//                                            PlayerUtils.playSound(p, cache.getNewOrderSound());
-//                                        }
-//                                    }
-//                                    return 1;
-//                                })
-//                );
+                )
+        ;
         return builder.build();
     }
 
@@ -117,7 +101,7 @@ public class Bootstrapper implements PluginBootstrap {
             for (final String orderAlias : cache.orderCommandAliases) {
                 e.registrar().register(getOrderCmd(orderAlias));
             }
-            e.registrar().register(getOrderiumCmd("orderium"));
+            e.registrar().register(getOrderiumCmd());
         });
     }
 
