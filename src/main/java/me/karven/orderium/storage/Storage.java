@@ -2,7 +2,7 @@ package me.karven.orderium.storage;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import me.karven.orderium.data.ConfigCache;
+import me.karven.orderium.config.ConfigCache;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
@@ -26,7 +26,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.ConfigCache.cache;
 import static me.karven.orderium.load.Orderium.plugin;
 
 public abstract class Storage {

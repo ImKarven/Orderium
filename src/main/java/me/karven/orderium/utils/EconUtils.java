@@ -5,7 +5,7 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.ConfigCache.cache;
 import static me.karven.orderium.load.Orderium.plugin;
 
 public class EconUtils {

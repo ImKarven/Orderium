@@ -18,7 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.UUID;
 
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.ConfigCache.cache;
 import static me.karven.orderium.load.Orderium.plugin;
 
 // TODO: Replace `item` with OrderItem instead of ItemStack.

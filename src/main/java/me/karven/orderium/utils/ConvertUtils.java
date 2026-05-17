@@ -5,7 +5,7 @@ import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
 import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.SlotInfo;
+import me.karven.orderium.config.util.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.CustomItem;
@@ -23,6 +23,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
 import org.intellij.lang.annotations.Subst;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,7 +34,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.ConfigCache.cache;
 import static me.karven.orderium.load.Orderium.plugin;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -42,8 +43,8 @@ public class ConvertUtils {
     private static final Registry<DataComponentType> dataComponentTypeRegistry = Registry.DATA_COMPONENT_TYPE;
     private static final MiniMessage mm = MiniMessage.miniMessage();
 
-    public static ItemType getItemType(@KeyPattern final String identifier) {
-        @Subst("ignored")
+    public static ItemType getItemType(final @Nullable String identifier) {
+        if (identifier == null) return ItemType.STONE;
         final ItemType itemType = itemRegistry.get(TypedKey.create(RegistryKey.ITEM, Key.key(identifier)));
         if (itemType == null) return ItemType.STONE;
         return itemType;

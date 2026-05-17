@@ -1,11 +1,12 @@
-package me.karven.orderium.data;
+package me.karven.orderium.config;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import io.papermc.paper.datacomponent.DataComponentType;
+import me.karven.orderium.config.util.SlotInfo;
+import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.ChooseItemGUI;
 import me.karven.orderium.obj.OrderStatus;
-import me.karven.orderium.obj.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.obj.StorageMethod;
 import me.karven.orderium.utils.ConvertUtils;
@@ -153,6 +154,8 @@ public class ConfigCache {
 
     public final List<DataComponentType.Valued<?>> similarityCheck = new ArrayList<>();
 
+    private static final int CURRENT_CONFIG_VERSION = 3;
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public ConfigCache() {
         // The constructor runs before the server even exists (when the class is loaded) so we must not use the API here
@@ -182,21 +185,6 @@ public class ConfigCache {
         });
     }
 
-    private void migrateConfig() {
-        final int previousConfigVersion = config.getInteger("config-version", -1);
-        final int currentConfigVersion = 3;
-        config.addDefault("config-version", currentConfigVersion);
-        if (currentConfigVersion < previousConfigVersion) {
-            Log.warn("You are downgrading Orderium. This may cause issues and is not supported.");
-            return;
-        }
-            if (previousConfigVersion == -1) ConfigMigration.migrateV1(config);
-        if (previousConfigVersion == 1) ConfigMigration.migrateV2(config);
-        if (previousConfigVersion == 2) ConfigMigration.migrateV3(config);
-
-        config.addComment("config-version", "DO NOT TOUCH THIS FIELD!");
-    }
-
     public boolean loadCfg() {
         checkFiles();
         try {
@@ -206,8 +194,20 @@ public class ConfigCache {
             return false;
         }
         // CONFIG
-        setDefaults();
-        migrateConfig();
+
+
+        final int previousConfigVersion = config.getInteger("config-version", -1);
+        if (previousConfigVersion < 3) setDefaults();
+        config.addDefault("config-version", CURRENT_CONFIG_VERSION);
+        if (CURRENT_CONFIG_VERSION < previousConfigVersion) {
+            Log.warn("You are downgrading Orderium. This may cause issues and is not supported.");
+        }
+        if (previousConfigVersion == -1) ConfigMigration.migrateV1(config);
+        if (previousConfigVersion == 1) ConfigMigration.migrateV2(config);
+        if (previousConfigVersion == 2) ConfigMigration.migrateV3(config);
+        if (previousConfigVersion == 3) ConfigMigration.migrateV4(config);
+
+        config.addComment("config-version", "DO NOT TOUCH THIS FIELD!");
 
 
 //        storageMethod = StorageMethod.fromString(config.getString("storage.method"));

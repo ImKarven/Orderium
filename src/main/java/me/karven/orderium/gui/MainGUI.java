@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.ConfigCache.cache;
 import static me.karven.orderium.load.Orderium.plugin;
 import static me.karven.orderium.utils.ConvertUtils.ceil_div;
 

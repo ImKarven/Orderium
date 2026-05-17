@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.ConfigCache.cache;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ManageOrderDialog {

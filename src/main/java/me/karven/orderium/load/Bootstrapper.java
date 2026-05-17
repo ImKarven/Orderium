@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
 
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.ConfigCache.cache;
 import static me.karven.orderium.load.Orderium.plugin;
 
 @SuppressWarnings({"UnstableApiUsage", "unused"})

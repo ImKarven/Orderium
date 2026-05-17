@@ -18,7 +18,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.ConfigCache.cache;
 
 @SuppressWarnings("UnstableApiUsage")
 public class AlgoUtils {

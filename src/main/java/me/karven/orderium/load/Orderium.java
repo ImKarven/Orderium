@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
 
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.ConfigCache.cache;
 
 public final class Orderium extends JavaPlugin {
     public static final Orderium plugin = new Orderium();

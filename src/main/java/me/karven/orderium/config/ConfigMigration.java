@@ -1,4 +1,4 @@
-package me.karven.orderium.data;
+package me.karven.orderium.config;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.utils.Log;
@@ -30,5 +30,10 @@ public class ConfigMigration {
         } catch (Exception e) {
             Log.error("Failed to migrate config version 3", e);
         }
+    }
+
+    public static void migrateV4(final @NotNull ConfigFile config) {
+        config.set("config-version", 4);
+
     }
 }
