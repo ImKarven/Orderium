@@ -2,6 +2,7 @@ package me.karven.orderium.load;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
+import me.karven.orderium.config.Config;
 import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.ChooseItemGUI;
@@ -30,6 +31,9 @@ public final class Orderium extends JavaPlugin {
     public static final Orderium plugin = new Orderium();
     public static boolean isFolia;
 
+    private final boolean shouldEnable;
+
+    private final Config config;
     private Storage storage;
     private Economy econ;
     public final MiniMessage mm = MiniMessage.miniMessage();
@@ -40,15 +44,30 @@ public final class Orderium extends JavaPlugin {
 
     public void setStorage(Storage storage) { this.storage = storage; }
 
+    public Orderium() {
+        Config tryConfig = null;
+        try {
+            tryConfig = new Config();
+        } catch (Exception e) {
+            Log.error("Failed to load config", e);
+        }
+        shouldEnable = tryConfig != null;
+        config = tryConfig;
+    }
+
     @Override
     public void onLoad() {
+        if (!shouldEnable) return;
         PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(), PacketListenerPriority.NORMAL);
         PacketEvents.getAPI().getEventManager().registerListener(new ContainerContentListener(), PacketListenerPriority.NORMAL);
     }
 
     @Override
     public void onEnable() {
-//        plugin = this;
+        if (!shouldEnable) {
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
         isFolia = isFolia();
         if (!setupEconomy()) {
             Log.warn("Orderium disabled due to no Vault dependency found!");

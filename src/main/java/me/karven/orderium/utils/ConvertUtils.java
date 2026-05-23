@@ -3,9 +3,9 @@ package me.karven.orderium.utils;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.registry.RegistryKey;
 import io.papermc.paper.registry.TypedKey;
+import me.karven.orderium.config.util.SlotInfo;
 import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.config.util.SlotInfo;
 import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.CustomItem;
@@ -39,13 +39,14 @@ import static me.karven.orderium.load.Orderium.plugin;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ConvertUtils {
-    private static final Registry<ItemType> itemRegistry = Registry.ITEM;
     private static final Registry<DataComponentType> dataComponentTypeRegistry = Registry.DATA_COMPONENT_TYPE;
     private static final MiniMessage mm = MiniMessage.miniMessage();
 
     public static ItemType getItemType(final @Nullable String identifier) {
         if (identifier == null) return ItemType.STONE;
-        final ItemType itemType = itemRegistry.get(TypedKey.create(RegistryKey.ITEM, Key.key(identifier)));
+        final String[] components = identifier.split(":");
+        if (components.length != 2) return ItemType.STONE;
+        final ItemType itemType = Registry.ITEM.get(new NamespacedKey(components[0], components[1]));
         if (itemType == null) return ItemType.STONE;
         return itemType;
     }

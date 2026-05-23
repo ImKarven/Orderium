@@ -1,9 +1,7 @@
 package me.karven.orderium.obj;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Arrays;
-import java.util.List;
+import org.jetbrains.annotations.Nullable;
 
 public enum SortTypes {
     MOST_MONEY_PER_ITEM("most-money-per-item"),
@@ -32,10 +30,11 @@ public enum SortTypes {
         this.identifier = identifier;
     }
 
-    public static SortTypes fromIdentifier(String identifier) {
-        List<SortTypes> sortType = Arrays.stream(SortTypes.values()).filter(s -> s.is(identifier)).toList();
-        if (sortType.isEmpty()) return null;
-        return sortType.getFirst();
+    public static @Nullable SortTypes fromIdentifier(String identifier) {
+        for (SortTypes sortType : SortTypes.values()) {
+            if (sortType.identifier.equals(identifier)) return sortType;
+        }
+        return null;
     }
 
     private boolean is(String identifier) {
