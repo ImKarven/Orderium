@@ -28,6 +28,9 @@ import static me.karven.orderium.data.ConfigCache.cache;
 
 public final class Orderium extends JavaPlugin {
     public static final Orderium plugin = new Orderium();
+    public final int bStatsID = 27569;
+    public Metrics metrics = null;
+    public boolean shouldEnable = true; // This would be false if the config file failed to load
     public static boolean isFolia;
 
     private Storage storage;
@@ -41,34 +44,26 @@ public final class Orderium extends JavaPlugin {
     public void setStorage(Storage storage) { this.storage = storage; }
 
     @Override
-    public void onLoad() {
-        PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(), PacketListenerPriority.NORMAL);
-        PacketEvents.getAPI().getEventManager().registerListener(new ContainerContentListener(), PacketListenerPriority.NORMAL);
-    }
-
-    @Override
     public void onEnable() {
-//        plugin = this;
-        isFolia = isFolia();
+        if (!plugin.shouldEnable) {
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
         if (!setupEconomy()) {
             Log.warn("Orderium disabled due to no Vault dependency found!");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        UpdateUtils.init();
-        Bukkit.getPluginManager().registerEvents(new GUIListener(), this);
-        Log.info("Orderium enabled");
-        Storage.init(); // need testing
+        isFolia = isFolia();
+
+        Storage.init();
         storage = createStorage();
         EconUtils.init();
-        AdminToolGUI.init(); // need testing
+        AdminToolGUI.init();
 
-        ChooseItemGUI.init(); // need testing
+        ChooseItemGUI.init();
 
-        if (cache.bStats) {
-            final int pluginId = 27569;
-            new Metrics(this, pluginId);
-        }
+        reloadBStats();
 
         if (cache.checkForUpdates) {
             Bukkit.getAsyncScheduler().runNow(this, task -> {
@@ -79,16 +74,20 @@ public final class Orderium extends JavaPlugin {
             });
         }
 
-        Bukkit.getPluginManager().registerEvents(new DisconnectListener(), this);
+        Bukkit.getPluginManager().registerEvents(new GUIListener(), this);
         Bukkit.getPluginManager().registerEvents(new DialogListener(), this);
+        Bukkit.getPluginManager().registerEvents(new DisconnectListener(), this);
+        PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(), PacketListenerPriority.NORMAL);
+        PacketEvents.getAPI().getEventManager().registerListener(new ContainerContentListener(), PacketListenerPriority.NORMAL);
 
         Bukkit.getAsyncScheduler().runAtFixedRate(this, task -> {
-
             for (Player p : Bukkit.getOnlinePlayers()) {
                 DispatchUtil.entity(p, () -> PDCUtils.removeCollected(p));
             }
 
         }, 1, 1, TimeUnit.MINUTES);
+
+        Log.info("Orderium enabled");
     }
 
     public Storage createStorage() {
@@ -105,10 +104,12 @@ public final class Orderium extends JavaPlugin {
         }
     }
 
+    private boolean checkVault() {
+        return getServer().getPluginManager().getPlugin("Vault") != null;
+    }
+
     private boolean setupEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            return false;
-        }
+        if (!checkVault()) return false;
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
             return false;
@@ -123,6 +124,17 @@ public final class Orderium extends JavaPlugin {
             return true;
         } catch (ClassNotFoundException e) {
             return false;
+        }
+    }
+
+    public void reloadBStats() {
+
+        if (cache.bStats) {
+            if (metrics == null)
+                metrics = new Metrics(plugin, bStatsID);
+        } else if (metrics != null) {
+            metrics.shutdown();
+            metrics = null;
         }
     }
 }

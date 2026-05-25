@@ -156,19 +156,20 @@ public class ConfigCache {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public ConfigCache() {
         // The constructor runs before the server even exists (when the class is loaded) so we must not use the API here
-        final File pluginFolder = new File("plugins");
-        final File dataFolder = new File(pluginFolder, "Orderium");
+        final File dataFolder = new File("plugins" + File.separator + "Orderium");
         if (!dataFolder.exists() || !dataFolder.isDirectory()) dataFolder.mkdirs();
         this.configFile = new File(dataFolder, "config.yml");
-        if (!loadCfg()) {
-            Log.warn("Failed to load config.");
-        }
+        if (loadCfg()) return;
+        Log.warn("Failed to load config. Orderium will not be enabled.");
+        plugin.shouldEnable = false;
     }
 
     public void reload(Runnable cb) {
         Bukkit.getAsyncScheduler().runNow(plugin, task -> {
             try {
                 loadCfg();
+
+                plugin.reloadBStats();
 
                 plugin.setStorage(plugin.createStorage());
                 ChooseItemGUI.init();
