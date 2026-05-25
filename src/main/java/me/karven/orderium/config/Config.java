@@ -2,7 +2,8 @@ package me.karven.orderium.config;
 
 import com.google.common.io.Files;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
-import me.karven.orderium.config.util.guiconfig.*;
+import me.karven.orderium.config.util.SignGUIConfig;
+import me.karven.orderium.config.util.gui.*;
 
 import java.io.File;
 import java.io.IOException;

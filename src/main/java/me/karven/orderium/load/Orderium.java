@@ -31,7 +31,13 @@ public final class Orderium extends JavaPlugin {
     public static final Orderium plugin = new Orderium();
     public static boolean isFolia;
 
-    private final boolean shouldEnable;
+    private final SignGUI SIGN_LISTENER = new SignGUI();
+    private final ContainerContentListener CONTAINER_CONTENT_LISTENER = new ContainerContentListener();
+    private final GUIListener GUI_LISTENER = new GUIListener();
+    private final DisconnectListener DISCONNECT_LISTENER = new DisconnectListener();
+    private final DialogListener DIALOG_LISTENER = new DialogListener();
+
+    private static boolean shouldEnable = true;
 
     private final Config config;
     private Storage storage;
@@ -49,17 +55,10 @@ public final class Orderium extends JavaPlugin {
         try {
             tryConfig = new Config();
         } catch (Exception e) {
+            shouldEnable = false;
             Log.error("Failed to load config", e);
         }
-        shouldEnable = tryConfig != null;
         config = tryConfig;
-    }
-
-    @Override
-    public void onLoad() {
-        if (!shouldEnable) return;
-        PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(), PacketListenerPriority.NORMAL);
-        PacketEvents.getAPI().getEventManager().registerListener(new ContainerContentListener(), PacketListenerPriority.NORMAL);
     }
 
     @Override
@@ -68,14 +67,21 @@ public final class Orderium extends JavaPlugin {
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
-        isFolia = isFolia();
         if (!setupEconomy()) {
             Log.warn("Orderium disabled due to no Vault dependency found!");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        isFolia = isFolia();
+        PacketEvents.getAPI().getEventManager().registerListener(SIGN_LISTENER, PacketListenerPriority.NORMAL);
+        PacketEvents.getAPI().getEventManager().registerListener(CONTAINER_CONTENT_LISTENER, PacketListenerPriority.NORMAL);
+        
+        Bukkit.getPluginManager().registerEvents(GUI_LISTENER, this);
+        Bukkit.getPluginManager().registerEvents(DISCONNECT_LISTENER, this);
+        Bukkit.getPluginManager().registerEvents(DIALOG_LISTENER, this);
+
         UpdateUtils.init();
-        Bukkit.getPluginManager().registerEvents(new GUIListener(), this);
         Log.info("Orderium enabled");
         Storage.init(); // need testing
         storage = createStorage();
@@ -97,9 +103,6 @@ public final class Orderium extends JavaPlugin {
                Log.info(mm.deserialize("<aqua>Download it on <green>Modrinth<gray>: <blue><u>https://modrinth.com/plugin/orderium/version/" + newVer));
             });
         }
-
-        Bukkit.getPluginManager().registerEvents(new DisconnectListener(), this);
-        Bukkit.getPluginManager().registerEvents(new DialogListener(), this);
 
         Bukkit.getAsyncScheduler().runAtFixedRate(this, task -> {
 

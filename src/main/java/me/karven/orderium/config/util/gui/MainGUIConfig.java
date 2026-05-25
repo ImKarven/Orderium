@@ -1,10 +1,10 @@
-package me.karven.orderium.config.util.guiconfig;
+package me.karven.orderium.config.util.gui;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.ButtonConfig;
 import me.karven.orderium.config.util.OrderConfig;
 import me.karven.orderium.config.util.SortButtonConfig;
-import me.karven.orderium.config.util.SortsOrder;
+import me.karven.orderium.config.util.SortsOrderConfig;
 import me.karven.orderium.obj.SortTypes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -17,7 +17,7 @@ import java.util.stream.IntStream;
 
 public class MainGUIConfig extends CommonGUIConfig {
     public final @NotNull OrderConfig orderConfig = new OrderConfig("order");
-    public final @NotNull SortsOrder sortsOrder = new SortsOrder("sorts-order");
+    public final @NotNull SortsOrderConfig sortsOrderConfig = new SortsOrderConfig("sorts-order");
     public final @NotNull SortButtonConfig sortButton = new SortButtonConfig("buttons.sort");
     public final @NotNull ButtonConfig refreshButton = new ButtonConfig("buttons.refresh");
     public final @NotNull ButtonConfig yourOrdersButton = new ButtonConfig("buttons.your-orders");
@@ -32,7 +32,7 @@ public class MainGUIConfig extends CommonGUIConfig {
     @Override
     public void reload() {
         orderConfig.reload(config);
-        sortsOrder.reload(config);
+        sortsOrderConfig.reload(config);
         sortButton.reload(config);
         sortButton.reload(config);
         refreshButton.reload(config);
@@ -46,7 +46,7 @@ public class MainGUIConfig extends CommonGUIConfig {
     @Override
     public void save() {
         orderConfig.save(config);
-        sortsOrder.save(config);
+        sortsOrderConfig.save(config);
         sortButton.save(config);
         refreshButton.save(config);
         yourOrdersButton.save(config);
@@ -59,7 +59,7 @@ public class MainGUIConfig extends CommonGUIConfig {
     @Override
     public void setDefault() {
         orderConfig.setDefault(config);
-        sortsOrder.setDefault(config);
+        sortsOrderConfig.setDefault(config);
         sortButton.setDefault(config);
         refreshButton.setDefault(config);
         yourOrdersButton.setDefault(config);
@@ -73,7 +73,7 @@ public class MainGUIConfig extends CommonGUIConfig {
     public void migrateV5(final @NotNull ConfigFile oldConfig) {
         title = oldConfig.getString("gui.main.title");
         orderConfig.migrateV5(oldConfig, "gui.main.order");
-        sortsOrder.migrateV5(oldConfig, "gui.main.sorts-order");
+        sortsOrderConfig.migrateV5(oldConfig, "gui.main.sorts-order");
         sortButton.migrateV5(oldConfig, "gui.main.buttons.sort");
         refreshButton.migrateV5(oldConfig, "gui.main.buttons.refresh");
         yourOrdersButton.migrateV5(oldConfig, "gui.main.buttons.your-orders");
@@ -100,10 +100,10 @@ public class MainGUIConfig extends CommonGUIConfig {
         orderConfig.lore.add("<white>Click to deliver <aqua><player><white>'s order");
         orderConfig.slots.addAll(IntStream.range(0, 45).boxed().toList());
 
-        sortsOrder.orderArray.add(SortTypes.MOST_MONEY_PER_ITEM);
-        sortsOrder.orderArray.add(SortTypes.MOST_DELIVERED);
-        sortsOrder.orderArray.add(SortTypes.RECENTLY_LISTED);
-        sortsOrder.orderArray.add(SortTypes.MOST_PAID);
+        sortsOrderConfig.orderArray.add(SortTypes.MOST_MONEY_PER_ITEM);
+        sortsOrderConfig.orderArray.add(SortTypes.MOST_DELIVERED);
+        sortsOrderConfig.orderArray.add(SortTypes.RECENTLY_LISTED);
+        sortsOrderConfig.orderArray.add(SortTypes.MOST_PAID);
 
         backButton.slot = 45;
         backButton.itemStack = ItemStack.of(Material.ARROW);

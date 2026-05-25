@@ -1,4 +1,4 @@
-package me.karven.orderium.config.util.guiconfig;
+package me.karven.orderium.config.util.gui;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.ButtonConfig;

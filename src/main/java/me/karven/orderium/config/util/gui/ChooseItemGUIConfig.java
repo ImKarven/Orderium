@@ -1,9 +1,9 @@
-package me.karven.orderium.config.util.guiconfig;
+package me.karven.orderium.config.util.gui;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.ButtonConfig;
 import me.karven.orderium.config.util.SortButtonConfig;
-import me.karven.orderium.config.util.SortsOrder;
+import me.karven.orderium.config.util.SortsOrderConfig;
 import me.karven.orderium.obj.SortTypes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ChooseItemGUIConfig extends CommonGUIConfig {
-    public final @NotNull SortsOrder sortsOrder = new SortsOrder("sorts-order");
+    public final @NotNull SortsOrderConfig sortsOrderConfig = new SortsOrderConfig("sorts-order");
     public final @NotNull SortButtonConfig sortButton = new SortButtonConfig("buttons.sort");
     public final @NotNull ButtonConfig nextButton = new ButtonConfig("buttons.next");
     public final @NotNull ButtonConfig backButton = new ButtonConfig("buttons.back");
@@ -28,7 +28,7 @@ public class ChooseItemGUIConfig extends CommonGUIConfig {
     public void reload() {
         title = config.getString("title");
         rows = config.getInteger("rows");
-        sortsOrder.reload(config);
+        sortsOrderConfig.reload(config);
         sortButton.reload(config);
         nextButton.reload(config);
         backButton.reload(config);
@@ -39,7 +39,7 @@ public class ChooseItemGUIConfig extends CommonGUIConfig {
     public void save() {
         config.set("title", title);
         config.set("rows", rows);
-        sortsOrder.save(config);
+        sortsOrderConfig.save(config);
         sortButton.save(config);
         nextButton.save(config);
         backButton.save(config);
@@ -50,7 +50,7 @@ public class ChooseItemGUIConfig extends CommonGUIConfig {
     public void setDefault() {
         config.addDefault("title", title);
         config.addDefault("rows", rows);
-        sortsOrder.setDefault(config);
+        sortsOrderConfig.setDefault(config);
         sortButton.setDefault(config);
         nextButton.setDefault(config);
         backButton.setDefault(config);
@@ -61,7 +61,7 @@ public class ChooseItemGUIConfig extends CommonGUIConfig {
     public void migrateV5(final @NotNull ConfigFile oldConfig) {
         title = oldConfig.getString("gui.choose-item.title");
         rows = 6;
-        sortsOrder.migrateV5(oldConfig, "gui.choose-item.sorts-order");
+        sortsOrderConfig.migrateV5(oldConfig, "gui.choose-item.sorts-order");
         sortButton.migrateV5(oldConfig, "gui.choose-item.buttons.sort");
         nextButton.migrateV5(oldConfig, "gui.choose-item.buttons.next");
         backButton.migrateV5(oldConfig, "gui.choose-item.buttons.back");
@@ -79,8 +79,8 @@ public class ChooseItemGUIConfig extends CommonGUIConfig {
     public void applyDefaultValues() {
         title = "Choose Your Item";
         rows = 6;
-        sortsOrder.orderArray.add(SortTypes.A_Z);
-        sortsOrder.orderArray.add(SortTypes.Z_A);
+        sortsOrderConfig.orderArray.add(SortTypes.A_Z);
+        sortsOrderConfig.orderArray.add(SortTypes.Z_A);
         sortButton.slot = 48;
         sortButton.lore.add("");
         sortButton.lore.add("<white> • <a-z>");

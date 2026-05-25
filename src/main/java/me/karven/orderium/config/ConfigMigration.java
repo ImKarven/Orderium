@@ -262,6 +262,6 @@ public class ConfigMigration {
         final ConfigFile oldConfigFile = config.configFile;
         config.mainGUIConfig.title = oldConfigFile.getString("gui.main.title");
         final List<String> sortsOrderString = oldConfigFile.getStringList("gui.main.sorts-order");
-        config.mainGUIConfig.sortsOrder.reload(sortsOrderString);
+        config.mainGUIConfig.sortsOrderConfig.reload(sortsOrderString);
     }
 }

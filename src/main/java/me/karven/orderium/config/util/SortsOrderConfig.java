@@ -8,11 +8,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SortsOrder {
+public class SortsOrderConfig {
     private final String path;
     public final @NotNull ArrayList<@NotNull SortTypes> orderArray = new ArrayList<>();
 
-    public SortsOrder(final @NotNull String path) {
+    public SortsOrderConfig(final @NotNull String path) {
         this.path = path;
     }
 
