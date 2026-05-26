@@ -2,7 +2,7 @@ package me.karven.orderium.config.util.gui;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.ButtonConfig;
-import me.karven.orderium.config.util.GUIConfig;
+import me.karven.orderium.config.util.GUIConfigFile;
 import me.karven.orderium.config.util.EnchantmentConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -12,7 +12,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class EnchantGUIConfig extends GUIConfig {
+public class EnchantGUIConfig extends GUIConfigFile {
+    public String title;
+    public int rows;
     public final @NotNull EnchantmentConfig enchantmentConfig = new EnchantmentConfig();
     public final @NotNull ButtonConfig confirmButton = new ButtonConfig("buttons.confirm");
 

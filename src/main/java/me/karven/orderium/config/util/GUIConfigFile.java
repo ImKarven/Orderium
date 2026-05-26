@@ -5,12 +5,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-public abstract class GUIConfig {
+public abstract class GUIConfigFile {
     protected final @NotNull ConfigFile config;
-    public String title;
-    public int rows;
 
-    protected GUIConfig(final @NotNull String guiName) {
+    protected GUIConfigFile(final @NotNull String guiName) {
         try {
             config = ConfigFile.loadConfig(new File("plugins" + File.separator + "Orderium" + File.separator + "gui" + File.separator + guiName + ".yml"));
         } catch (Exception e) {

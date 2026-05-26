@@ -12,7 +12,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class MainGUIConfig extends GUIConfig {
+public class MainGUIConfig extends GUIConfigFile {
+    public String title;
+    public int rows;
     public final @NotNull OrderConfig orderConfig = new OrderConfig("order");
     public final @NotNull SortsOrderConfig sortsOrderConfig = new SortsOrderConfig("sorts-order");
     public final @NotNull SortButtonConfig sortButton = new SortButtonConfig("buttons.sort");

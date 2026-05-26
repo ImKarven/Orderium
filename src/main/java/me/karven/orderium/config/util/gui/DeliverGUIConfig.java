@@ -1,10 +1,12 @@
 package me.karven.orderium.config.util.gui;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
-import me.karven.orderium.config.util.GUIConfig;
+import me.karven.orderium.config.util.GUIConfigFile;
 import org.jetbrains.annotations.NotNull;
 
-public class DeliverGUIConfig extends GUIConfig {
+public class DeliverGUIConfig extends GUIConfigFile {
+    public String title;
+    public int rows;
     public DeliverGUIConfig() {
         super("deliver");
     }

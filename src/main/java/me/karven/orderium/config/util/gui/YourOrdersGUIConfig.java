@@ -2,7 +2,7 @@ package me.karven.orderium.config.util.gui;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.ButtonConfig;
-import me.karven.orderium.config.util.GUIConfig;
+import me.karven.orderium.config.util.GUIConfigFile;
 import me.karven.orderium.config.util.OrderConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -13,7 +13,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class YourOrdersGUIConfig extends GUIConfig {
+public class YourOrdersGUIConfig extends GUIConfigFile {
+    public String title;
+    public int rows;
     public final @NotNull OrderConfig orderConfig = new OrderConfig("order");
     public final @NotNull ButtonConfig newOrderButton = new ButtonConfig("buttons.new-order");
     
