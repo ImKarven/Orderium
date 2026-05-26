@@ -23,6 +23,7 @@ import static me.karven.orderium.load.Orderium.plugin;
 
 @SuppressWarnings({"UnstableApiUsage", "unused"})
 public class Bootstrapper implements PluginBootstrap {
+    public static boolean commandRegistration = true;
 
     private static @NotNull Predicate<CommandSourceStack> permission(@NotNull String permission) {
         return predicate ->
@@ -98,6 +99,7 @@ public class Bootstrapper implements PluginBootstrap {
     @Override
     public void bootstrap(@NotNull BootstrapContext ctx) {
         ctx.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, e -> {
+            if (!commandRegistration) return;
             for (final String orderAlias : cache.orderCommandAliases) {
                 e.registrar().register(getOrderCmd(orderAlias));
             }
