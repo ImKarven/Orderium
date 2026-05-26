@@ -34,6 +34,9 @@ permissions:
   orderium.bypass.max-collect-per-minute:
     default: op
     description: Bypass max-collect-per-minute value
+  orderium.use:
+    default: true
+    description: Access to the orders command
 
 dependencies:
   server:

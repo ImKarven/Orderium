@@ -1,3 +1,6 @@
-- Fixed an issue with false warning of downgrading plugin.
-
-If you didn't downgrade the plugin, you can safely ignore the message.
+- Removed empty items.db file
+- Fix bStats not working correctly with config option
+- Fix packetevents listeners spamming errors if the plugin is disabled
+- Fix not recognizing economy plugin if it enables after Orderium
+- Fix commands not unregistered if the plugin is disabled
+- Add permission `orderium.use` for executing command `orders`

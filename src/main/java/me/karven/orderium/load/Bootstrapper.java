@@ -40,7 +40,7 @@ public class Bootstrapper implements PluginBootstrap {
     private static LiteralCommandNode<CommandSourceStack> getOrderCmd(String alias) {
 
         return Commands.literal(alias)
-                .requires(predicate -> predicate.getExecutor() instanceof Player)
+                .requires(playerAndPermission("use"))
                 .executes(ctx -> {
                     if (!(ctx.getSource().getExecutor() instanceof Player player)) return 2;
                     MainGUI mainGUI = new MainGUI(player, 0);
