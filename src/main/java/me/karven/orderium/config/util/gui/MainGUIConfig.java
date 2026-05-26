@@ -1,10 +1,7 @@
 package me.karven.orderium.config.util.gui;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
-import me.karven.orderium.config.util.ButtonConfig;
-import me.karven.orderium.config.util.OrderConfig;
-import me.karven.orderium.config.util.SortButtonConfig;
-import me.karven.orderium.config.util.SortsOrderConfig;
+import me.karven.orderium.config.util.*;
 import me.karven.orderium.obj.SortTypes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -15,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class MainGUIConfig extends CommonGUIConfig {
+public class MainGUIConfig extends GUIConfig {
     public final @NotNull OrderConfig orderConfig = new OrderConfig("order");
     public final @NotNull SortsOrderConfig sortsOrderConfig = new SortsOrderConfig("sorts-order");
     public final @NotNull SortButtonConfig sortButton = new SortButtonConfig("buttons.sort");

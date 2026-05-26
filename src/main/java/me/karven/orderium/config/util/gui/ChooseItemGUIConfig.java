@@ -2,6 +2,7 @@ package me.karven.orderium.config.util.gui;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.ButtonConfig;
+import me.karven.orderium.config.util.GUIConfig;
 import me.karven.orderium.config.util.SortButtonConfig;
 import me.karven.orderium.config.util.SortsOrderConfig;
 import me.karven.orderium.obj.SortTypes;
@@ -13,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class ChooseItemGUIConfig extends CommonGUIConfig {
+public class ChooseItemGUIConfig extends GUIConfig {
     public final @NotNull SortsOrderConfig sortsOrderConfig = new SortsOrderConfig("sorts-order");
     public final @NotNull SortButtonConfig sortButton = new SortButtonConfig("buttons.sort");
     public final @NotNull ButtonConfig nextButton = new ButtonConfig("buttons.next");
