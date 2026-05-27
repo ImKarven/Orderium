@@ -4,11 +4,15 @@ import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.action.DialogActionCallback;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.config.util.DialogButtonConfig;
 import me.karven.orderium.config.util.ItemlessItemDialogBodyConfig;
+import me.karven.orderium.config.util.TextDialogInputConfig;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +21,10 @@ import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
 public class NewOrderDialogConfig extends ConfirmationDialogConfig {
+    private static final @NotNull ClickCallback.Options DEFAULT_OPTIONS = ClickCallback.Options.builder().build();
     public final @NotNull ItemlessItemDialogBodyConfig bodyConfig = new ItemlessItemDialogBodyConfig("body");
+    public final @NotNull TextDialogInputConfig amountInputConfig = new TextDialogInputConfig("inputs.amount");
+    public final @NotNull TextDialogInputConfig moneyPerItemInputConfig = new TextDialogInputConfig("inputs.money-per-item");
 
     public NewOrderDialogConfig() {
         super("new-order-dialog");
@@ -25,7 +32,7 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
         noButton = new DialogButtonConfig("buttons.change-item");
     }
 
-    public @NotNull Dialog dialog(final @NotNull ItemStack item) {
+    public @NotNull Dialog dialog(final @NotNull ItemStack item, final @NotNull DialogActionCallback yesAction, final @NotNull DialogActionCallback noAction) {
         final MiniMessage mm = MiniMessage.miniMessage();
         return Dialog.create(builder ->
                 builder.empty()
@@ -33,8 +40,8 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
                                 .builder(mm.deserialize(title))
                                 .body(List.of(bodyConfig.body(item)))
                                 .canCloseWithEscape(canCloseWithEsc)
-                                .afterAction(DialogBase.DialogAfterAction.NONE)
-//                                .inputs() // TODO: add inputs
+                                .afterAction(DialogBase.DialogAfterAction.CLOSE)
+                                .inputs(List.of(amountInputConfig.input("amount"), moneyPerItemInputConfig.input("money-per-item")))
                                 .build()
                         )
                         .type(DialogType.confirmation(
@@ -42,11 +49,13 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
                                         .builder(mm.deserialize(yesButton.label))
                                         .tooltip(mm.deserialize(yesButton.tooltip))
                                         .width(yesButton.width)
+                                        .action(DialogAction.customClick(yesAction, DEFAULT_OPTIONS))
                                         .build(),
                                 ActionButton
                                         .builder(mm.deserialize(noButton.label))
                                         .tooltip(mm.deserialize(noButton.tooltip))
                                         .width(noButton.width)
+                                        .action(DialogAction.customClick(noAction, DEFAULT_OPTIONS))
                                         .build()
                         ))
         );
