@@ -3,6 +3,7 @@ package me.karven.orderium.config;
 import com.google.common.io.Files;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.SignGUIConfig;
+import me.karven.orderium.config.util.dialog.NewOrderDialogConfig;
 import me.karven.orderium.config.util.gui.*;
 
 import java.io.File;
@@ -10,13 +11,8 @@ import java.io.IOException;
 
 public class Config {
     private static final String CONFIG_PATH = "plugins" + File.separator + "Orderium" + File.separator + "config.yml";
-    private static final String GUI_PATH = "plugins" + File.separator + "Orderium" + File.separator + "gui";
-    private static final String MAIN_GUI_PATH = GUI_PATH + File.separator + "main.yml";
-    private static final String YOUR_ORDERS_GUI_PATH = GUI_PATH + File.separator + "your-orders.yml";
 
     public final ConfigFile configFile;
-    public final ConfigFile mainGUIFile;
-    public final ConfigFile yourOrdersGUIFile;
 
     public final MainGUIConfig mainGUIConfig = new MainGUIConfig();
     public final YourOrdersGUIConfig yourOrdersGUIConfig = new YourOrdersGUIConfig();
@@ -24,12 +20,11 @@ public class Config {
     public final SignGUIConfig signGUIConfig = new SignGUIConfig();
     public final EnchantGUIConfig enchantGUIConfig = new EnchantGUIConfig();
     public final DeliverGUIConfig deliverGUIConfig = new DeliverGUIConfig();
+    public final NewOrderDialogConfig newOrderDialogConfig = new NewOrderDialogConfig();
 
     public Config() {
         try {
             configFile = ConfigFile.loadConfig(new File(CONFIG_PATH));
-            mainGUIFile = ConfigFile.loadConfig(new File(MAIN_GUI_PATH));
-            yourOrdersGUIFile = ConfigFile.loadConfig(new File(YOUR_ORDERS_GUI_PATH));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -59,7 +54,7 @@ public class Config {
         signGUIConfig.migrateV5(configFile);
         enchantGUIConfig.migrateV5(configFile);
         deliverGUIConfig.migrateV5(configFile);
-
+        newOrderDialogConfig.migrateV5(configFile);
         // TODO: Missing some dialogs...
 
         // Remove the gui section entirely after migration
@@ -73,5 +68,6 @@ public class Config {
         signGUIConfig.applyDefaultValues();
         enchantGUIConfig.applyDefaultValues();
         deliverGUIConfig.applyDefaultValues();
+        newOrderDialogConfig.applyDefaultValues();
     }
 }
