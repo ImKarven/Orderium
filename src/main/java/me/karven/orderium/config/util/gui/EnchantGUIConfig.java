@@ -2,8 +2,8 @@ package me.karven.orderium.config.util.gui;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.ButtonConfig;
-import me.karven.orderium.config.util.GUIConfigFile;
 import me.karven.orderium.config.util.EnchantmentConfig;
+import me.karven.orderium.config.util.GUIConfigFile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;

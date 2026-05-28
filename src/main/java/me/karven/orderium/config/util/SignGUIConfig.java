@@ -8,23 +8,17 @@ import org.bukkit.block.Sign;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SignGUIConfig {
-    private final @NotNull ConfigFile config;
+public class SignGUIConfig extends GUIConfigFile {
     // We load the BlockType lazily instead of storing directly because the config loads before some APIs are available
     public NamespacedKey signTypeKey;
     public int queryLine;
     public final @NotNull List<@NotNull String> signLines = new ArrayList<>();
 
     public SignGUIConfig() {
-        try {
-            config = ConfigFile.loadConfig(new File("plugins" + File.separator + "Orderium" + File.separator + "gui" + File.separator + "sign.yml"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        super("search.yml");
     }
 
     public void reload() {
@@ -42,18 +36,21 @@ public class SignGUIConfig {
         return signType;
     }
 
+    @Override
     public void save() {
         config.set("type", signTypeKey.toString());
         config.set("query-line", queryLine);
         config.set("lines", signLines);
     }
 
+    @Override
     public void setDefault() {
         config.addDefault("type", signTypeKey.toString());
         config.addDefault("query-line", queryLine);
         config.addDefault("lines", signLines);
     }
 
+    @Override
     public void migrateV5(@NotNull ConfigFile oldConfig) {
         signTypeKey = getKey(oldConfig.getString("gui.search-sign.type"));
         queryLine = oldConfig.getInteger("gui.search-sign.search-line") - 1;
@@ -80,6 +77,7 @@ public class SignGUIConfig {
         return type.createBlockData().createBlockState() instanceof Sign;
     }
 
+    @Override
     public void applyDefaultValues() {
         signTypeKey = new NamespacedKey("minecraft", "oak_sign");
         queryLine = 0;
