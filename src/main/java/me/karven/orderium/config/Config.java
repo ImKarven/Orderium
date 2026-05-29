@@ -3,6 +3,7 @@ package me.karven.orderium.config;
 import com.google.common.io.Files;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.SignGUIConfig;
+import me.karven.orderium.config.util.dialog.ConfirmDeliveryDialogConfig;
 import me.karven.orderium.config.util.dialog.NewOrderDialogConfig;
 import me.karven.orderium.config.util.gui.*;
 
@@ -21,6 +22,7 @@ public class Config {
     public final EnchantGUIConfig enchantGUIConfig = new EnchantGUIConfig();
     public final DeliverGUIConfig deliverGUIConfig = new DeliverGUIConfig();
     public final NewOrderDialogConfig newOrderDialogConfig = new NewOrderDialogConfig();
+    public final ConfirmDeliveryDialogConfig confirmDeliveryDialogConfig = new ConfirmDeliveryDialogConfig();
 
     public Config() {
         try {
@@ -55,6 +57,7 @@ public class Config {
         enchantGUIConfig.migrateV5(configFile);
         deliverGUIConfig.migrateV5(configFile);
         newOrderDialogConfig.migrateV5(configFile);
+        confirmDeliveryDialogConfig.migrateV5(configFile);
         // TODO: Missing some dialogs...
 
         // Remove the gui section entirely after migration

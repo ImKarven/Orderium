@@ -1,0 +1,88 @@
+package me.karven.orderium.config.util.dialog;
+
+import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.action.DialogActionCallback;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
+import me.karven.orderium.config.util.DialogButtonConfig;
+import me.karven.orderium.config.util.ItemlessItemDialogBodyConfig;
+import me.karven.orderium.config.util.MessageDialogBodyConfig;
+import me.karven.orderium.utils.Values;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+
+@SuppressWarnings("UnstableApiUsage")
+public class ConfirmDeliveryDialogConfig extends ConfirmationDialogConfig {
+    public final @NotNull MessageDialogBodyConfig textBody = new MessageDialogBodyConfig("text-body");
+    public final @NotNull ItemlessItemDialogBodyConfig itemBody = new ItemlessItemDialogBodyConfig("item-body");
+
+    public ConfirmDeliveryDialogConfig() {
+        super("confirm-delivery");
+
+        yesButton = new DialogButtonConfig("buttons.confirm");
+        noButton = new DialogButtonConfig("buttons.cancel");
+    }
+
+    public @NotNull Dialog dialog(final @NotNull ItemStack item, final @NotNull String formattedAmount,
+                                  final @NotNull DialogActionCallback yesAction, final @NotNull DialogActionCallback noAction) {
+        final TagResolver placeholder = Placeholder.unparsed("amount", formattedAmount);
+        return Dialog.create(builder -> builder.empty()
+                .type(DialogType.confirmation(
+                        ActionButton.builder(Values.minimessage.deserialize(yesButton.label))
+                                .tooltip(Values.minimessage.deserialize(yesButton.tooltip))
+                                .width(yesButton.width)
+                                .action(DialogAction.customClick(yesAction, Values.CLICK_CALLBACK_DEFAULT_OPTIONS))
+                                .build(),
+                        ActionButton.builder(Values.minimessage.deserialize(noButton.label))
+                                .tooltip(Values.minimessage.deserialize(noButton.tooltip))
+                                .width(noButton.width)
+                                .action(DialogAction.customClick(noAction, Values.CLICK_CALLBACK_DEFAULT_OPTIONS))
+                                .build()
+                ))
+                .base(DialogBase.builder(Values.minimessage.deserialize(title))
+                        .canCloseWithEscape(canCloseWithEsc)
+                        .afterAction(DialogBase.DialogAfterAction.CLOSE)
+                        .body(List.of(textBody.body(placeholder), itemBody.body(item, placeholder)))
+                        .build()
+                )
+        );
+    }
+
+    @Override
+    public void reload() {
+        super.reload();
+        textBody.reload(config);
+        itemBody.reload(config);
+    }
+
+    @Override
+    public void save() {
+        super.save();
+        textBody.save(config);
+        itemBody.save(config);
+    }
+
+    @Override
+    public void setDefault() {
+        super.setDefault();
+        textBody.setDefault(config);
+        itemBody.setDefault(config);
+    }
+
+    @Override
+    public void migrateV5(final @NotNull ConfigFile oldConfig) {
+        title = oldConfig.getString("gui.confirm-delivery.title");
+        canCloseWithEsc = true;
+        yesButton.migrateV5(oldConfig, "gui.confirm-delivery.confirm-");
+        noButton.migrateV5(oldConfig, "gui.confirm-delivery.cancel-");
+        textBody.migrateV5(oldConfig, "gui.confirm-delivery.body");
+        itemBody.migrateV5(oldConfig, "gui.confirm-delivery.transaction-message");
+    }
+}

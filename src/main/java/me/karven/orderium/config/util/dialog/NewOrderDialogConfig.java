@@ -6,13 +6,11 @@ import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.action.DialogActionCallback;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.config.util.DialogButtonConfig;
 import me.karven.orderium.config.util.ItemlessItemDialogBodyConfig;
 import me.karven.orderium.config.util.TextDialogInputConfig;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickCallback;
+import me.karven.orderium.utils.Values;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +19,6 @@ import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
 public class NewOrderDialogConfig extends ConfirmationDialogConfig {
-    private static final @NotNull ClickCallback.Options DEFAULT_OPTIONS = ClickCallback.Options.builder().build();
     public final @NotNull ItemlessItemDialogBodyConfig bodyConfig = new ItemlessItemDialogBodyConfig("body");
     public final @NotNull TextDialogInputConfig amountInputConfig = new TextDialogInputConfig("inputs.amount");
     public final @NotNull TextDialogInputConfig moneyPerItemInputConfig = new TextDialogInputConfig("inputs.money-per-item");
@@ -49,13 +46,13 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
                                         .builder(mm.deserialize(yesButton.label))
                                         .tooltip(mm.deserialize(yesButton.tooltip))
                                         .width(yesButton.width)
-                                        .action(DialogAction.customClick(yesAction, DEFAULT_OPTIONS))
+                                        .action(DialogAction.customClick(yesAction, Values.CLICK_CALLBACK_DEFAULT_OPTIONS))
                                         .build(),
                                 ActionButton
                                         .builder(mm.deserialize(noButton.label))
                                         .tooltip(mm.deserialize(noButton.tooltip))
                                         .width(noButton.width)
-                                        .action(DialogAction.customClick(noAction, DEFAULT_OPTIONS))
+                                        .action(DialogAction.customClick(noAction, Values.CLICK_CALLBACK_DEFAULT_OPTIONS))
                                         .build()
                         ))
         );
@@ -91,7 +88,8 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
     public void applyDefaultValues() {
         super.applyDefaultValues();
         title = "Create A New Order";
-        bodyConfig.description.body = DialogBody.plainMessage(Component.text("You're creating an order for this item"), 210);
+        bodyConfig.description.contents = "You're creating an order for this item";
+        bodyConfig.description.width = 210;
         bodyConfig.showDecoration = true;
         bodyConfig.showTooltip = true;
         bodyConfig.width = 16;

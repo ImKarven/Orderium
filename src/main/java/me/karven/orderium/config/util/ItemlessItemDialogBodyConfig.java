@@ -3,6 +3,7 @@ package me.karven.orderium.config.util;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.body.ItemDialogBody;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,8 +19,8 @@ public class ItemlessItemDialogBodyConfig extends ComponentConfig {
         super(path);
     }
 
-    public @NotNull ItemDialogBody body(final @NotNull ItemStack item) {
-        return DialogBody.item(item, description.body, showDecoration, showTooltip, width, height);
+    public @NotNull ItemDialogBody body(final @NotNull ItemStack item, final @NotNull TagResolver... tagResolvers) {
+        return DialogBody.item(item, description.body(tagResolvers), showDecoration, showTooltip, width, height);
     }
 
     @Override
