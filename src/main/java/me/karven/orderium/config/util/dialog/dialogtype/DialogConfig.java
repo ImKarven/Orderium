@@ -1,16 +1,13 @@
-package me.karven.orderium.config.util.dialog;
+package me.karven.orderium.config.util.dialog.dialogtype;
 
-import me.karven.orderium.config.util.DialogButtonConfig;
 import me.karven.orderium.config.util.GUIConfigFile;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class ConfirmationDialogConfig extends GUIConfigFile {
+public abstract class DialogConfig extends GUIConfigFile {
     public String title;
     public boolean canCloseWithEsc;
-    public DialogButtonConfig yesButton;
-    public DialogButtonConfig noButton;
 
-    protected ConfirmationDialogConfig(@NotNull String guiName) {
+    public DialogConfig(final @NotNull String guiName) {
         super(guiName);
     }
 
@@ -18,8 +15,6 @@ public abstract class ConfirmationDialogConfig extends GUIConfigFile {
     public void reload() {
         title = config.getString("title");
         canCloseWithEsc = config.getBoolean("can-close-with-escape");
-        yesButton.reload(config);
-        noButton.reload(config);
     }
 
     @Override

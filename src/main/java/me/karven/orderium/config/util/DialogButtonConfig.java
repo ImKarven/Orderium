@@ -1,8 +1,14 @@
 package me.karven.orderium.config.util;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.action.DialogActionCallback;
+import me.karven.orderium.utils.Values;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("UnstableApiUsage")
 public class DialogButtonConfig extends ComponentConfig {
     public String label;
     public String tooltip;
@@ -10,6 +16,14 @@ public class DialogButtonConfig extends ComponentConfig {
 
     public DialogButtonConfig(@NotNull String path) {
         super(path);
+    }
+
+    public @NotNull ActionButton button(final @NotNull DialogActionCallback clickAction, final @NotNull TagResolver... placeholders) {
+        return ActionButton.builder(Values.minimessage.deserialize(label, placeholders))
+                .tooltip(Values.minimessage.deserialize(tooltip, placeholders))
+                .width(width)
+                .action(DialogAction.customClick(clickAction, Values.CLICK_CALLBACK_DEFAULT_OPTIONS))
+                .build();
     }
 
     @Override

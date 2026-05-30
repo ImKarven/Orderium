@@ -2,14 +2,13 @@ package me.karven.orderium.config.util.dialog;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import io.papermc.paper.dialog.Dialog;
-import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
-import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.action.DialogActionCallback;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.config.util.DialogButtonConfig;
 import me.karven.orderium.config.util.ItemlessItemDialogBodyConfig;
 import me.karven.orderium.config.util.MessageDialogBodyConfig;
+import me.karven.orderium.config.util.dialog.dialogtype.ConfirmationDialogConfig;
 import me.karven.orderium.utils.Values;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -35,18 +34,10 @@ public class ConfirmDeliveryDialogConfig extends ConfirmationDialogConfig {
         final TagResolver placeholder = Placeholder.unparsed("amount", formattedAmount);
         return Dialog.create(builder -> builder.empty()
                 .type(DialogType.confirmation(
-                        ActionButton.builder(Values.minimessage.deserialize(yesButton.label))
-                                .tooltip(Values.minimessage.deserialize(yesButton.tooltip))
-                                .width(yesButton.width)
-                                .action(DialogAction.customClick(yesAction, Values.CLICK_CALLBACK_DEFAULT_OPTIONS))
-                                .build(),
-                        ActionButton.builder(Values.minimessage.deserialize(noButton.label))
-                                .tooltip(Values.minimessage.deserialize(noButton.tooltip))
-                                .width(noButton.width)
-                                .action(DialogAction.customClick(noAction, Values.CLICK_CALLBACK_DEFAULT_OPTIONS))
-                                .build()
+                        yesButton.button(yesAction, placeholder),
+                        noButton.button(noAction, placeholder)
                 ))
-                .base(DialogBase.builder(Values.minimessage.deserialize(title))
+                .base(DialogBase.builder(Values.minimessage.deserialize(title, placeholder))
                         .canCloseWithEscape(canCloseWithEsc)
                         .afterAction(DialogBase.DialogAfterAction.CLOSE)
                         .body(List.of(textBody.body(placeholder), itemBody.body(item, placeholder)))
@@ -80,8 +71,8 @@ public class ConfirmDeliveryDialogConfig extends ConfirmationDialogConfig {
     public void migrateV5(final @NotNull ConfigFile oldConfig) {
         title = oldConfig.getString("gui.confirm-delivery.title");
         canCloseWithEsc = true;
-        yesButton.migrateV5(oldConfig, "gui.confirm-delivery.confirm-");
-        noButton.migrateV5(oldConfig, "gui.confirm-delivery.cancel-");
+        yesButton.migrateV5(oldConfig, "gui.confirm-delivery.confirm");
+        noButton.migrateV5(oldConfig, "gui.confirm-delivery.cancel");
         textBody.migrateV5(oldConfig, "gui.confirm-delivery.body");
         itemBody.migrateV5(oldConfig, "gui.confirm-delivery.transaction-message");
     }

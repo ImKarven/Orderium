@@ -2,15 +2,13 @@ package me.karven.orderium.config.util.dialog;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import io.papermc.paper.dialog.Dialog;
-import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
-import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.action.DialogActionCallback;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.config.util.DialogButtonConfig;
 import me.karven.orderium.config.util.ItemlessItemDialogBodyConfig;
 import me.karven.orderium.config.util.TextDialogInputConfig;
-import me.karven.orderium.utils.Values;
+import me.karven.orderium.config.util.dialog.dialogtype.ConfirmationDialogConfig;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -42,18 +40,8 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
                                 .build()
                         )
                         .type(DialogType.confirmation(
-                                ActionButton
-                                        .builder(mm.deserialize(yesButton.label))
-                                        .tooltip(mm.deserialize(yesButton.tooltip))
-                                        .width(yesButton.width)
-                                        .action(DialogAction.customClick(yesAction, Values.CLICK_CALLBACK_DEFAULT_OPTIONS))
-                                        .build(),
-                                ActionButton
-                                        .builder(mm.deserialize(noButton.label))
-                                        .tooltip(mm.deserialize(noButton.tooltip))
-                                        .width(noButton.width)
-                                        .action(DialogAction.customClick(noAction, Values.CLICK_CALLBACK_DEFAULT_OPTIONS))
-                                        .build()
+                                yesButton.button(yesAction),
+                                noButton.button(noAction)
                         ))
         );
     }
