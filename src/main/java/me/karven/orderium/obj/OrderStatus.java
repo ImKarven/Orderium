@@ -3,9 +3,9 @@ package me.karven.orderium.obj;
 import org.jetbrains.annotations.NotNull;
 
 public enum OrderStatus {
-    EXPIRED("expired"),
-    COMPLETED("completed"),
-    AVAILABLE("available");
+    EXPIRED("expired", "<red>Order Expired"),
+    COMPLETED("completed", "<green>Order Completed"),
+    AVAILABLE("available", "<gray>Expires after <day>d <hour>h <minute>m <second>s");
 
     private final String identifier;
     private String text;
@@ -14,7 +14,8 @@ public enum OrderStatus {
     public String getText() { return text; }
     public void setText(final @NotNull String text) { this.text = text; }
 
-     OrderStatus(String identifier) {
+    OrderStatus(final String identifier, final String defaultText) {
         this.identifier = identifier;
+        this.text = defaultText;
     }
 }

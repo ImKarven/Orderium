@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class EnchantGUIConfig extends GUIConfigFile {
+    public boolean enabled;
     public String title;
     public int rows;
     public final @NotNull EnchantmentConfig enchantmentConfig = new EnchantmentConfig();
@@ -24,6 +25,7 @@ public class EnchantGUIConfig extends GUIConfigFile {
 
     @Override
     public void reload() {
+        enabled = config.getBoolean("enabled");
         title = config.getString("title");
         rows = config.getInteger("rows");
         enchantmentConfig.reload(config);
@@ -32,6 +34,7 @@ public class EnchantGUIConfig extends GUIConfigFile {
 
     @Override
     public void save() {
+        config.set("enabled", enabled);
         config.set("title", title);
         config.set("rows", rows);
         enchantmentConfig.save(config);
@@ -40,6 +43,7 @@ public class EnchantGUIConfig extends GUIConfigFile {
 
     @Override
     public void setDefault() {
+        config.addDefault("enabled", enabled);
         config.addDefault("title", title);
         config.addDefault("rows", rows);
         enchantmentConfig.setDefault(config);
@@ -48,6 +52,7 @@ public class EnchantGUIConfig extends GUIConfigFile {
 
     @Override
     public void migrateV5(@NotNull ConfigFile oldConfig) {
+        enabled = oldConfig.getBoolean("enchantments");
         title = oldConfig.getString("gui.enchant-item.title");
         rows = -1;
         enchantmentConfig.migrateV5(oldConfig);
@@ -62,6 +67,7 @@ public class EnchantGUIConfig extends GUIConfigFile {
 
     @Override
     public void applyDefaultValues() {
+        enabled = false;
         title = "Enchant Your Item";
         rows = -1;
         confirmButton.slot = 8;

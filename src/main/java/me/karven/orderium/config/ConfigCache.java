@@ -235,7 +235,7 @@ public class ConfigCache {
             @Subst("ignored")
             final String identifier = sortType.getIdentifier();
             sortType.setDisplayActive(config.getString("sort-types." + identifier));
-            sortPlaceholders[i++] = Placeholder.parsed(identifier, sortType.getDisplayActive());
+            sortPlaceholders[i++] = Placeholder.parsed(identifier, sortType.getDisplayInactive());
         }
 
         for (OrderStatus status : OrderStatus.values()) {

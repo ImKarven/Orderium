@@ -1,5 +1,6 @@
 package me.karven.orderium.config;
 
+import com.google.common.io.Files;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.SlotInfo;
 import me.karven.orderium.obj.OrderStatus;
@@ -8,15 +9,81 @@ import me.karven.orderium.utils.Log;
 import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class ConfigMigration {
 
+    /**
+     * Perform config migration
+     *
+     * @param config the config
+     * @return {@code true} if migration was performed. {@code false} if nothing changed
+     */
+    public static boolean perform(final @NotNull Config config) {
+        if (config.configFile.isNew()) return false;
+        final int configVersion = config.configFile.getInteger("config-version");
+        if (configVersion == Config.CURRENT_CONFIG_VERSION) return false;
+        if (configVersion > Config.CURRENT_CONFIG_VERSION) {
+            throw new RuntimeException("Downgrading config is not supported. Please use the latest version");
+        }
+
+        setDefaultV4(config.configFile);
+
+        // Backup old config file
+        final File backupConfig = new File(Config.dataFolder, "config.yml.old");
+        try {
+            Files.copy(new File(Config.dataFolder, "config.yml"), backupConfig);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Convert GUI config sections to their respective files
+        config.mainGUIConfig.migrateV5(config.configFile);
+        config.yourOrdersGUIConfig.migrateV5(config.configFile);
+        config.chooseItemGUIConfig.migrateV5(config.configFile);
+        config.signGUIConfig.migrateV5(config.configFile);
+        config.enchantGUIConfig.migrateV5(config.configFile);
+        config.deliverGUIConfig.migrateV5(config.configFile);
+        config.newOrderDialogConfig.migrateV5(config.configFile);
+        config.confirmDeliveryDialogConfig.migrateV5(config.configFile);
+        config.manageOrderDialogConfig.migrateV5(config.configFile);
+
+        // Remove the gui section entirely after migration
+        config.configFile.set("gui", null);
+
+        // Merge `sort-types` and `sort-prefix` to `sorts-display`
+        final String prefix = config.configFile.getString("sort-prefix");
+        assert prefix != null;
+        for (final SortType sort : SortType.values()) {
+            final String display = config.configFile.getString("sort-types." + sort.getIdentifier());
+            assert display != null;
+            sort.setDisplayActive(prefix + display);
+            sort.setDisplayInactive(display);
+            config.configFile.set("sorts-display.active." + sort.getIdentifier(), sort.getDisplayActive());
+            config.configFile.set("sorts-display.inactive." + sort.getIdentifier(), sort.getDisplayInactive());
+        }
+
+        config.configFile.set("sort-prefix", null);
+        config.configFile.set("sort-types", null);
+
+        config.configFile.set("config-version", 5);
+
+        try {
+            config.configFile.save();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return true;
+    }
+
+    // Set default values for config with version 4 or below
     @SuppressWarnings("UnstableApiUsage")
-    public static void migrateV4(final @NotNull ConfigFile config) {
+    public static void setDefaultV4(final @NotNull ConfigFile config) {
         config.set("config-version", 4);
 
-        // Old config initialization code
         config.addDefault("bstats", true, "Whether to let bStats collect data anonymously or not");
         config.addDefault("check-for-updates", true, "Whether to check for updates or not");
         config.addDefault("log-transactions", true, "Whether to log money changes of players or not");

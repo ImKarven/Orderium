@@ -205,7 +205,7 @@ public class ConvertUtils {
         List<TagResolver> placeholders = new ArrayList<>(List.of(cache.sortPlaceholders));
         @Subst("ignored")
         final String identifier = type.getIdentifier();
-        placeholders.add(Placeholder.parsed(identifier, cache.sortPrefix + type.getDisplayActive()));
+        placeholders.add(Placeholder.parsed(identifier, type.getDisplayActive()));
         item.editMeta(meta -> {
             meta.displayName(mm.deserialize(info.getDisplayName(), TagResolver.resolver(placeholders)).decoration(TextDecoration.ITALIC, false));
             final List<Component> lore = info.getLore().stream().map(str -> mm.deserialize(str, TagResolver.resolver(placeholders)).decoration(TextDecoration.ITALIC, false)).toList();
