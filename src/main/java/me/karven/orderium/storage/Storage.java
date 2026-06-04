@@ -2,7 +2,6 @@ package me.karven.orderium.storage;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import me.karven.orderium.config.ConfigCache;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
@@ -27,22 +26,15 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static me.karven.orderium.Orderium.plugin;
-import static me.karven.orderium.config.ConfigCache.cache;
 
 public abstract class Storage {
-    protected static ConfigCache configs;
-    protected static File dataDir;
-    protected final String ORDER_TABLE = configs.tablePref + "orders";
-    protected final String TRANSACTION_TABLE = configs.tablePref + "transactions";
+    protected static final File dataDir = new File("plugins", "Orderium");
+    protected final String ORDER_TABLE = "orderium_orders";
+    protected final String TRANSACTION_TABLE = "orderium_transactions";
     private final String CUSTOM_ITEMS_TABLE = "orderium_custom_items_v2";
     private final String BLACKLIST_TABLE = "orderium_blacklist";
 
     private final HikariDataSource modifiedItemDataSource;
-
-    public static void init() {
-        Storage.configs = cache;
-        Storage.dataDir = plugin.getDataFolder();
-    }
 
     protected Storage() {
         HikariConfig modifiedItemsConfig = new HikariConfig();

@@ -18,7 +18,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 
-import static me.karven.orderium.config.ConfigCache.cache;
+import static me.karven.orderium.config.Config.config;
 
 @SuppressWarnings("UnstableApiUsage")
 public class AlgoUtils {
@@ -111,9 +111,14 @@ public class AlgoUtils {
 
     public static boolean isSimilar(final ItemStack a, final ItemStack b) {
         if (!a.getType().equals(b.getType())) return false;
-        for (final DataComponentType.Valued<?> component : cache.similarityCheck) {
-            final Object dataA = a.getData(component);
-            final Object dataB = b.getData(component);
+        for (final NamespacedKey componentKey : config.similarityCheck) {
+            final DataComponentType nonValueType = Registry.DATA_COMPONENT_TYPE.get(componentKey);
+            if (!(nonValueType instanceof DataComponentType.Valued<?> dataComponentType)) {
+                Log.error("Data component type does not exist in similarity check: " + componentKey, new RuntimeException());
+                continue;
+            }
+            final Object dataA = a.getData(dataComponentType);
+            final Object dataB = b.getData(dataComponentType);
             if (dataA == null && dataB == null) continue;
             if (dataA == null || !dataA.equals(dataB)) return false;
         }

@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
 
-import static me.karven.orderium.config.ConfigCache.cache;
+import static me.karven.orderium.config.Config.config;
 
 public final class Orderium extends JavaPlugin {
     public static final Orderium plugin = new Orderium();
@@ -53,7 +53,7 @@ public final class Orderium extends JavaPlugin {
             return;
         }
 
-        Config.config = new Config();
+        config = new Config();
         OrderiumCommands.register();
 
         isFolia = isFolia();
@@ -65,19 +65,18 @@ public final class Orderium extends JavaPlugin {
 
         UpdateUtils.init();
         Log.info("Orderium enabled");
-        Storage.init(); // need testing
         storage = createStorage();
         EconUtils.init();
         AdminToolGUI.init(); // need testing
 
         ChooseItemGUI.init(); // need testing
 
-        if (cache.bStats) {
+        if (config.bStats) {
             final int pluginId = 27569;
             new Metrics(this, pluginId);
         }
 
-        if (cache.checkForUpdates) {
+        if (config.checkForUpdates) {
             Bukkit.getAsyncScheduler().runNow(this, task -> {
                final String newVer = UpdateUtils.checkForUpdates();
                if (newVer == null) return;
@@ -96,17 +95,7 @@ public final class Orderium extends JavaPlugin {
     }
 
     public Storage createStorage() {
-        switch (cache.storageMethod) {
-            case SQLITE -> {
-                return SQLStorage.sqlite();
-            }
-            case MYSQL -> {
-                return SQLStorage.mysql();
-            }
-            default -> {
-                return SQLStorage.h2();
-            }
-        }
+        return SQLStorage.sqlite();
     }
 
     private boolean setupEconomy() {

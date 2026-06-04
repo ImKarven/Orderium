@@ -25,7 +25,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import static me.karven.orderium.Orderium.plugin;
-import static me.karven.orderium.config.ConfigCache.cache;
+import static me.karven.orderium.config.Config.config;
 import static me.karven.orderium.utils.ConvertUtils.formatNumber;
 
 // TODO: Replace `item` with OrderItem instead of ItemStack.
@@ -105,8 +105,8 @@ public class Order implements me.karven.orderium.api.Order {
             double moneyReceived = receive; // I don't like working with wrapped class at all so will use primitive
             if (moneyReceived == 0.0) return;
             EconUtils.addMoney(p, moneyReceived);
-            p.sendRichMessage(cache.delivered, Placeholder.unparsed("money", formatNumber(moneyReceived)));
-            PlayerUtils.playSound(p, cache.deliverSound);
+            p.sendRichMessage(config.deliver, Placeholder.unparsed("money", formatNumber(moneyReceived)));
+            PlayerUtils.playSound(p, config.deliverSound);
 
             PlayerDeliverOrderEvent.Post postEvent = new PlayerDeliverOrderEvent.Post(p, this, isAsync);
             postEvent.callEvent();
@@ -117,7 +117,7 @@ public class Order implements me.karven.orderium.api.Order {
             final Component displayName = meta == null ? null : meta.displayName();
             assert item.getType().getItemTranslationKey() != null;
             ownerPlayer.sendRichMessage(
-                    cache.receiveDelivery,
+                    config.receiveDelivery,
                     Placeholder.unparsed("deliverer", p.getName()),
                     Placeholder.unparsed("amount",  formatNumber((int) (moneyReceived / moneyPer))),
                     Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
@@ -132,7 +132,7 @@ public class Order implements me.karven.orderium.api.Order {
         final double dAmount = formatNumber(rawAmount);
         final int amount = (int) dAmount;
         if (dAmount == -1 || dAmount != amount) {
-            p.sendRichMessage(cache.invalidInput);
+            p.sendRichMessage(config.invalidInput);
             return Response.INVALID;
         }
         return collect(amount);
@@ -142,14 +142,14 @@ public class Order implements me.karven.orderium.api.Order {
     public Response collect(int amount) {
         final Player p = Bukkit.getPlayer(this.getOwnerUniqueId());
         if (p == null || !p.isOnline()) return Response.INVALID;
-        if (amount > cache.maxCollect && !p.hasPermission("orderium.bypass.max-collect")) {
-            p.sendRichMessage(cache.exceedMaxCollect);
+        if (amount > config.maxCollect && !p.hasPermission("orderium.bypass.max-collect")) {
+            p.sendRichMessage(config.exceedMaxCollect);
             return Response.FAIL;
         }
 
         final int collectedInMinute = PDCUtils.getCollected(p);
-        if (collectedInMinute > cache.maxCollectPerMinute && !p.hasPermission("orderium.bypass.max-collect-per-minute")) {
-            p.sendRichMessage(cache.collectingTooFast);
+        if (collectedInMinute > config.maxCollectPerMinute && !p.hasPermission("orderium.bypass.max-collect-per-minute")) {
+            p.sendRichMessage(config.collectingTooFast);
             return Response.FAIL;
         }
 
@@ -159,7 +159,7 @@ public class Order implements me.karven.orderium.api.Order {
         plugin.getStorage().collectItems(this, amount).thenAccept(success -> {
             boolean succeeded = success;
             if (!succeeded) {
-                p.sendRichMessage(cache.invalidInput);
+                p.sendRichMessage(config.invalidInput);
                 return;
             }
 
@@ -283,7 +283,7 @@ public class Order implements me.karven.orderium.api.Order {
         final double dAmount = formatNumber(rawAmount);
         final int amount = (int) dAmount;
         final double moneyPer = formatNumber(rawMoneyPer);
-        if (dAmount == -1 || moneyPer == -1 || dAmount != amount) return Response.INVALID;
+        if (dAmount == -1 || moneyPer == -1 || moneyPer < config.minPrice || dAmount != amount) return Response.INVALID;
 
         return create(p, item, moneyPer, amount);
     }
