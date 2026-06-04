@@ -9,7 +9,6 @@ import me.karven.orderium.gui.ChooseItemGUI;
 import me.karven.orderium.gui.SignGUI;
 import me.karven.orderium.guiframework.GUIListener;
 import me.karven.orderium.listener.ContainerContentListener;
-import me.karven.orderium.listener.DialogListener;
 import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.storage.Storage;
 import me.karven.orderium.storage.implementation.SQLStorage;
@@ -35,7 +34,6 @@ public final class Orderium extends JavaPlugin {
     private final ContainerContentListener CONTAINER_CONTENT_LISTENER = new ContainerContentListener();
     private final GUIListener GUI_LISTENER = new GUIListener();
     private final DisconnectListener DISCONNECT_LISTENER = new DisconnectListener();
-    private final DialogListener DIALOG_LISTENER = new DialogListener();
 
     private Storage storage;
     private Economy econ;
@@ -64,7 +62,6 @@ public final class Orderium extends JavaPlugin {
         
         Bukkit.getPluginManager().registerEvents(GUI_LISTENER, this);
         Bukkit.getPluginManager().registerEvents(DISCONNECT_LISTENER, this);
-        Bukkit.getPluginManager().registerEvents(DIALOG_LISTENER, this);
 
         UpdateUtils.init();
         Log.info("Orderium enabled");
