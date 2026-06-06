@@ -1,5 +1,6 @@
 package me.karven.orderium.utils;
 
+import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.CustomItem;
@@ -10,6 +11,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.ResultSet;
@@ -160,5 +162,27 @@ public class ConvertUtils {
         if (!unit.containsKey(suffix)) return -1;
         num *= unit.get(suffix);
         return num;
+    }
+
+    public static @NotNull ItemStack deserializeItem(final @NotNull ConfigSection section) {
+        final HashMap<String, Object> serialized = new HashMap<>();
+        Log.info("Deserializing item. Key-value's list:");
+        for (final String key : section.getKeys(false, true)) {
+            if (!key.equals("components")) {
+                serialized.put(key, section.get(key));
+                Log.info(key + ": " + section.get(key));
+                continue;
+            }
+
+            final HashMap<String, String> componentMap = new HashMap<>();
+            final ConfigSection componentSection = section.getConfigSection(key);
+            for (final String componentKey : componentSection.getKeys(false, true)) {
+                componentMap.put(componentKey, componentSection.getString(componentKey));
+            }
+            serialized.put(key, componentMap);
+        }
+        Log.info("");
+
+        return ItemStack.deserialize(serialized);
     }
 }

@@ -13,6 +13,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -36,7 +37,7 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
                                 .body(List.of(bodyConfig.body(item)))
                                 .canCloseWithEscape(canCloseWithEsc)
                                 .afterAction(DialogBase.DialogAfterAction.CLOSE)
-                                .inputs(List.of(amountInputConfig.input("amount"), moneyPerItemInputConfig.input("money-per-item")))
+                                .inputs(List.of(amountInputConfig.input("amount"), moneyPerItemInputConfig.input("money_per")))
                                 .build()
                         )
                         .type(DialogType.confirmation(
@@ -47,21 +48,27 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
     }
 
     @Override
-    public void reload() {
+    public void reload() throws IOException {
         super.reload();
         bodyConfig.reload(config);
+        amountInputConfig.reload(config);
+        moneyPerItemInputConfig.reload(config);
     }
 
     @Override
     public void save() {
         super.save();
         bodyConfig.save(config);
+        amountInputConfig.save(config);
+        moneyPerItemInputConfig.save(config);
     }
 
     @Override
     public void setDefault() {
         super.setDefault();
         bodyConfig.setDefault(config);
+        amountInputConfig.setDefault(config);
+        moneyPerItemInputConfig.setDefault(config);
     }
 
     @Override
@@ -71,6 +78,8 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
         yesButton.migrateV5(oldConfig, "gui.new-order.confirm");
         noButton.migrateV5(oldConfig, "gui.new-order.change-item");
         canCloseWithEsc = true;
+        amountInputConfig.migrateV5(oldConfig, "gui.new-order.amount-label");
+        moneyPerItemInputConfig.migrateV5(oldConfig, "gui.new-order.money-per-label");
 
         saveToFile();
     }
@@ -91,5 +100,15 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
         noButton.label = "Change Item...";
         noButton.tooltip = "Click to change the item";
         noButton.width = 150;
+        amountInputConfig.label = "Amount";
+        amountInputConfig.width = 200;
+        amountInputConfig.initial = "1";
+        amountInputConfig.labelVisible = true;
+        amountInputConfig.maxLength = 32;
+        moneyPerItemInputConfig.label = "Amount";
+        moneyPerItemInputConfig.width = 200;
+        moneyPerItemInputConfig.initial = "1";
+        moneyPerItemInputConfig.labelVisible = true;
+        moneyPerItemInputConfig.maxLength = 32;
     }
 }

@@ -5,6 +5,7 @@ import me.karven.orderium.config.Config;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 
 public abstract class GUIConfigFile implements IConfigFile {
     protected final @NotNull ConfigFile config;
@@ -16,15 +17,19 @@ public abstract class GUIConfigFile implements IConfigFile {
             guiFolder.mkdirs();
         }
         try {
-            config = ConfigFile.loadConfig(new File(guiFolder, guiName + ".yml"));
+            config = new ConfigFile(new File(guiFolder, guiName + ".yml"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public abstract void reload();
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void reload() throws IOException {
+        config.getFile().createNewFile();
+        config.loadContent();
+    }
     public abstract void save();
-    public abstract void setDefault();
+    public abstract void setDefault() throws Exception;
 
     /**
      * This caches the values from the old config file to the objects
@@ -33,4 +38,8 @@ public abstract class GUIConfigFile implements IConfigFile {
      */
     public abstract void migrateV5(final @NotNull ConfigFile oldConfig);
     public abstract void applyDefaultValues();
+
+    public void saveToFile() throws Exception {
+        config.save();
+    }
 }

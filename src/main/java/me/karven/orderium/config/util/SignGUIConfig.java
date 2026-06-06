@@ -8,6 +8,7 @@ import org.bukkit.block.Sign;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +22,8 @@ public class SignGUIConfig extends GUIConfigFile {
         super("search");
     }
 
-    public void reload() {
+    public void reload() throws IOException {
+        super.reload();
         final String typeKey = config.getString("type");
         assert typeKey != null;
         signTypeKey = getKey(typeKey);

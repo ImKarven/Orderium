@@ -5,6 +5,7 @@ import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.utils.ConvertUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -23,7 +24,11 @@ public class ButtonConfig extends ComponentConfig {
 
     @Override
     public void reload(final @NotNull ConfigFile config) {
-        itemStack = ItemStack.deserialize(config.getConfigSection(path + ".item"));
+        try {
+            itemStack = ConvertUtils.deserializeItem(config.getConfigSection(path + ".item"));
+        } catch (Exception e) {
+            itemStack = ItemStack.of(Material.STONE);
+        }
         slot = config.getInteger(path + ".slot");
     }
 
@@ -45,7 +50,7 @@ public class ButtonConfig extends ComponentConfig {
     }
 
     public @NotNull InventoryItem item(final @NotNull Consumer<InventoryClickEvent> action) {
-        return new InventoryItem(itemStack, action);
+        return new InventoryItem(itemStack.clone(), action);
     }
 
     // Migrate config version 4 -> 5

@@ -12,6 +12,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.List;
 
 public class ChooseItemGUIConfig extends GUIConfigFile {
@@ -28,7 +29,8 @@ public class ChooseItemGUIConfig extends GUIConfigFile {
     }
 
     @Override
-    public void reload() {
+    public void reload() throws IOException {
+        super.reload();
         title = config.getString("title");
         rows = config.getInteger("rows");
         sortsOrderConfig.reload(config);

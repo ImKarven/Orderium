@@ -4,6 +4,8 @@ import me.karven.orderium.config.util.GUIConfigFile;
 import me.karven.orderium.utils.Log;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
 public abstract class DialogConfigFile extends GUIConfigFile {
     public String title;
     public boolean canCloseWithEsc;
@@ -13,7 +15,8 @@ public abstract class DialogConfigFile extends GUIConfigFile {
     }
 
     @Override
-    public void reload() {
+    public void reload() throws IOException {
+        super.reload();
         title = config.getString("title");
         canCloseWithEsc = config.getBoolean("can-close-with-escape");
     }

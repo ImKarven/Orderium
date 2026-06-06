@@ -3,6 +3,8 @@ package me.karven.orderium.config.util.dialog.dialogtype;
 import me.karven.orderium.config.util.component.dialog.DialogButtonConfig;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
 public abstract class ConfirmationDialogConfig extends DialogConfigFile {
     public DialogButtonConfig yesButton;
     public DialogButtonConfig noButton;
@@ -12,7 +14,7 @@ public abstract class ConfirmationDialogConfig extends DialogConfigFile {
     }
 
     @Override
-    public void reload() {
+    public void reload() throws IOException {
         super.reload();
         yesButton.reload(config);
         noButton.reload(config);

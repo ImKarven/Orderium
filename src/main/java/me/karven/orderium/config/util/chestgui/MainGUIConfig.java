@@ -13,6 +13,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -33,10 +34,10 @@ public class MainGUIConfig extends GUIConfigFile {
     }
 
     @Override
-    public void reload() {
+    public void reload() throws IOException {
+        super.reload();
         orderConfig.reload(config);
         sortsOrderConfig.reload(config);
-        sortButton.reload(config);
         sortButton.reload(config);
         refreshButton.reload(config);
         yourOrdersButton.reload(config);
@@ -44,6 +45,7 @@ public class MainGUIConfig extends GUIConfigFile {
         backButton.reload(config);
         nextButton.reload(config);
         title = config.getString("title");
+        rows = config.getInteger("rows");
     }
 
     @Override
@@ -57,6 +59,7 @@ public class MainGUIConfig extends GUIConfigFile {
         backButton.save(config);
         nextButton.save(config);
         config.set("title", title);
+        config.set("rows", rows);
     }
 
     @Override
@@ -70,6 +73,7 @@ public class MainGUIConfig extends GUIConfigFile {
         backButton.setDefault(config);
         nextButton.setDefault(config);
         config.addDefault("title", title);
+        config.addDefault("rows", rows);
     }
 
     @Override
@@ -83,7 +87,7 @@ public class MainGUIConfig extends GUIConfigFile {
         searchButton.migrateV5(oldConfig, "gui.main.buttons.search");
         backButton.migrateV5(oldConfig, "gui.main.buttons.back");
         nextButton.migrateV5(oldConfig, "gui.main.buttons.next");
-
+        rows = 6;
         save();
         try {
             config.save();
@@ -95,6 +99,7 @@ public class MainGUIConfig extends GUIConfigFile {
     @Override
     public void applyDefaultValues() {
         title = "Orders";
+        rows = 6;
         orderConfig.lore.add("");
         orderConfig.lore.add("<#786500>$<paid><gray>/<#017800>$<total> <gray>Paid");
         orderConfig.lore.add("<#786500><delivered><gray>/<#017800><amount> <gray>Delivered");

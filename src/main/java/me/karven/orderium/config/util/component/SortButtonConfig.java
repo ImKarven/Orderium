@@ -19,14 +19,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static me.karven.orderium.config.Config.config;
-
 // Sort buttons have placeholders in lore, we need a different way to handle them.
 public class SortButtonConfig extends ButtonConfig {
     public final @NotNull List<@NotNull String> lore = new ArrayList<>();
 
     public SortButtonConfig(@NotNull String path) {
         super(path);
+    }
+
+    @Override
+    public void reload(final @NotNull ConfigFile config) {
+        super.reload(config);
+
+        lore.clear();
+        lore.addAll(config.getStringList(path + ".lore"));
     }
 
     @Override
@@ -46,29 +52,31 @@ public class SortButtonConfig extends ButtonConfig {
     @Override
     public @NonNull InventoryItem item(final @NotNull Consumer<InventoryClickEvent> action) {
         final ItemStack item = itemStack.clone();
-        final List<TagResolver> placeholders = new ArrayList<>(List.of(config.sortPlaceholders));
-
-        item.editMeta(meta -> {
-            final List<Component> parsedLore = lore.stream().map(line -> Values.minimessage.deserialize(line, TagResolver.resolver(placeholders))).toList();
-            meta.lore(parsedLore);
-        });
+        final List<Component> parsedLore = lore.stream().map(line -> Values.minimessage.deserialize(line, TagResolver.resolver(getPlaceholders(null)))).toList();
+        item.lore(parsedLore);
 
         return new InventoryItem(item, action);
     }
 
     public @NotNull InventoryItem item(final @NotNull Consumer<InventoryClickEvent> action, final @NotNull SortType sort) {
         final ItemStack item = itemStack.clone();
-        final List<TagResolver> placeholders = new ArrayList<>(List.of(config.sortPlaceholders));
-        @Subst("ignored")
-        final String identifier = sort.getIdentifier();
-        placeholders.add(Placeholder.parsed(identifier, sort.getDisplayActive()));
-
-        item.editMeta(meta -> {
-            final List<Component> parsedLore = lore.stream().map(line -> Values.minimessage.deserialize(line, TagResolver.resolver(placeholders))).toList();
-            meta.lore(parsedLore);
-        });
+        final List<Component> parsedLore = lore.stream().map(line -> Values.minimessage.deserialize(line, TagResolver.resolver(getPlaceholders(sort)))).toList();
+        item.lore(parsedLore);
 
         return new InventoryItem(item, action);
+    }
+
+    private List<TagResolver> getPlaceholders(final SortType activeSort) {
+        final List<TagResolver> placeholders = new ArrayList<>();
+        for (final SortType sort : SortType.values()) {
+            final @Subst("ignored") String identifier = sort.getIdentifier();
+            if (sort.equals(activeSort)) {
+                placeholders.add(Placeholder.parsed(identifier, sort.getDisplayActive()));
+            } else {
+                placeholders.add(Placeholder.parsed(identifier, sort.getDisplayInactive()));
+            }
+        }
+        return placeholders;
     }
 
     @Override

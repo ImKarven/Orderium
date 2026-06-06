@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import static me.karven.orderium.config.Config.config;
 
 public final class Orderium extends JavaPlugin {
-    public static final Orderium plugin = new Orderium();
+    public static Orderium plugin;
     public static boolean isFolia;
 
     private final SignGUI SIGN_LISTENER = new SignGUI();
@@ -47,13 +47,18 @@ public final class Orderium extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        plugin = this;
         if (!setupEconomy()) {
             Log.warn("Orderium disabled due to no Vault dependency found!");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        config = new Config();
+        try {
+            config = new Config();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         OrderiumCommands.register();
 
         isFolia = isFolia();

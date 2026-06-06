@@ -21,8 +21,8 @@ public class ConfigMigration {
      * @param config the config
      * @return {@code true} if migration was performed. {@code false} if nothing changed
      */
-    public static boolean perform(final @NotNull Config config) {
-        if (config.configFile.isNew()) return false;
+    public static boolean perform(final @NotNull Config config) throws IOException {
+        config.configFile.loadContent();
         final int configVersion = config.configFile.getInteger("config-version");
         if (configVersion == Config.CURRENT_CONFIG_VERSION) return false;
         if (configVersion > Config.CURRENT_CONFIG_VERSION) {
@@ -67,6 +67,7 @@ public class ConfigMigration {
 
         config.configFile.set("sort-prefix", null);
         config.configFile.set("sort-types", null);
+        config.configFile.set("enchantments", null);
 
         config.configFile.set("config-version", 5);
 

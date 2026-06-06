@@ -12,13 +12,11 @@ import me.karven.orderium.utils.DispatchUtil;
 import me.karven.orderium.utils.Log;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.NamespacedKey;
-import org.intellij.lang.annotations.Subst;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -65,32 +63,44 @@ public class Config {
     public double minPrice;
     public int maxCollectPerMinute;
     public int maxCollect;
-    public TagResolver[] sortPlaceholders;
     public boolean shulkerDelivering;
 
     public final List<@NotNull String> orderCommandAliases = new ArrayList<>();
 
     public final List<NamespacedKey> similarityCheck = new ArrayList<>();
 
-    public Config() {
+    public Config() throws Exception {
         if (!dataFolder.exists() || !dataFolder.isDirectory()) {
             dataFolder.mkdirs();
         }
         try {
-            configFile = ConfigFile.loadConfig(new File(dataFolder, "config.yml"));
+            configFile = new ConfigFile(new File(dataFolder, "config.yml"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         setDefaults();
-        if (configFile.isNew()) {
+        if (!configFile.getFile().exists()) {
             // save default config to file if it's newly created
-            try {
-                configFile.save();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            save();
+            reload();
             // reload the config normally if no migration has been done
-        } else if (!ConfigMigration.perform(this)) reload();
+        } else if (!ConfigMigration.perform(this)) {
+            reload();
+        }
+    }
+
+    public void save() throws Exception {
+        configFile.set("config-version", 5);
+        configFile.save();
+        mainGUIConfig.saveToFile();
+        yourOrdersGUIConfig.saveToFile();
+        chooseItemGUIConfig.saveToFile();
+        signGUIConfig.saveToFile();
+        enchantGUIConfig.saveToFile();
+        deliverGUIConfig.saveToFile();
+        newOrderDialogConfig.saveToFile();
+        confirmDeliveryDialogConfig.saveToFile();
+        manageOrderDialogConfig.saveToFile();
     }
 
     public void setDefaults() {
@@ -162,13 +172,18 @@ public class Config {
     public CompletableFuture<Void> reloadAsync() {
         final CompletableFuture<Void> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
-            reload();
+            try {
+                reload();
+            } catch (IOException e) {
+                future.completeExceptionally(e);
+            }
             future.complete(null);
         });
         return future;
     }
 
-    public void reload() {
+    public void reload() throws IOException {
+        configFile.loadContent();
         mainGUIConfig.reload();
         yourOrdersGUIConfig.reload();
         chooseItemGUIConfig.reload();
@@ -199,12 +214,6 @@ public class Config {
         maxCollect = configFile.getInteger("max-collect");
         maxCollectPerMinute = configFile.getInteger(("max-collect-per-minute"));
         shulkerDelivering = configFile.getBoolean("shulker-delivering");
-        sortPlaceholders = new TagResolver[SortType.values().length];
-        int i = 0;
-        for (final SortType sort : SortType.values()) {
-            @Subst("ignored") final String placeholder = sort.getIdentifier();
-            sortPlaceholders[i++] = Placeholder.parsed(placeholder, sort.getDisplayInactive());
-        }
 
         final List<String> rawDataComponents = configFile.getStringList("similarity-check");
         similarityCheck.clear();
@@ -263,12 +272,12 @@ public class Config {
 
     private void setDefaultSounds() {
         final Sound clickSound = Sound.sound(Key.key("minecraft:ui.button.click"), Sound.Source.UI, 1, 1);
-        setDefaultSound("sounds.next-page", clickSound);
-        setDefaultSound("sounds.previous-page", clickSound);
-        setDefaultSound("sounds.refresh", clickSound);
-        setDefaultSound("sounds.sort", clickSound);
-        setDefaultSound("sounds.new-order", Sound.sound(Key.key("minecraft:entity.villager.work_cartographer"), Sound.Source.UI, 1, 1));
-        setDefaultSound("sounds.deliver", Sound.sound(Key.key("minecraft:entity.player.levelup"), Sound.Source.UI, 1, 2));
+        setDefaultSound("next-page", clickSound);
+        setDefaultSound("previous-page", clickSound);
+        setDefaultSound("refresh", clickSound);
+        setDefaultSound("sort", clickSound);
+        setDefaultSound("new-order", Sound.sound(Key.key("minecraft:entity.villager.work_cartographer"), Sound.Source.UI, 1, 1));
+        setDefaultSound("deliver", Sound.sound(Key.key("minecraft:entity.player.levelup"), Sound.Source.UI, 1, 2));
     }
 
     private void setDefaultMessages() {

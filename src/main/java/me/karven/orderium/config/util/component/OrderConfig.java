@@ -1,6 +1,7 @@
 package me.karven.orderium.config.util.component;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
+import me.karven.orderium.utils.ConvertUtils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +28,7 @@ public class OrderConfig extends ComponentConfig {
         final List<String> loreLines = config.getStringList(path + ".lore");
         lore.addAll(loreLines);
         try {
-            itemRepresentation = ItemStack.deserialize(config.getConfigSection(path + ".item"));
+            itemRepresentation = ConvertUtils.deserializeItem(config.getConfigSection(path + ".item"));
         } catch (Exception e) {
             itemRepresentation = ItemStack.of(Material.STONE);
         }

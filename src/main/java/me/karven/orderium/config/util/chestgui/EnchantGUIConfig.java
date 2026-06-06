@@ -10,13 +10,14 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.List;
 
 public class EnchantGUIConfig extends GUIConfigFile {
     public boolean enabled;
     public String title;
     public int rows;
-    public final @NotNull EnchantmentConfig enchantmentConfig = new EnchantmentConfig();
+    public final @NotNull EnchantmentConfig enchantmentConfig = new EnchantmentConfig("enchantment-book");
     public final @NotNull ButtonConfig confirmButton = new ButtonConfig("buttons.confirm");
 
     public EnchantGUIConfig() {
@@ -24,7 +25,8 @@ public class EnchantGUIConfig extends GUIConfigFile {
     }
 
     @Override
-    public void reload() {
+    public void reload() throws IOException {
+        super.reload();
         enabled = config.getBoolean("enabled");
         title = config.getString("title");
         rows = config.getInteger("rows");

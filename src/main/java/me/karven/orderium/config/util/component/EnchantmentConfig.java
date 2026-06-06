@@ -1,6 +1,7 @@
 package me.karven.orderium.config.util.component;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
+import me.karven.orderium.utils.ConvertUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -17,7 +18,7 @@ public class EnchantmentConfig {
     public ItemStack itemRepresentation = ItemStack.of(Material.ENCHANTED_BOOK);
     public final @NotNull List<@NotNull Integer> slots = IntStream.range(18, 36).boxed().collect(Collectors.toCollection(ArrayList::new));
 
-    public EnchantmentConfig() {
+    public EnchantmentConfig(final @NotNull String path) {
         itemRepresentation.editMeta(meta -> meta.setEnchantmentGlintOverride(true));
     }
 
@@ -25,7 +26,7 @@ public class EnchantmentConfig {
         activeName = config.getString("name.active");
         inactiveName = config.getString("name.inactive");
         try {
-            itemRepresentation = ItemStack.deserialize(config.getConfigSection("item"));
+            itemRepresentation = ConvertUtils.deserializeItem(config.getConfigSection("item"));
         } catch (Exception e) {
             itemRepresentation = ItemStack.of(Material.ENCHANTED_BOOK);
             itemRepresentation.editMeta(meta -> meta.setEnchantmentGlintOverride(true));

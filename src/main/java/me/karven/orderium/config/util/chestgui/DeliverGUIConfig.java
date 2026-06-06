@@ -4,6 +4,8 @@ import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.GUIConfigFile;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
 public class DeliverGUIConfig extends GUIConfigFile {
     public String title;
     public int rows;
@@ -12,7 +14,8 @@ public class DeliverGUIConfig extends GUIConfigFile {
     }
 
     @Override
-    public void reload() {
+    public void reload() throws IOException {
+        super.reload();
         title = config.getString("title");
         rows = config.getInteger("rows");
     }

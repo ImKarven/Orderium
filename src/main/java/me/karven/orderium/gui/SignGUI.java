@@ -80,7 +80,7 @@ public class SignGUI implements PacketListener {
         final Vector3i blockPos = new Vector3i(pos.blockX(), pos.blockY(), pos.blockZ());
         if (!wrapper.getBlockPosition().equals(blockPos)) return;
         final String[] lines = wrapper.getTextLines();
-        completeSession(player, lines[info.line() - 1]);
+        completeSession(player, lines[info.line()]);
 
         World world = player.getWorld();
         Location loc = pos.toLocation(world);
