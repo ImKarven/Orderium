@@ -63,14 +63,16 @@ public class MainGUI {
     }
 
     private void setupPages() {
-        int curr = 0, cnt = 0;
+        int curr = 0;
 
         InventoryGUI page = initPage();
         addButtons(page, curr);
 
+        int currentSlotIndex = 0;
+
         for (final Order order : orders) {
-            if (cnt == 45) {
-                cnt = 0;
+            if (currentSlotIndex == config.mainGUIConfig.orderConfig.slots.size()) {
+                currentSlotIndex = 0;
                 pages.add(page);
                 page = initPage();
                 addButtons(page, ++curr);
@@ -88,14 +90,14 @@ public class MainGUI {
                 }
                 InventoryGUI deliverGUI = setupDeliverGUI(order);
                 deliverGUI.open(who);
-            }), cnt);
-            cnt++;
+            }), config.mainGUIConfig.orderConfig.slots.get(currentSlotIndex));
+            currentSlotIndex++;
         }
         pages.add(page);
     }
 
     private InventoryGUI initPage() {
-        InventoryGUI page = new InventoryGUI(6, mm.deserialize(config.mainGUIConfig.title));
+        InventoryGUI page = new InventoryGUI(config.mainGUIConfig.rows, mm.deserialize(config.mainGUIConfig.title));
         page.setOnClick(event -> event.setCancelled(true), InteractLocation.GLOBAL);
         page.setOnDrag(event -> event.setCancelled(true), InteractLocation.GLOBAL);
         return page;

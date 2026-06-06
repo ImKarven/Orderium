@@ -84,9 +84,12 @@ public class Config {
             save();
             reload();
             // reload the config normally if no migration has been done
-        } else if (!ConfigMigration.perform(this)) {
-            reload();
         }
+//        else if (!ConfigMigration.perform(this)) {
+//            reload();
+//        }
+
+        else reload();
     }
 
     public void save() throws Exception {
