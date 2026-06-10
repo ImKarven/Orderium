@@ -105,7 +105,7 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
         amountInputConfig.initial = "1";
         amountInputConfig.labelVisible = true;
         amountInputConfig.maxLength = 32;
-        moneyPerItemInputConfig.label = "Amount";
+        moneyPerItemInputConfig.label = "Money Per Item";
         moneyPerItemInputConfig.width = 200;
         moneyPerItemInputConfig.initial = "1";
         moneyPerItemInputConfig.labelVisible = true;

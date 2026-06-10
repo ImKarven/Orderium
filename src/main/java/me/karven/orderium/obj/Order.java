@@ -12,6 +12,7 @@ import me.karven.orderium.utils.PlayerUtils;
 import me.karven.orderium.utils.Values;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -66,6 +67,10 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     public @NotNull Component deserializeText(final @NotNull String text) {
+        return Values.minimessage.deserialize(text, placeholders());
+    }
+
+    public @NotNull TagResolver[] placeholders() {
         final OfflinePlayer player = Bukkit.getOfflinePlayer(owner);
         final String playerName = player.getName() == null ? owner.toString() : player.getName();
         long millis = expiresAt - System.currentTimeMillis();
@@ -77,7 +82,7 @@ public class Order implements me.karven.orderium.api.Order {
         min %= 60;
         sec %= 60;
         millis %= 1000;
-        return Values.minimessage.deserialize(text,
+        return new TagResolver[]{
                 Placeholder.unparsed("money-per", formatNumber(moneyPer)),
                 Placeholder.unparsed("paid", formatNumber(moneyPer * delivered)),
                 Placeholder.unparsed("total", formatNumber(moneyPer * amount)),
@@ -93,7 +98,7 @@ public class Order implements me.karven.orderium.api.Order {
                         Placeholder.unparsed("second", String.valueOf(sec)),
                         Placeholder.unparsed("millisecond", String.valueOf(millis))
                 ))
-        );
+        };
     }
 
     /// Must be called in the player region

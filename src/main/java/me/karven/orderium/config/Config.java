@@ -16,28 +16,28 @@ import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
+import static me.karven.orderium.Orderium.plugin;
+
 public class Config {
     public static Config config;
     public static final int CURRENT_CONFIG_VERSION = 5;
-    public static final File dataFolder = new File("plugins" + File.separator + "Orderium");
+    public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
 
     public ConfigFile configFile;
 
-    public final MainGUIConfig mainGUIConfig = new MainGUIConfig();
-    public final YourOrdersGUIConfig yourOrdersGUIConfig = new YourOrdersGUIConfig();
-    public final ChooseItemGUIConfig chooseItemGUIConfig = new ChooseItemGUIConfig();
-    public final SignGUIConfig signGUIConfig = new SignGUIConfig();
-    public final EnchantGUIConfig enchantGUIConfig = new EnchantGUIConfig();
-    public final DeliverGUIConfig deliverGUIConfig = new DeliverGUIConfig();
-    public final NewOrderDialogConfig newOrderDialogConfig = new NewOrderDialogConfig();
-    public final ConfirmDeliveryDialogConfig confirmDeliveryDialogConfig = new ConfirmDeliveryDialogConfig();
-    public final ManageOrderDialogConfig manageOrderDialogConfig = new ManageOrderDialogConfig();
+    public final MainGUIConfig mainGUIConfig;
+    public final YourOrdersGUIConfig yourOrdersGUIConfig;
+    public final ChooseItemGUIConfig chooseItemGUIConfig;
+    public final SignGUIConfig signGUIConfig;
+    public final EnchantGUIConfig enchantGUIConfig;
+    public final DeliverGUIConfig deliverGUIConfig;
+    public final NewOrderDialogConfig newOrderDialogConfig;
+    public final ConfirmDeliveryDialogConfig confirmDeliveryDialogConfig;
+    public final ManageOrderDialogConfig manageOrderDialogConfig;
 
     public boolean bStats;
     public boolean checkForUpdates;
@@ -70,19 +70,26 @@ public class Config {
     public final List<NamespacedKey> similarityCheck = new ArrayList<>();
 
     public Config() throws Exception {
-        if (!dataFolder.exists() || !dataFolder.isDirectory()) {
-            dataFolder.mkdirs();
-        }
+        mainGUIConfig = new MainGUIConfig();
+        yourOrdersGUIConfig = new YourOrdersGUIConfig();
+        chooseItemGUIConfig = new ChooseItemGUIConfig();
+        signGUIConfig = new SignGUIConfig();
+        enchantGUIConfig = new EnchantGUIConfig();
+        deliverGUIConfig = new DeliverGUIConfig();
+        newOrderDialogConfig = new NewOrderDialogConfig();
+        confirmDeliveryDialogConfig = new ConfirmDeliveryDialogConfig();
+        manageOrderDialogConfig = new ManageOrderDialogConfig();
+
         try {
-            configFile = new ConfigFile(new File(dataFolder, "config.yml"));
+            configFile = ConfigFile.loadConfig(javaConfigFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         setDefaults();
-        if (!configFile.getFile().exists()) {
+        if (configFile.isNew()) {
             // save default config to file if it's newly created
             save();
-            reload();
+            load();
             // reload the config normally if no migration has been done
         }
 //        else if (!ConfigMigration.perform(this)) {
@@ -177,16 +184,18 @@ public class Config {
         DispatchUtil.async(() -> {
             try {
                 reload();
-            } catch (IOException e) {
+            } catch (Exception e) {
+                Log.error("Failed to reload config", e);
                 future.completeExceptionally(e);
+                return;
             }
             future.complete(null);
         });
         return future;
     }
 
-    public void reload() throws IOException {
-        configFile.loadContent();
+    public void reload() throws Exception {
+        configFile = ConfigFile.loadConfig(javaConfigFile);
         mainGUIConfig.reload();
         yourOrdersGUIConfig.reload();
         chooseItemGUIConfig.reload();
@@ -197,6 +206,10 @@ public class Config {
         confirmDeliveryDialogConfig.reload();
         manageOrderDialogConfig.reload();
 
+        load();
+    }
+
+    public void load() {
         for (final SortType sort : SortType.values()) {
             final String displayActive = configFile.getString("sorts-display.active." + sort.getIdentifier());
             final String displayInactive = configFile.getString("sorts-display.inactive." + sort.getIdentifier());

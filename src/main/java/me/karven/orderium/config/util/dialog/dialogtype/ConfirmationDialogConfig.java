@@ -19,4 +19,18 @@ public abstract class ConfirmationDialogConfig extends DialogConfigFile {
         yesButton.reload(config);
         noButton.reload(config);
     }
+
+    @Override
+    public void save() {
+        super.save();
+        yesButton.save(config);
+        noButton.save(config);
+    }
+
+    @Override
+    public void setDefault() {
+        super.setDefault();
+        yesButton.setDefault(config);
+        noButton.setDefault(config);
+    }
 }

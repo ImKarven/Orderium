@@ -151,7 +151,7 @@ public class MainGUIConfig extends GUIConfigFile {
         sortButton.lore.add("<white> • <most-paid>");
 
         yourOrdersButton.slot = 51;
-        yourOrdersButton.itemStack = ItemStack.of(Material.ARROW);
+        yourOrdersButton.itemStack = ItemStack.of(Material.CHEST);
         yourOrdersButton.itemStack.editMeta(meta -> {
             meta.displayName(Component.text("Your Orders").color(NamedTextColor.AQUA));
             meta.lore(List.of(Component.text("Click to view your orders").color(NamedTextColor.WHITE)));

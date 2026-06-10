@@ -1,32 +1,39 @@
 package me.karven.orderium.config.util;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
-import me.karven.orderium.config.Config;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 
+import static me.karven.orderium.Orderium.plugin;
+
 public abstract class GUIConfigFile implements IConfigFile {
-    protected final @NotNull ConfigFile config;
+    protected @NotNull ConfigFile config;
+    private final @NotNull File configFile;
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     protected GUIConfigFile(final @NotNull String guiName) {
-        final File guiFolder = new File(Config.dataFolder, "gui");
+        final File guiFolder = new File(plugin.getDataFolder(), "gui");
+
         if (!guiFolder.exists() || !guiFolder.isDirectory()) {
             guiFolder.mkdirs();
         }
+
+        this.configFile = new File(guiFolder, guiName + ".yml");
         try {
-            config = new ConfigFile(new File(guiFolder, guiName + ".yml"));
+            config = ConfigFile.loadConfig(configFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void reload() throws IOException {
-        config.getFile().createNewFile();
-        config.loadContent();
+        try {
+            config = ConfigFile.loadConfig(configFile);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
     public abstract void save();
     public abstract void setDefault() throws Exception;

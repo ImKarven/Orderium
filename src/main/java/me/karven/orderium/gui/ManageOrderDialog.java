@@ -14,6 +14,7 @@ public class ManageOrderDialog {
         final ItemStack item = order.itemStack(config.yourOrdersGUIConfig.orderConfig.lore);
         final Dialog collectItemsDialog = config.manageOrderDialogConfig.collectItems.dialog(
                 item,
+                order.placeholders(),
                 (view, player) -> {
                     if (!(player instanceof Player p)) return;
 

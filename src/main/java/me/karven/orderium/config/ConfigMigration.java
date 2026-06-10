@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import static me.karven.orderium.Orderium.plugin;
+
 public class ConfigMigration {
 
     /**
@@ -32,9 +34,9 @@ public class ConfigMigration {
         setDefaultV4(config.configFile);
 
         // Backup old config file
-        final File backupConfig = new File(Config.dataFolder, "config.yml.old");
+        final File backupConfig = new File(plugin.getDataFolder(), "config.yml.old");
         try {
-            Files.copy(new File(Config.dataFolder, "config.yml"), backupConfig);
+            Files.copy(new File(plugin.getDataFolder(), "config.yml"), backupConfig);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

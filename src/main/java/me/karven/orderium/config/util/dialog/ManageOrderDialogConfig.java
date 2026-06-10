@@ -12,6 +12,7 @@ import me.karven.orderium.config.util.component.dialog.ItemlessItemDialogBodyCon
 import me.karven.orderium.config.util.component.dialog.TextDialogInputConfig;
 import me.karven.orderium.utils.Log;
 import me.karven.orderium.utils.Values;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -94,6 +95,7 @@ public class ManageOrderDialogConfig extends GUIConfigFile {
                             cancelOrderButtonConfig.button(clickCancelOrderButtonAction)
                     )).build())
                     .base(DialogBase.builder(Values.minimessage.deserialize(title))
+                            .pause(false)
                             .afterAction(DialogBase.DialogAfterAction.NONE)
                             .canCloseWithEscape(canCloseWithEsc)
                             .build()
@@ -159,7 +161,7 @@ public class ManageOrderDialogConfig extends GUIConfigFile {
             this.parent = parent;
         }
 
-        public @NotNull Dialog dialog(final @NotNull ItemStack item, final @Nullable DialogActionCallback yesAction, final @Nullable DialogActionCallback noAction) {
+        public @NotNull Dialog dialog(final @NotNull ItemStack item, final @NotNull TagResolver @NotNull [] placeholders, final @Nullable DialogActionCallback yesAction, final @Nullable DialogActionCallback noAction) {
             return Dialog.create(builder -> builder.empty()
                     .type(DialogType.confirmation(
                             yesButton.button(yesAction),
@@ -167,7 +169,7 @@ public class ManageOrderDialogConfig extends GUIConfigFile {
                     ))
                     .base(DialogBase.builder(Values.minimessage.deserialize(title))
                             .canCloseWithEscape(canCloseWithEsc)
-                            .body(List.of(body.body(item)))
+                            .body(List.of(body.body(item, placeholders)))
                             .inputs(List.of(amountInputConfig.input("amount")))
                             .build()
                     )
@@ -216,15 +218,15 @@ public class ManageOrderDialogConfig extends GUIConfigFile {
 
         @Override
         public void applyDefaultValues() {
-            title = "Cancel Order";
+            title = "Collect Items";
             canCloseWithEsc = true;
             yesButton.label = "<green>Confirm";
-            yesButton.tooltip = "Click to confirm the cancellation of this order";
+            yesButton.tooltip = "Click to confirm";
             yesButton.width = 150;
             noButton.label = "<red>Cancel";
-            noButton.tooltip = "Click to cancel the cancellation of this order";
+            noButton.tooltip = "Click to cancel";
             noButton.width = 150;
-            body.description.contents = "You are cancelling this order. It will be expired";
+            body.description.contents = "You are collecting items from this order. You can collect up to <aqua><in-storage> <item>";
             body.description.width = 200;
             body.width = 16;
             body.height = 16;
@@ -311,12 +313,11 @@ public class ManageOrderDialogConfig extends GUIConfigFile {
             noButton.tooltip = "Click to cancel the cancellation of this order";
             noButton.width = 150;
             body.description.contents = "You are cancelling this order. It will be expired";
-            body.description.width = 200;
+            body.description.width = 250;
             body.width = 16;
             body.height = 16;
             body.showDecoration = true;
             body.showTooltip = true;
-            body.width = 200;
         }
     }
 }
