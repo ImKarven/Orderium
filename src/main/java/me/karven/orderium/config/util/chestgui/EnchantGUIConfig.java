@@ -4,8 +4,10 @@ import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.GUIConfigFile;
 import me.karven.orderium.config.util.component.ButtonConfig;
 import me.karven.orderium.config.util.component.EnchantmentConfig;
+import me.karven.orderium.utils.DecoratedText;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -75,8 +77,8 @@ public class EnchantGUIConfig extends GUIConfigFile {
         confirmButton.slot = 8;
         confirmButton.itemStack = ItemStack.of(Material.LIME_WOOL);
         confirmButton.itemStack.editMeta(meta -> {
-            meta.displayName(Component.text("Confirm").color(NamedTextColor.GREEN));
-            meta.lore(List.of(Component.text("Click to confirm your enchantments").color(NamedTextColor.WHITE)));
+            meta.displayName(Component.text("Confirm").color(NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false));
+            meta.lore(List.of(DecoratedText.buttonLore("Click to confirm your enchantments")));
         });
     }
 }

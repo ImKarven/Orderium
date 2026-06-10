@@ -6,8 +6,7 @@ import me.karven.orderium.config.util.component.ButtonConfig;
 import me.karven.orderium.config.util.component.SortButtonConfig;
 import me.karven.orderium.config.util.component.SortsOrderConfig;
 import me.karven.orderium.obj.SortType;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import me.karven.orderium.utils.DecoratedText;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -88,27 +87,27 @@ public class ChooseItemGUIConfig extends GUIConfigFile {
         sortsOrderConfig.orderArray.add(SortType.Z_A);
         sortButton.slot = 48;
         sortButton.lore.add("");
-        sortButton.lore.add("<white> • <a-z>");
-        sortButton.lore.add("<white> • <z-a>");
+        sortButton.lore.add("<!i><white> • <a-z>");
+        sortButton.lore.add("<!i><white> • <z-a>");
         sortButton.itemStack = ItemStack.of(Material.HOPPER);
-        sortButton.itemStack.editMeta(meta -> meta.displayName(Component.text("Sort").color(NamedTextColor.AQUA)));
+        sortButton.itemStack.editMeta(meta -> meta.displayName(DecoratedText.buttonName("Sort")));
         nextButton.slot = 53;
         nextButton.itemStack = ItemStack.of(Material.ARROW);
         nextButton.itemStack.editMeta(meta -> {
-            meta.displayName(Component.text("Next").color(NamedTextColor.AQUA));
-            meta.lore(List.of(Component.text("Click to go to the next page").color(NamedTextColor.WHITE)));
+            meta.displayName(DecoratedText.buttonName("Next"));
+            meta.lore(List.of(DecoratedText.buttonLore("Click to go to the next page")));
         });
         backButton.slot = 45;
         backButton.itemStack = ItemStack.of(Material.ARROW);
         backButton.itemStack.editMeta(meta -> {
-            meta.displayName(Component.text("Back").color(NamedTextColor.AQUA));
-            meta.lore(List.of(Component.text("Click to go to previous page").color(NamedTextColor.WHITE)));
+            meta.displayName(DecoratedText.buttonName("Back"));
+            meta.lore(List.of(DecoratedText.buttonLore("Click to go to the previous page")));
         });
         searchButton.slot = 50;
         searchButton.itemStack = ItemStack.of(Material.OAK_SIGN);
         searchButton.itemStack.editMeta(meta -> {
-            meta.displayName(Component.text("Search").color(NamedTextColor.AQUA));
-            meta.lore(List.of(Component.text("Click to search").color(NamedTextColor.WHITE)));
+            meta.displayName(DecoratedText.buttonName("Search"));
+            meta.lore(List.of(DecoratedText.buttonLore("Click to search")));
         });
     }
 }

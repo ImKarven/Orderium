@@ -4,8 +4,7 @@ import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.GUIConfigFile;
 import me.karven.orderium.config.util.component.ButtonConfig;
 import me.karven.orderium.config.util.component.OrderConfig;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import me.karven.orderium.utils.DecoratedText;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -64,19 +63,19 @@ public class YourOrdersGUIConfig extends GUIConfigFile {
     public void applyDefaultValues() {
         title = "Your Orders";
         orderConfig.lore.add("");
-        orderConfig.lore.add("<#786500>$<paid><gray>/<#017800>$<total> <gray>Paid");
-        orderConfig.lore.add("<#786500><delivered><gray>/<#017800><amount> <gray>Delivered");
-        orderConfig.lore.add("<green>$<money-per> <white>each");
+        orderConfig.lore.add("<!i><#786500>$<paid><gray>/<#017800>$<total> <gray>Paid");
+        orderConfig.lore.add("<!i><#786500><delivered><gray>/<#017800><amount> <gray>Delivered");
+        orderConfig.lore.add("<!i><green>$<money-per> <white>each");
         orderConfig.lore.add("");
-        orderConfig.lore.add("<order-status>");
+        orderConfig.lore.add("<!i><order-status>");
         orderConfig.slots.addAll(IntStream.range(0, 27).boxed().toList());
         orderConfig.itemRepresentation = ItemStack.of(Material.STONE);
 
         newOrderButton.slot = -1;
         newOrderButton.itemStack = ItemStack.of(Material.MAP);
         newOrderButton.itemStack.editMeta(meta -> {
-            meta.displayName(Component.text("New Order").color(NamedTextColor.AQUA));
-            meta.lore(List.of(Component.text("Click to create a new order").color(NamedTextColor.WHITE)));
+            meta.displayName(DecoratedText.buttonName("New Order"));
+            meta.lore(List.of(DecoratedText.buttonLore("Click to create a new order")));
         });
     }
 }
