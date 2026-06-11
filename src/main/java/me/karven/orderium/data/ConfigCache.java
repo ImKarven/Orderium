@@ -193,10 +193,7 @@ public class ConfigCache {
             Log.warn("You are downgrading Orderium. This may cause issues and is not supported.");
             return;
         }
-        if (configVersion() == -1) ConfigMigration.migrateV1(config);
-        if (configVersion() == 1) ConfigMigration.migrateV2(config);
-        if (configVersion() == 2) ConfigMigration.migrateV3(config);
-        if (configVersion() == 3) ConfigMigration.migrateV4(config);
+        if (configVersion() <= 3) ConfigMigration.migrateV4(config);
 
         config.addComment("config-version", "DO NOT TOUCH THIS FIELD!");
     }
