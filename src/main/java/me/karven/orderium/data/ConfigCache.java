@@ -189,7 +189,7 @@ public class ConfigCache {
     private void migrateConfig() {
         final int currentConfigVersion = 4;
         config.addDefault("config-version", currentConfigVersion);
-        if (currentConfigVersion < previousConfigVersion) {
+        if (currentConfigVersion < configVersion()) {
             Log.warn("You are downgrading Orderium. This may cause issues and is not supported.");
             return;
         }
