@@ -187,19 +187,22 @@ public class ConfigCache {
     }
 
     private void migrateConfig() {
-        final int previousConfigVersion = config.getInteger("config-version", -1);
         final int currentConfigVersion = 4;
         config.addDefault("config-version", currentConfigVersion);
         if (currentConfigVersion < previousConfigVersion) {
             Log.warn("You are downgrading Orderium. This may cause issues and is not supported.");
             return;
         }
-            if (previousConfigVersion == -1) ConfigMigration.migrateV1(config);
-        if (previousConfigVersion == 1) ConfigMigration.migrateV2(config);
-        if (previousConfigVersion == 2) ConfigMigration.migrateV3(config);
-        if (previousConfigVersion == 3) ConfigMigration.migrateV4(config);
+        if (configVersion() == -1) ConfigMigration.migrateV1(config);
+        if (configVersion() == 1) ConfigMigration.migrateV2(config);
+        if (configVersion() == 2) ConfigMigration.migrateV3(config);
+        if (configVersion() == 3) ConfigMigration.migrateV4(config);
 
         config.addComment("config-version", "DO NOT TOUCH THIS FIELD!");
+    }
+
+    private int configVersion() {
+        return config.getInteger("config-version", -1);
     }
 
     public boolean loadCfg() {
