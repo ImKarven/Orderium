@@ -2,7 +2,7 @@ package me.karven.orderium.data;
 
 import me.karven.orderium.api.events.OrderRemoveEvent;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.obj.SortType;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.CustomItem;
 import me.karven.orderium.obj.orderitem.OrderItem;
@@ -27,8 +27,8 @@ public final class DataCache {
     }
 
     private static final Registry<BlockType> BLOCK_REGISTRY = Registry.BLOCK;
-    private final NavigableSet<OrderItem> itemsAZ = new ConcurrentSkipListSet<>(AlgoUtils.getComparator(SortTypes.A_Z));
-    private final NavigableSet<OrderItem> itemsZA = new ConcurrentSkipListSet<>(AlgoUtils.getComparator(SortTypes.Z_A));
+    private final NavigableSet<OrderItem> itemsAZ = new ConcurrentSkipListSet<>(AlgoUtils.getComparator(SortType.A_Z));
+    private final NavigableSet<OrderItem> itemsZA = new ConcurrentSkipListSet<>(AlgoUtils.getComparator(SortType.Z_A));
 
     private final Set<CustomItem> customItems = ConcurrentHashMap.newKeySet();
     private final Set<BlacklistedItem> blacklist = ConcurrentHashMap.newKeySet();
@@ -126,7 +126,7 @@ public final class DataCache {
         return ownerOrders;
     }
 
-    public NavigableSet<Order> getSortedOrders(SortTypes sortType) {
+    public NavigableSet<Order> getSortedOrders(SortType sortType) {
         switch (sortType) {
             case MOST_MONEY_PER_ITEM -> { return mostMoneyPerItem; }
             case RECENTLY_LISTED -> { return recentlyListed; }
@@ -136,7 +136,7 @@ public final class DataCache {
         return mostMoneyPerItem;
     }
 
-    public NavigableSet<OrderItem> getItems(SortTypes sortType) {
+    public NavigableSet<OrderItem> getItems(SortType sortType) {
         switch (sortType) {
             case A_Z -> { return itemsAZ; }
             case Z_A -> { return itemsZA; }

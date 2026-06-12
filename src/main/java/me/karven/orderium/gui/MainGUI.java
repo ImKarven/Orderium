@@ -6,9 +6,8 @@ import io.papermc.paper.dialog.Dialog;
 import me.karven.orderium.guiframework.InteractLocation;
 import me.karven.orderium.guiframework.InventoryGUI;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.obj.SortType;
 import me.karven.orderium.utils.AlgoUtils;
-import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.DispatchUtil;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -23,8 +22,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static me.karven.orderium.data.ConfigCache.cache;
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
+import static me.karven.orderium.config.Config.config;
 import static me.karven.orderium.utils.ConvertUtils.ceil_div;
 
 public class MainGUI {
@@ -41,7 +40,7 @@ public class MainGUI {
         this.search = "";
         this.sortIdx = sortIdx;
         this.player = p;
-        final SortTypes sortType = cache.ordersSortsOrder.get(sortIdx);
+        final SortType sortType = config.mainGUIConfig.sortsOrderConfig.index(sortIdx);
 
         Collection<Order> allOrders = plugin.getDataCache().getSortedOrders(sortType);
         orders = allOrders.stream().filter(Order::isActive).toList();
@@ -54,7 +53,7 @@ public class MainGUI {
         this.search = search;
         this.sortIdx = sortIdx;
         this.player = p;
-        final SortTypes sortType = cache.ordersSortsOrder.get(sortIdx);
+        final SortType sortType = config.mainGUIConfig.sortsOrderConfig.index(sortIdx);
 
         Collection<Order> allOrders = AlgoUtils.searchOrder(search, plugin.getDataCache().getSortedOrders(sortType));
         orders = allOrders.stream().filter(Order::isActive).toList();
@@ -64,19 +63,21 @@ public class MainGUI {
     }
 
     private void setupPages() {
-        int curr = 0, cnt = 0;
+        int curr = 0;
 
         InventoryGUI page = initPage();
         addButtons(page, curr);
 
+        int currentSlotIndex = 0;
+
         for (final Order order : orders) {
-            if (cnt == 45) {
-                cnt = 0;
+            if (currentSlotIndex == config.mainGUIConfig.orderConfig.slots.size()) {
+                currentSlotIndex = 0;
                 pages.add(page);
                 page = initPage();
                 addButtons(page, ++curr);
             }
-            page.addItem(ConvertUtils.fetchOrder(order, cache.orderLore, e -> {
+            page.addItem(order.item(config.mainGUIConfig.orderConfig.lore, e -> {
                 HumanEntity who = e.getWhoClicked();
                 if (e.getClick() == ClickType.RIGHT && who.hasPermission("orderium.admin.edit-orders")) {
                     Dialog dialog = AdminToolGUI.createEditOrder(order);
@@ -84,19 +85,19 @@ public class MainGUI {
                     return;
                 }
                 if (player.getUniqueId().equals(order.getOwnerUniqueId())) {
-                    player.sendRichMessage(cache.deliverSelf);
+                    player.sendRichMessage(config.deliverSelf);
                     return;
                 }
                 InventoryGUI deliverGUI = setupDeliverGUI(order);
                 deliverGUI.open(who);
-            }), cnt);
-            cnt++;
+            }), config.mainGUIConfig.orderConfig.slots.get(currentSlotIndex));
+            currentSlotIndex++;
         }
         pages.add(page);
     }
 
     private InventoryGUI initPage() {
-        InventoryGUI page = new InventoryGUI(6, mm.deserialize(cache.mainGuiTitle));
+        InventoryGUI page = new InventoryGUI(config.mainGUIConfig.rows, mm.deserialize(config.mainGUIConfig.title));
         page.setOnClick(event -> event.setCancelled(true), InteractLocation.GLOBAL);
         page.setOnDrag(event -> event.setCancelled(true), InteractLocation.GLOBAL);
         return page;
@@ -104,7 +105,7 @@ public class MainGUI {
 
     private InventoryGUI setupDeliverGUI(Order order) {
         final ItemStack comparer = order.getItem();
-        final InventoryGUI deliverGUI = new InventoryGUI(cache.deliverRows, mm.deserialize(cache.deliverTitle));
+        final InventoryGUI deliverGUI = new InventoryGUI(config.deliverGUIConfig.rows, mm.deserialize(config.deliverGUIConfig.title));
 
         deliverGUI.setOnClose(e -> {
             if (!(e.getPlayer() instanceof Player p)) return;
@@ -147,7 +148,7 @@ public class MainGUI {
                 amount += item.getAmount();
                 continue;
             }
-            if (!cache.shulkerDelivering || !isShulkerBox(item)) continue;
+            if (!config.shulkerDelivering || !isShulkerBox(item)) continue;
             ItemContainerContents shulkerContent = item.getData(DataComponentTypes.CONTAINER);
             if (shulkerContent == null) continue;
 
@@ -167,51 +168,57 @@ public class MainGUI {
 
     private void addButtons(InventoryGUI gui, int curr) {
         if (curr > 0)
-            gui.addItem(ConvertUtils.parseNewButton(
-                    cache.ordersBackButton,
-                    e -> PlayerUtils.clickBack(e, pages.get(curr - 1))
-        ), cache.ordersBackButton.getSlot() + 45);
+            gui.addItem(
+                    config.mainGUIConfig.backButton.item(e -> PlayerUtils.clickBack(e, pages.get(curr - 1))),
+                    config.mainGUIConfig.backButton.slot
+            );
 
         if (curr + 1 < amount)
-            gui.addItem(ConvertUtils.parseNewButton(
-                    cache.ordersNextButton,
-                    e -> PlayerUtils.clickNext(e, pages.get(curr + 1))
-        ), cache.ordersNextButton.getSlot() + 45);
+            gui.addItem(
+                    config.mainGUIConfig.nextButton.item(e -> PlayerUtils.clickNext(e, pages.get(curr + 1))),
+                    config.mainGUIConfig.nextButton.slot
+            );
 
-        gui.addItem(ConvertUtils.parseNewButton(cache.refreshButton, event -> {
-            MainGUI mainGUI = search.isEmpty() ? new MainGUI(player, sortIdx) : new MainGUI(player, sortIdx, search);
-            PlayerUtils.openGUI(player, mainGUI.getGUI(), false);
-            PlayerUtils.playSound(player, cache.refreshSound);
+        gui.addItem(
+                config.mainGUIConfig.refreshButton.item(event -> {
+                    MainGUI mainGUI = search.isEmpty() ? new MainGUI(player, sortIdx) : new MainGUI(player, sortIdx, search);
+                    PlayerUtils.openGUI(player, mainGUI.getGUI(), false);
+                    PlayerUtils.playSound(player, config.refreshSound);
 
-        }), cache.refreshButton.getSlot() + 45);
+                }),
+                config.mainGUIConfig.refreshButton.slot
+        );
 
-        gui.addItem(ConvertUtils.parseSortButton(cache.ordersSortButton, cache.ordersSortsOrder.get(sortIdx), event -> {
-            MainGUI mainGUI = search.isEmpty() ?
-                    new MainGUI(player, sortIdx + 1 == cache.ordersSortsOrder.size() ? 0 : sortIdx + 1) :
-                    new MainGUI(player, sortIdx + 1 == cache.ordersSortsOrder.size() ? 0 : sortIdx + 1, search);
+        gui.addItem(
+                config.mainGUIConfig.sortButton.item(event -> {
+                    MainGUI mainGUI = search.isEmpty() ?
+                            new MainGUI(player, sortIdx + 1 == config.mainGUIConfig.sortsOrderConfig.orderArray.size() ? 0 : sortIdx + 1) :
+                            new MainGUI(player, sortIdx + 1 == config.mainGUIConfig.sortsOrderConfig.orderArray.size() ? 0 : sortIdx + 1, search);
 
-            PlayerUtils.openGUI(player, mainGUI.getGUI(), false);
+                    PlayerUtils.openGUI(player, mainGUI.getGUI(), false);
 
-            PlayerUtils.playSound(player, cache.sortSound);
+                    PlayerUtils.playSound(player, config.sortSound);
 
-        }), cache.ordersSortButton.getSlot() + 45);
+                }, config.mainGUIConfig.sortsOrderConfig.index(sortIdx)),
+                config.mainGUIConfig.sortButton.slot
+        );
 
-        gui.addItem(ConvertUtils.parseNewButton(
-                cache.ordersSearchButton,
-                event -> SignGUI.newSession(
-                    player,
-                    (s) -> DispatchUtil.entity(player, () -> {
-                        MainGUI mainGUI = new MainGUI(player, sortIdx, s);
-                        PlayerUtils.openGUI(player, mainGUI.getGUI(), false);
-                    }),
-                    cache.lines, cache.signBlock, cache.searchLine
-                )
-        ), cache.ordersSearchButton.getSlot() + 45);
+        gui.addItem(
+                config.mainGUIConfig.searchButton.item(event -> SignGUI.newSession(
+                        player,
+                        (s) -> DispatchUtil.entity(player, () -> {
+                            MainGUI mainGUI = new MainGUI(player, sortIdx, s);
+                            PlayerUtils.openGUI(player, mainGUI.getGUI(), false);
+                        }),
+                        config.signGUIConfig.signLines, config.signGUIConfig.signType(), config.signGUIConfig.queryLine
+                )),
+                config.mainGUIConfig.searchButton.slot
+        );
 
-        gui.addItem(ConvertUtils.parseNewButton(
-                cache.yoButton,
-                event -> YourOrderGUI.open(player)
-        ), cache.yoButton.getSlot() + 45);
+        gui.addItem(
+                config.mainGUIConfig.yourOrdersButton.item(event -> YourOrderGUI.open(player)),
+                config.mainGUIConfig.yourOrdersButton.slot
+        );
     }
 
     public InventoryGUI getGUI() {

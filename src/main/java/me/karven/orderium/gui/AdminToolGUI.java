@@ -30,7 +30,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
 
 public class AdminToolGUI {
     private static final List<InventoryGUI> blacklist = new CopyOnWriteArrayList<>();

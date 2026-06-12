@@ -6,14 +6,13 @@ import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.obj.orderitem.EnchantableItem;
 import me.karven.orderium.obj.orderitem.OrderItem;
 import me.karven.orderium.obj.orderitem.VanillaItem;
-import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.Log;
 import me.karven.orderium.utils.PDCUtils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.apache.logging.log4j.util.TriConsumer;
-import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -23,8 +22,8 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import static me.karven.orderium.data.ConfigCache.cache;
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
+import static me.karven.orderium.config.Config.config;
 
 /**
  * GUI that lets players select enchantments of their item
@@ -50,10 +49,7 @@ public class EnchantGUI {
             return;
         }
         MiniMessage mm = plugin.mm;
-        int length = enchantable.size();
-        // Create the GUI. Use more rows if more than 9 enchantments
-        int enchantmentsRows = Math.min(4, length / 9 + 1); // amount of rows for enchantment books
-        this.gui = new InventoryGUI(2 + enchantmentsRows, mm.deserialize(cache.enchantItemTitle));
+        this.gui = new InventoryGUI(config.enchantGUIConfig.rows, mm.deserialize(config.enchantGUIConfig.title));
         gui.setOnClick(event -> event.setCancelled(true), InteractLocation.GLOBAL);
         gui.setOnDrag(event -> event.setCancelled(true), InteractLocation.GLOBAL);
 
@@ -66,22 +62,24 @@ public class EnchantGUI {
             action.accept(copy);
         };
         InventoryItem displayItem = new InventoryItem(enchantedItem);
-        InventoryItem confirmItem = ConvertUtils.parseNewButton(cache.confirmEnchantButton, confirmAction);
+        InventoryItem confirmItem = config.enchantGUIConfig.confirmButton.item(confirmAction);
 
         gui.addItem(displayItem, 0);
-        gui.addItem(confirmItem, cache.confirmEnchantButton.getSlot());
+        gui.addItem(confirmItem, config.enchantGUIConfig.confirmButton.slot);
 
-        Component activePrefix = mm.deserialize(cache.enchantActivePrefix);
-        Component inactivePrefix = mm.deserialize(cache.enchantInactivePrefix);
-        int slot = 18;
+        int currentSlotIndex = 0;
         for (Enchantment enchantment : enchantable) {
-            Component enchantmentName = enchantment.description().decoration(TextDecoration.ITALIC, false);
-            ItemStack bookItem = ItemStack.of(Material.ENCHANTED_BOOK);
-            bookItem.editMeta(meta -> {
-               meta.setEnchantmentGlintOverride(true);
-               meta.displayName(inactivePrefix.append(enchantmentName));
-               meta.lore(cache.enchantLore.stream().map(raw -> mm.deserialize(raw).decoration(TextDecoration.ITALIC, false)).toList());
-            });
+            Component enchantmentName = enchantment.description();
+            final TagResolver enchantmentPlaceholder = Placeholder.component("enchantment", enchantmentName);
+            ItemStack bookItem = config.enchantGUIConfig.enchantmentConfig.itemRepresentation.clone();
+            bookItem.editMeta(meta ->
+                    meta.displayName(
+                            mm.deserialize(
+                                    config.enchantGUIConfig.enchantmentConfig.inactiveName,
+                                    enchantmentPlaceholder
+                            )
+                    )
+            );
             InventoryItem guiItem = new InventoryItem(bookItem);
 
             TriConsumer<Integer, Integer, Integer> changeLevel = (start, end, increment) -> {
@@ -91,10 +89,14 @@ public class EnchantGUI {
                     return currentLevel + increment;
                 });
                 guiItem.getItem().editMeta(meta -> {
-                    switch (newLevel) {
-                        case 0 -> meta.displayName(inactivePrefix.append(enchantmentName));
-                        case 1 -> meta.displayName(activePrefix.append(enchantmentName));
-                        default -> meta.displayName(activePrefix.append(enchantmentName.append(Component.text(" " + newLevel))));
+                    if (newLevel == 0) {
+                        meta.displayName(mm.deserialize(config.enchantGUIConfig.enchantmentConfig.inactiveName, enchantmentPlaceholder));
+                    } else {
+                        meta.displayName(mm.deserialize(
+                                config.enchantGUIConfig.enchantmentConfig.activeName, enchantmentPlaceholder,
+                                Placeholder.unparsed("level", String.valueOf(newLevel)),
+                                Placeholder.component("roman-numeral-level", Component.translatable("enchantment.level." + newLevel))
+                        ));
                     }
                 });
                 if (newLevel == 0) enchantedItem.removeEnchantment(enchantment);
@@ -110,7 +112,7 @@ public class EnchantGUI {
                 }
             };
             guiItem.setOnClick(clickAction);
-            gui.addItem(guiItem, slot++);
+            gui.addItem(guiItem, config.enchantGUIConfig.enchantmentConfig.slots.get(currentSlotIndex++));
         }
     }
 

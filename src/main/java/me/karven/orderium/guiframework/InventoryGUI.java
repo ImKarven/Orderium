@@ -37,7 +37,8 @@ public class InventoryGUI implements InventoryHolder {
     private Consumer<InventoryCloseEvent> onClose = null;
 
     public InventoryGUI(int rows, @NotNull Component title) {
-        Preconditions.checkArgument(rows >= 1 && rows <= 6, "Rows must be between 1 and 6");
+        Preconditions.checkArgument(rows >= 1 && rows <= 6, "Rows must be between 1 and 6, found " + rows);
+
         this.rows = rows;
         this.title = title;
         this.handle = Bukkit.createInventory(this, rows * 9, title);
@@ -65,6 +66,7 @@ public class InventoryGUI implements InventoryHolder {
     }
 
     public void addItem(@NotNull InventoryItem item, int slot) {
+        Preconditions.checkArgument(slot >= 0 && slot < rows * 9, "Slot must be between 1 and " + (rows * 9 - 1) + ", found " + slot);
         items.put(item.getId(), item);
         handle.setItem(slot, item.getItem());
     }

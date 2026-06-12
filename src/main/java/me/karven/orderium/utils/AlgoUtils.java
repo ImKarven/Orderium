@@ -7,7 +7,7 @@ import io.papermc.paper.datacomponent.item.PotionContents;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.SortTypes;
+import me.karven.orderium.obj.SortType;
 import me.karven.orderium.obj.orderitem.OrderItem;
 import me.karven.orderium.obj.orderitem.SearchableItem;
 import org.bukkit.*;
@@ -18,7 +18,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.Config.config;
 
 @SuppressWarnings("UnstableApiUsage")
 public class AlgoUtils {
@@ -111,16 +111,21 @@ public class AlgoUtils {
 
     public static boolean isSimilar(final ItemStack a, final ItemStack b) {
         if (!a.getType().equals(b.getType())) return false;
-        for (final DataComponentType.Valued<?> component : cache.similarityCheck) {
-            final Object dataA = a.getData(component);
-            final Object dataB = b.getData(component);
+        for (final NamespacedKey componentKey : config.similarityCheck) {
+            final DataComponentType nonValueType = Registry.DATA_COMPONENT_TYPE.get(componentKey);
+            if (!(nonValueType instanceof DataComponentType.Valued<?> dataComponentType)) {
+                Log.error("Data component type does not exist in similarity check: " + componentKey, new RuntimeException());
+                continue;
+            }
+            final Object dataA = a.getData(dataComponentType);
+            final Object dataB = b.getData(dataComponentType);
             if (dataA == null && dataB == null) continue;
             if (dataA == null || !dataA.equals(dataB)) return false;
         }
         return true;
     }
 
-    public static Comparator<OrderItem> getComparator(SortTypes sortType) {
+    public static Comparator<OrderItem> getComparator(SortType sortType) {
         switch (sortType) {
             case A_Z -> { return getComparator(false); }
             case Z_A -> { return getComparator(true); }

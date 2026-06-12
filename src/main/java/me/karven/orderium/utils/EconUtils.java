@@ -4,8 +4,8 @@ import me.karven.orderium.obj.MoneyTransaction;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
-import static me.karven.orderium.data.ConfigCache.cache;
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
+import static me.karven.orderium.config.Config.config;
 
 public class EconUtils {
     private static final MoneyTransaction currentTransaction = new MoneyTransaction();
@@ -26,14 +26,14 @@ public class EconUtils {
     }
 
     private static void logTransactionBefore(OfflinePlayer p, double amount) {
-        if (!cache.logTransactions) return;
+        if (!config.logTransactions) return;
         currentTransaction.player = p.getUniqueId();
         currentTransaction.before = plugin.getEconomy().getBalance(p);
         currentTransaction.amount = amount;
     }
 
     private static void logTransactionAfter(OfflinePlayer p) {
-        if (!cache.logTransactions) return;
+        if (!config.logTransactions) return;
         currentTransaction.after = plugin.getEconomy().getBalance(p);
         plugin.getStorage().logTransaction(currentTransaction.player, currentTransaction.before, currentTransaction.amount, currentTransaction.after);
     }

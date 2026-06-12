@@ -5,7 +5,7 @@ import net.kyori.adventure.text.Component;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
 
 public class Log {
     private static final Logger logger = Logger.getLogger("Orderium");

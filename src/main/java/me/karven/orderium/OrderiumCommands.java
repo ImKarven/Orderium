@@ -1,40 +1,34 @@
-package me.karven.orderium.load;
+package me.karven.orderium;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.plugin.bootstrap.BootstrapContext;
-import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
-import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
 import me.karven.orderium.utils.PlayerUtils;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
 
-import static me.karven.orderium.data.ConfigCache.cache;
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
+import static me.karven.orderium.config.Config.config;
 
-@SuppressWarnings({"UnstableApiUsage", "unused"})
-public class Bootstrapper implements PluginBootstrap {
-    public static boolean commandRegistration = true;
-
+public class OrderiumCommands {
     private static @NotNull Predicate<CommandSourceStack> permission(@NotNull String permission) {
         return predicate ->
                 predicate.getExecutor() != null &&
-                predicate.getExecutor().hasPermission("orderium." + permission);
+                        predicate.getExecutor().hasPermission("orderium." + permission);
     }
 
     private static @NotNull Predicate<CommandSourceStack> playerAndPermission(@NotNull String permission) {
         return predicate ->
                 predicate.getExecutor() instanceof final Player player &&
-                player.hasPermission("orderium." + permission);
+                        player.hasPermission("orderium." + permission);
     }
 
     private static LiteralCommandNode<CommandSourceStack> getOrderCmd(String alias) {
@@ -67,8 +61,10 @@ public class Bootstrapper implements PluginBootstrap {
                 .then(Commands.literal("reload")
                         .requires(permission("admin.reload"))
                         .executes(ctx -> {
-                            assert ctx.getSource().getExecutor() != null;
-                            cache.reload(() -> ctx.getSource().getExecutor().sendRichMessage("<green>Orderium reloaded"));
+                            final Entity executor = ctx.getSource().getExecutor();
+                            assert executor != null;
+                            config.reloadAsync().thenAccept(ignored -> executor.sendRichMessage("<green>Orderium reloaded"));
+
                             return 1;
                         })
                 )
@@ -96,19 +92,13 @@ public class Bootstrapper implements PluginBootstrap {
         return builder.build();
     }
 
-    @Override
-    public void bootstrap(@NotNull BootstrapContext ctx) {
-        ctx.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, e -> {
-            if (!commandRegistration) return;
-            for (final String orderAlias : cache.orderCommandAliases) {
-                e.registrar().register(getOrderCmd(orderAlias));
-            }
-            e.registrar().register(getOrderiumCmd());
-        });
-    }
+    public static void register() {
+        plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            event.registrar().register(getOrderiumCmd());
 
-    @Override
-    public @NotNull JavaPlugin createPlugin(@NotNull PluginProviderContext ctx) {
-        return plugin;
+            for (final String alias : config.orderCommandAliases) {
+                event.registrar().register(getOrderCmd(alias));
+            }
+        });
     }
 }

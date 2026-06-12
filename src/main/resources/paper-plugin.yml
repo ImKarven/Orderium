@@ -1,7 +1,6 @@
 name: Orderium
 version: ${version}
-main: me.karven.orderium.load.Orderium
-bootstrapper: me.karven.orderium.load.Bootstrapper
+main: me.karven.orderium.Orderium
 api-version: '1.21'
 folia-supported: true
 authors: [ Karven ]
@@ -34,6 +33,7 @@ permissions:
   orderium.bypass.max-collect-per-minute:
     default: op
     description: Bypass max-collect-per-minute value
+
   orderium.use:
     default: true
     description: Access to the orders command

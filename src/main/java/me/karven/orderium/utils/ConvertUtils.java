@@ -1,28 +1,18 @@
 package me.karven.orderium.utils;
 
-import io.papermc.paper.datacomponent.DataComponentType;
-import io.papermc.paper.registry.RegistryKey;
-import io.papermc.paper.registry.TypedKey;
-import me.karven.orderium.guiframework.InventoryItem;
+import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
 import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.SlotInfo;
-import me.karven.orderium.obj.SortTypes;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.CustomItem;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.key.KeyPattern;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
-import org.intellij.lang.annotations.Subst;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,33 +20,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 
-import static me.karven.orderium.data.ConfigCache.cache;
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ConvertUtils {
-    private static final Registry<ItemType> itemRegistry = Registry.ITEM;
-    private static final Registry<DataComponentType> dataComponentTypeRegistry = Registry.DATA_COMPONENT_TYPE;
     private static final MiniMessage mm = MiniMessage.miniMessage();
 
-    public static ItemType getItemType(@KeyPattern final String identifier) {
-        @Subst("ignored")
-        final ItemType itemType = itemRegistry.get(TypedKey.create(RegistryKey.ITEM, Key.key(identifier)));
+    public static ItemType getItemType(final @Nullable String identifier) {
+        if (identifier == null) return ItemType.STONE;
+        final String[] components = identifier.split(":");
+        if (components.length != 2) return ItemType.STONE;
+        final ItemType itemType = Registry.ITEM.get(new NamespacedKey(components[0], components[1]));
         if (itemType == null) return ItemType.STONE;
         return itemType;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> DataComponentType.Valued<T> getDataComponentType(@KeyPattern final String identifier) {
-        final DataComponentType component = dataComponentTypeRegistry.get(TypedKey.create(RegistryKey.DATA_COMPONENT_TYPE, Key.key(identifier)));
-
-        if (component instanceof DataComponentType.Valued) {
-            return (DataComponentType.Valued<T>) component;
-        }
-        return null;
     }
 
     public static List<Order> convertOrders(ResultSet raw) {
@@ -130,91 +108,6 @@ public class ConvertUtils {
         return item;
     }
 
-    public static InventoryItem parseOrder(Order order, List<String> rawLore, Consumer<InventoryClickEvent> action) {
-        return new InventoryItem(parseOrder(order, rawLore), action);
-    }
-
-    public static InventoryItem fetchOrder(Order order, List<String> rawLore, Consumer<InventoryClickEvent> action) {
-        return new InventoryItem(parseOrder(order, rawLore), action);
-    }
-
-    public static ItemStack parseOrder(Order order, List<String> rawLore) {
-        final ItemStack item = order.getItem().clone();
-        final String playerName = Bukkit.getOfflinePlayer(order.getOwnerUniqueId()).getName();
-        final String pName = playerName == null ? String.valueOf(order.getOwnerUniqueId()) : playerName;
-        final List<Component> lore = rawLore.stream().map(str -> delOrder(str, order, pName).decoration(TextDecoration.ITALIC, false)).toList();
-        item.lore(lore);
-
-        return item;
-    }
-
-    /// Deserialize a text with orders placeholders
-    public static Component delOrder(String s, Order order) {
-        final String playerName = Bukkit.getOfflinePlayer(order.getOwnerUniqueId()).getName();
-        final String pName = playerName == null ? String.valueOf(order.getOwnerUniqueId()) : playerName;
-        return delOrder(s, order, pName);
-    }
-
-    /// Deserialize a text with orders placeholders
-    public static Component delOrder(String s, Order order, String pName) {
-        long millis = order.getExpiresAt() - System.currentTimeMillis();
-        long sec = millis / 1000;
-        long min = sec / 60;
-        long hour = min / 60;
-        final long day = hour / 24;
-        hour %= 24;
-        min %= 60;
-        sec %= 60;
-        millis %= 1000;
-        return mm.deserialize(s,
-                Placeholder.unparsed("money-per", formatNumber(order.getMoneyPer())),
-                Placeholder.unparsed("paid", formatNumber(order.getMoneyPer() * order.getDelivered())),
-                Placeholder.unparsed("total", formatNumber(order.getMoneyPer() * order.getAmount())),
-                Placeholder.unparsed("delivered", formatNumber(order.getDelivered())),
-                Placeholder.unparsed("amount", formatNumber(order.getAmount())),
-                Placeholder.unparsed("in-storage", formatNumber(order.getInStorage())),
-                Placeholder.unparsed("player", pName),
-                Placeholder.component("item", Component.translatable(order.getItem().translationKey())),
-                Placeholder.component("order-status", mm.deserialize(order.getStatus().getText(),
-                        Placeholder.unparsed("day", String.valueOf(day)),
-                        Placeholder.unparsed("hour", String.valueOf(hour)),
-                        Placeholder.unparsed("minute", String.valueOf(min)),
-                        Placeholder.unparsed("second", String.valueOf(sec)),
-                        Placeholder.unparsed("millisecond", String.valueOf(millis))
-                        ))
-        );
-    }
-
-    public static InventoryItem parseNewButton(SlotInfo info, Consumer<InventoryClickEvent> action, TagResolver... placeholders) {
-        final ItemStack item = info.getType().createItemStack();
-        item.editMeta(meta -> {
-            meta.displayName(mm.deserialize(info.getDisplayName(), placeholders).decoration(TextDecoration.ITALIC, false));
-            final List<Component> lore = info.getLore().stream().map(str -> mm.deserialize(str, placeholders).decoration(TextDecoration.ITALIC, false)).toList();
-            meta.lore(lore);
-            String itemModel = info.getItemModel();
-            if (itemModel != null)
-                meta.setItemModel(NamespacedKey.fromString(itemModel));
-        });
-        return new InventoryItem(item, action);
-    }
-
-    public static InventoryItem parseSortButton(SlotInfo info, SortTypes type, Consumer<InventoryClickEvent> action) {
-        final ItemStack item = info.getType().createItemStack();
-        List<TagResolver> placeholders = new ArrayList<>(List.of(cache.sortPlaceholders));
-        @Subst("ignored")
-        final String identifier = type.getIdentifier();
-        placeholders.add(Placeholder.parsed(identifier, cache.sortPrefix + type.getDisplay()));
-        item.editMeta(meta -> {
-            meta.displayName(mm.deserialize(info.getDisplayName(), TagResolver.resolver(placeholders)).decoration(TextDecoration.ITALIC, false));
-            final List<Component> lore = info.getLore().stream().map(str -> mm.deserialize(str, TagResolver.resolver(placeholders)).decoration(TextDecoration.ITALIC, false)).toList();
-            meta.lore(lore);
-            String itemModel = info.getItemModel();
-            if (itemModel != null)
-                meta.setItemModel(NamespacedKey.fromString(itemModel));
-        });
-        return new InventoryItem(item, action);
-    }
-
     public static int ceil_div(int a, int b) {
         return 1 + ((a - 1) / b);
     }
@@ -257,9 +150,7 @@ public class ConvertUtils {
     public static double formatNumber(String s) {
         if (s == null || s.isEmpty()) return -1;
         try {
-            final double num = Double.parseDouble(s);
-            if (num < cache.minPrice) return -1;
-            return num;
+            return Double.parseDouble(s);
         } catch (Exception e) {
             if (s.length() == 1) return -1;
         }
@@ -270,7 +161,25 @@ public class ConvertUtils {
         final String suffix = s.substring(s.length() - 1).toUpperCase();
         if (!unit.containsKey(suffix)) return -1;
         num *= unit.get(suffix);
-        if (num < cache.minPrice) return -1;
         return num;
+    }
+
+    public static @NotNull ItemStack deserializeItem(final @NotNull ConfigSection section) {
+        final HashMap<String, Object> serialized = new HashMap<>();
+        for (final String key : section.getKeys(false, true)) {
+            if (!key.equals("components")) {
+                serialized.put(key, section.get(key));
+                continue;
+            }
+
+            final HashMap<String, String> componentMap = new HashMap<>();
+            final ConfigSection componentSection = section.getConfigSection(key);
+            for (final String componentKey : componentSection.getKeys(false, true)) {
+                componentMap.put(componentKey, componentSection.getString(componentKey));
+            }
+            serialized.put(key, componentMap);
+        }
+
+        return ItemStack.deserialize(serialized);
     }
 }

@@ -6,7 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.jetbrains.annotations.NotNull;
 
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
 
 public class ServerLoadListener implements Listener {
 

@@ -1,4 +1,4 @@
-package me.karven.orderium.obj;
+package me.karven.orderium.config.util;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import io.github.thatsmusic99.configurationmaster.api.ConfigSection;

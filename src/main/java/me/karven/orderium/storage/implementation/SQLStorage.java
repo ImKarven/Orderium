@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static me.karven.orderium.data.ConfigCache.cache;
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
+import static me.karven.orderium.config.Config.config;
 
 public class SQLStorage extends Storage {
 
@@ -39,9 +39,9 @@ public class SQLStorage extends Storage {
 
     private final HikariDataSource data;
 
-    public static SQLStorage mysql() {
-        return new SQLStorage(StorageMethod.MYSQL, "jdbc:mysql://" + configs.remoteAddress + "/" + configs.databaseName, configs.dbUsername, configs.dbPassword);
-    }
+//    public static SQLStorage mysql() {
+//        return new SQLStorage(StorageMethod.MYSQL, "jdbc:mysql://" + configs.remoteAddress + "/" + configs.databaseName, configs.dbUsername, configs.dbPassword);
+//    }
 
     public static SQLStorage h2() {
         return new SQLStorage(StorageMethod.H2, "jdbc:h2:" + dataDir + File.separator + "data-h2", "sa", "");
@@ -96,7 +96,7 @@ public class SQLStorage extends Storage {
                     Connection connection = data.getConnection();
                     PreparedStatement create = connection.prepareStatement(CREATE_ORDER, Statement.RETURN_GENERATED_KEYS)
             ) {
-                long expiresAt = System.currentTimeMillis() + configs.expiresAfter;
+                long expiresAt = System.currentTimeMillis() + config.expiresAfter;
                 create.setLong(1, owner.getMostSignificantBits());
                 create.setLong(2, owner.getLeastSignificantBits());
                 create.setBytes(3, item.serializeAsBytes());
@@ -206,7 +206,7 @@ public class SQLStorage extends Storage {
 
                 for (ItemStack item : items) {
                     if (!AlgoUtils.isSimilar(item, order.getItem())) {
-                        if (isShulkerBox(item) && cache.shulkerDelivering) {
+                        if (isShulkerBox(item) && config.shulkerDelivering) {
                             deliverable = scanShulkerBox(item, order.getItem(), deliverable);
                         }
                         PlayerUtils.give(deliverer, item, true);

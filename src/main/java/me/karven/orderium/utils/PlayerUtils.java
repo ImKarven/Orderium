@@ -17,8 +17,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static me.karven.orderium.data.ConfigCache.cache;
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
+import static me.karven.orderium.config.Config.config;
 
 public class PlayerUtils {
 
@@ -105,12 +105,12 @@ public class PlayerUtils {
     public static void clickNext(InventoryClickEvent e, InventoryGUI nextPage) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
         PlayerUtils.openGUI(p, nextPage, false);
-        PlayerUtils.playSound(p, cache.nextPageSound);
+        PlayerUtils.playSound(p, config.nextPageSound);
     }
 
     public static void clickBack(InventoryClickEvent e, InventoryGUI previousPage) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
         PlayerUtils.openGUI(p, previousPage, false);
-        PlayerUtils.playSound(p, cache.previousPageSound);
+        PlayerUtils.playSound(p, config.previousPageSound);
     }
 }

@@ -1,14 +1,14 @@
-package me.karven.orderium.load;
+package me.karven.orderium;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
+import me.karven.orderium.config.Config;
 import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.ChooseItemGUI;
 import me.karven.orderium.gui.SignGUI;
 import me.karven.orderium.guiframework.GUIListener;
 import me.karven.orderium.listener.ContainerContentListener;
-import me.karven.orderium.listener.DialogListener;
 import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.listener.ServerLoadListener;
 import me.karven.orderium.storage.Storage;
@@ -27,14 +27,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
-
-import static me.karven.orderium.data.ConfigCache.cache;
+import static me.karven.orderium.config.Config.config;
 
 public final class Orderium extends JavaPlugin {
-    public static final Orderium plugin = new Orderium();
+    public static Orderium plugin;
     public final int bStatsID = 27569;
     public Metrics metrics = null;
-    public boolean shouldEnable = true; // This would be false if the config file failed to load or no economy plugin is found
     public static boolean isFolia;
 
     private Storage storage;
@@ -49,16 +47,17 @@ public final class Orderium extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        if (!plugin.shouldEnable) {
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
+        plugin = this;
+        try {
+            config = new Config();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+        OrderiumCommands.register();
         isFolia = isFolia();
-        Storage.init();
         storage = createStorage();
         AdminToolGUI.init();
         ChooseItemGUI.init();
-        reloadBStats();
         Bukkit.getPluginManager().registerEvents(new ServerLoadListener(), this);
         Log.info("Orderium enabled");
     }
@@ -78,7 +77,6 @@ public final class Orderium extends JavaPlugin {
 
     private void registerListeners() {
         Bukkit.getPluginManager().registerEvents(new GUIListener(), this);
-        Bukkit.getPluginManager().registerEvents(new DialogListener(), this);
         Bukkit.getPluginManager().registerEvents(new DisconnectListener(), this);
         PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(), PacketListenerPriority.NORMAL);
         PacketEvents.getAPI().getEventManager().registerListener(new ContainerContentListener(), PacketListenerPriority.NORMAL);
@@ -94,7 +92,7 @@ public final class Orderium extends JavaPlugin {
     }
 
     private void checkUpdates() {
-        if (cache.checkForUpdates) {
+        if (config.checkForUpdates) {
             Bukkit.getAsyncScheduler().runNow(this, task -> {
                 final String newVer = UpdateUtils.checkForUpdates();
                 if (newVer == null) return;
@@ -105,17 +103,7 @@ public final class Orderium extends JavaPlugin {
     }
 
     public Storage createStorage() {
-        switch (cache.storageMethod) {
-            case SQLITE -> {
-                return SQLStorage.sqlite();
-            }
-            case MYSQL -> {
-                return SQLStorage.mysql();
-            }
-            default -> {
-                return SQLStorage.h2();
-            }
-        }
+        return SQLStorage.sqlite();
     }
 
     private boolean checkVault() {
@@ -139,23 +127,13 @@ public final class Orderium extends JavaPlugin {
         }
     }
 
-    public void reloadBStats() {
-
-        if (cache.bStats) {
+    public void reloadBStats(final Config config) {
+        if (config.bStats) {
             if (metrics == null)
                 metrics = new Metrics(plugin, bStatsID);
         } else if (metrics != null) {
             metrics.shutdown();
             metrics = null;
         }
-    }
-
-    @Override
-    public void onDisable() {
-        Bukkit.getAsyncScheduler().cancelTasks(this);
-
-        // Unregister commands
-        Bootstrapper.commandRegistration = false;
-        Bukkit.reloadData();
     }
 }

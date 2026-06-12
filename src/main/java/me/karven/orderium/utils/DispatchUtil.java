@@ -6,7 +6,7 @@ import org.bukkit.entity.Entity;
 
 import java.util.function.Consumer;
 
-import static me.karven.orderium.load.Orderium.plugin;
+import static me.karven.orderium.Orderium.plugin;
 
 public class DispatchUtil {
 
