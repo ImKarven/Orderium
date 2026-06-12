@@ -28,30 +28,35 @@ public class YourOrdersGUIConfig extends GUIConfigFile {
     @Override
     public void reload() throws IOException {
         super.reload();
-        orderConfig.reload(config);
-        newOrderButton.reload(config);
         title = config.getString("title");
+        rows = config.getInteger("rows");
+        newOrderButton.reload(config);
+        orderConfig.reload(config);
     }
 
     @Override
     public void save() {
-        orderConfig.save(config);
-        newOrderButton.save(config);
         config.set("title", title);
+        config.set("rows", rows);
+        newOrderButton.save(config);
+        orderConfig.save(config);
     }
 
     @Override
     public void setDefault() {
-        orderConfig.setDefault(config);
-        newOrderButton.setDefault(config);
         config.addDefault("title", title);
+        config.addDefault("rows", rows);
+        newOrderButton.setDefault(config);
+        orderConfig.setDefault(config);
     }
 
     @Override
     public void migrateV5(final @NotNull ConfigFile oldConfig) {
         title = oldConfig.getString("gui.your-orders.title");
+        rows = 3;
         orderConfig.migrateV5(oldConfig, "gui.your-orders.order");
         newOrderButton.migrateV5(oldConfig, "gui.your-orders.buttons.new-order", 0);
+        newOrderButton.slot = 26;
 
         save();
         try {
@@ -64,6 +69,7 @@ public class YourOrdersGUIConfig extends GUIConfigFile {
     @Override
     public void applyDefaultValues() {
         title = "Your Orders";
+        rows = 3;
         orderConfig.lore.add("");
         orderConfig.lore.add("<!i><#786500>$<paid><gray>/<#017800>$<total> <gray>Paid");
         orderConfig.lore.add("<!i><#786500><delivered><gray>/<#017800><amount> <gray>Delivered");
@@ -73,7 +79,7 @@ public class YourOrdersGUIConfig extends GUIConfigFile {
         orderConfig.slots.addAll(IntStream.range(0, 27).boxed().toList());
         orderConfig.itemRepresentation = ItemStack.of(Material.STONE);
 
-        newOrderButton.slot = -1;
+        newOrderButton.slot = 26;
         newOrderButton.itemStack = ItemStack.of(Material.MAP);
         newOrderButton.itemStack.editMeta(meta -> {
             meta.displayName(DecoratedText.buttonName("New Order"));

@@ -55,7 +55,7 @@ public class OrderConfig extends ComponentConfig {
         final List<String> oldLore = config.getStringList(OLD_LORE_PATH);
         lore.clear();
         slots.clear();
-        lore.addAll(oldLore);
+        lore.addAll(oldLore.stream().map(line -> line.isEmpty() ? "" : "<!i>" + line).toList());
         for (int i = 0; i < 45; i++) {
             slots.add(i);
         }

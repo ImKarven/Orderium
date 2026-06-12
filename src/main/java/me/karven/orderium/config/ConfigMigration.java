@@ -10,7 +10,6 @@ import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import static me.karven.orderium.Orderium.plugin;
@@ -21,25 +20,28 @@ public class ConfigMigration {
      * Perform config migration
      *
      * @param config the config
-     * @return {@code true} if migration was performed. {@code false} if nothing changed
      */
-    public static boolean perform(final @NotNull Config config) throws IOException {
+    public static void perform(final @NotNull Config config) throws Exception {
         config.configFile.loadContent();
         final int configVersion = config.configFile.getInteger("config-version");
-        if (configVersion == Config.CURRENT_CONFIG_VERSION) return false;
+
+        // No migration needed
+        if (configVersion == Config.CURRENT_CONFIG_VERSION) {
+            config.setDefaults();
+            config.reload();
+            config.load();
+            return;
+        }
+
         if (configVersion > Config.CURRENT_CONFIG_VERSION) {
             throw new RuntimeException("Downgrading config is not supported. Please use the latest version");
         }
 
-        setDefaultV4(config.configFile);
-
         // Backup old config file
         final File backupConfig = new File(plugin.getDataFolder(), "config.yml.old");
-        try {
-            Files.copy(new File(plugin.getDataFolder(), "config.yml"), backupConfig);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        Files.copy(new File(plugin.getDataFolder(), "config.yml"), backupConfig);
+
+        setDefaultV4(config.configFile);
 
         // Convert GUI config sections to their respective files
         config.mainGUIConfig.migrateV5(config.configFile);
@@ -73,20 +75,14 @@ public class ConfigMigration {
 
         config.configFile.set("config-version", 5);
 
-        try {
-            config.configFile.save();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        config.load();
 
-        return true;
+        config.configFile.save();
     }
 
     // Set default values for config with version 4 or below
     @SuppressWarnings("UnstableApiUsage")
     public static void setDefaultV4(final @NotNull ConfigFile config) {
-        config.set("config-version", 4);
-
         config.addDefault("bstats", true, "Whether to let bStats collect data anonymously or not");
         config.addDefault("check-for-updates", true, "Whether to check for updates or not");
         config.addDefault("log-transactions", true, "Whether to log money changes of players or not");
@@ -326,12 +322,5 @@ public class ConfigMigration {
         } catch (Exception e) {
             Log.error("Failed to migrate config version 4", e);
         }
-    }
-
-    public static void migrateV5(final @NotNull Config config) {
-        final ConfigFile oldConfigFile = config.configFile;
-        config.mainGUIConfig.title = oldConfigFile.getString("gui.main.title");
-        final List<String> sortsOrderString = oldConfigFile.getStringList("gui.main.sorts-order");
-        config.mainGUIConfig.sortsOrderConfig.reload(sortsOrderString);
     }
 }

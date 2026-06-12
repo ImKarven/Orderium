@@ -85,18 +85,14 @@ public class Config {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        setDefaults();
+
         if (configFile.isNew()) {
-            // save default config to file if it's newly created
+            setDefaults();
             save();
             load();
-            // reload the config normally if no migration has been done
-        }
-//        else if (!ConfigMigration.perform(this)) {
-//            reload();
-//        }
+        } else ConfigMigration.perform(this);
 
-        else reload();
+//        else reload();
     }
 
     public void save() throws Exception {
@@ -196,6 +192,11 @@ public class Config {
 
     public void reload() throws Exception {
         configFile = ConfigFile.loadConfig(javaConfigFile);
+        reloadGUIs();
+        load();
+    }
+
+    public void reloadGUIs() throws Exception {
         mainGUIConfig.reload();
         yourOrdersGUIConfig.reload();
         chooseItemGUIConfig.reload();
@@ -205,8 +206,6 @@ public class Config {
         newOrderDialogConfig.reload();
         confirmDeliveryDialogConfig.reload();
         manageOrderDialogConfig.reload();
-
-        load();
     }
 
     public void load() {

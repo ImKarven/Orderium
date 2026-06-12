@@ -51,6 +51,8 @@ public class MainGUIConfig extends GUIConfigFile {
 
     @Override
     public void save() {
+        config.set("title", title);
+        config.set("rows", rows);
         orderConfig.save(config);
         sortsOrderConfig.save(config);
         sortButton.save(config);
@@ -59,12 +61,12 @@ public class MainGUIConfig extends GUIConfigFile {
         searchButton.save(config);
         backButton.save(config);
         nextButton.save(config);
-        config.set("title", title);
-        config.set("rows", rows);
     }
 
     @Override
     public void setDefault() {
+        config.addDefault("title", title);
+        config.addDefault("rows", rows);
         orderConfig.setDefault(config);
         sortsOrderConfig.setDefault(config);
         sortButton.setDefault(config);
@@ -73,8 +75,6 @@ public class MainGUIConfig extends GUIConfigFile {
         searchButton.setDefault(config);
         backButton.setDefault(config);
         nextButton.setDefault(config);
-        config.addDefault("title", title);
-        config.addDefault("rows", rows);
     }
 
     @Override

@@ -63,8 +63,8 @@ public class ButtonConfig extends ComponentConfig {
         final String itemModel = config.getString(oldPath + ".item-model");
         item.editMeta(meta -> {
             final MiniMessage mm = MiniMessage.miniMessage();
-            if (displayNameString != null) meta.displayName(mm.deserialize(displayNameString));
-            final List<Component> lore = loreLines.stream().map(mm::deserialize).toList();
+            if (displayNameString != null) meta.displayName(mm.deserialize("<!i>" + displayNameString));
+            final List<Component> lore = loreLines.stream().map(line -> mm.deserialize("<!i>" + line)).toList();
             meta.lore(lore);
 
             if (itemModel == null) return;

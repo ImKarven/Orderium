@@ -81,18 +81,22 @@ public class SortButtonConfig extends ButtonConfig {
 
     @Override
     public void migrateV5(final @NotNull ConfigFile config, final @NotNull String oldPath) {
+        migrateV5(config, oldPath, 45);
+    }
+
+    public void migrateV5(final @NotNull ConfigFile config, final @NotNull String oldPath, final int slotOffset) {
         final ItemStack item = ConvertUtils.getItemType(config.getString(oldPath + ".type"))
                 .createItemStack();
         final List<String> loreLines = config.getStringList(oldPath + ".lore");
         final String displayNameString = config.getString(oldPath + ".display-name");
         final int slot = config.getInteger(oldPath + ".slot");
         item.editMeta(meta -> {
-            if (displayNameString != null) meta.displayName(MiniMessage.miniMessage().deserialize(displayNameString));
+            if (displayNameString != null) meta.displayName(MiniMessage.miniMessage().deserialize("<!i>" + displayNameString));
         });
 
         this.itemStack = item;
-        this.slot = slot;
+        this.slot = slot + slotOffset;
         this.lore.clear();
-        this.lore.addAll(loreLines);
+        this.lore.addAll(loreLines.stream().map(line -> line.isEmpty() ? "" : "<!i>" + line).toList());
     }
 }
