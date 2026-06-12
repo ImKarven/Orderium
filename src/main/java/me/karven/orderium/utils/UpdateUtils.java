@@ -6,7 +6,6 @@ import com.google.gson.JsonParser;
 import org.bukkit.Bukkit;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -18,25 +17,12 @@ public class UpdateUtils {
     private static final String API_URL = "https://api.modrinth.com/v2/project/";
     private static final String PROJECT_ID = "EH2l9h8i";
     private static final String mcVer = Bukkit.getMinecraftVersion();
-    private static String plVer;
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void init() {
-        final File itemsFile = new File(plugin.getDataFolder(), "items.db");
-        plVer = plugin.getPluginMeta().getVersion();
-
-        try {
-            plugin.getDataFolder().mkdirs();
-            itemsFile.createNewFile();
-        } catch (IOException e) {
-            Log.error("An error occurred while creating plugin's directory", e);
-        }
-    }
     /// Check for updates
     /// Returns the newer version if available, otherwise returns null
     public static String checkForUpdates() {
         final String latestVer = fetchLatestVer();
-        if (latestVer == null || latestVer.compareTo(plVer) <= 0) return null;
+        if (latestVer == null || latestVer.compareTo(plugin.getPluginMeta().getVersion()) <= 0) return null;
         return latestVer;
     }
 

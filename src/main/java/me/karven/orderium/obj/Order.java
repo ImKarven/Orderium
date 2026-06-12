@@ -308,6 +308,14 @@ public class Order implements me.karven.orderium.api.Order {
                 .thenAccept(order -> {
                     PlayerCreateOrderEvent.Post postEvent = new PlayerCreateOrderEvent.Post(owner, order, true);
                     postEvent.callEvent();
+
+                    if (config.broadcastOrderCreation) {
+                        final Component message = order.deserializeText(config.orderCreationBroadcast);
+
+                        for (Player p : Bukkit.getOnlinePlayers()) {
+                            p.sendMessage(message);
+                        }
+                    }
                 });
         return Response.SUCCESS;
     }

@@ -17,7 +17,6 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -31,8 +30,7 @@ public class ManageOrderDialogConfig extends GUIConfigFile {
     }
 
     @Override
-    public void reload() throws IOException {
-        super.reload();
+    public void reload() {
         manageOrder.reload();
         collectItems.reload();
         cancelOrder.reload();

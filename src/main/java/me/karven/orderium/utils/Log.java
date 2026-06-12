@@ -25,4 +25,6 @@ public class Log {
     public static void warn(String message) {
         logger.log(Level.WARNING, message);
     }
+
+    public static void severe(String message) { logger.log(Level.SEVERE, message); }
 }

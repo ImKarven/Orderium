@@ -34,6 +34,10 @@ permissions:
     default: op
     description: Bypass max-collect-per-minute value
 
+  orderium.use:
+    default: true
+    description: Access to the orders command
+
 dependencies:
   server:
     packetevents:

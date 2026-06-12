@@ -4,7 +4,6 @@ import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.IOException;
 
 import static me.karven.orderium.Orderium.plugin;
 
@@ -28,13 +27,24 @@ public abstract class GUIConfigFile implements IConfigFile {
         }
     }
 
-    public void reload() throws IOException {
+    public void reloadFromFile() {
         try {
             config = ConfigFile.loadConfig(configFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        reload();
     }
+
+    public abstract void reload();
+//            throws IOException {
+//        try {
+//            config = ConfigFile.loadConfig(configFile);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
     public abstract void save();
     public abstract void setDefault() throws Exception;
 

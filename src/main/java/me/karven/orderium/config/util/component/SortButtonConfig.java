@@ -46,7 +46,7 @@ public class SortButtonConfig extends ButtonConfig {
     public void setDefault(final @NotNull ConfigFile config) {
         super.setDefault(config);
 
-        config.set(path + ".lore", lore);
+        config.addDefault(path + ".lore", lore);
     }
 
     @Override

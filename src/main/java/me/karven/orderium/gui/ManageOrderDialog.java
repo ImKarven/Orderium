@@ -15,11 +15,12 @@ public class ManageOrderDialog {
         final Dialog collectItemsDialog = config.manageOrderDialogConfig.collectItems.dialog(
                 item,
                 order.placeholders(),
-                (view, player) -> {
-                    if (!(player instanceof Player)) return;
+                (view, audience) -> {
+                    if (!(audience instanceof Player player)) return;
 
                     final String rawAmount = view.getText("amount");
                     order.collect(rawAmount);
+                    player.closeInventory();
                 },
                 null
         );
@@ -30,7 +31,10 @@ public class ManageOrderDialog {
                     if (!(player instanceof Player p)) return;
                     order.cancel(p);
                 },
-                null
+                (view, audience) -> {
+                    if (!(audience instanceof Player player)) return;
+                    YourOrderGUI.open(player);
+                }
         );
 
         return config.manageOrderDialogConfig.manageOrder.dialog(

@@ -9,7 +9,6 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -26,8 +25,7 @@ public class YourOrdersGUIConfig extends GUIConfigFile {
     }
 
     @Override
-    public void reload() throws IOException {
-        super.reload();
+    public void reload() {
         title = config.getString("title");
         rows = config.getInteger("rows");
         newOrderButton.reload(config);

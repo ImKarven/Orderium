@@ -15,7 +15,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.List;
 
 // TODO: Add container alternative for all dialogs for geyser support
@@ -49,7 +48,7 @@ public class ConfirmDeliveryDialogConfig extends ConfirmationDialogConfig {
     }
 
     @Override
-    public void reload() throws IOException {
+    public void reload() {
         super.reload();
         textBody.reload(config);
         itemBody.reload(config);

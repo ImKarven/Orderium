@@ -13,7 +13,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.List;
 
 // TODO: Make a paginated dialog alternative
@@ -49,7 +48,7 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
     }
 
     @Override
-    public void reload() throws IOException {
+    public void reload() {
         super.reload();
         bodyConfig.reload(config);
         amountInputConfig.reload(config);
@@ -74,6 +73,7 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
 
     @Override
     public void migrateV5(@NotNull ConfigFile oldConfig) {
+        title = oldConfig.getString("gui.new-order.title");
         bodyConfig.migrateV5(oldConfig, "gui.new-order.item-description");
         bodyConfig.showDecoration = false;
         yesButton.migrateV5(oldConfig, "gui.new-order.confirm");

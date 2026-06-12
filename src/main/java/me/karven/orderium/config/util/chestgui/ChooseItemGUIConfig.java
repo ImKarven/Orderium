@@ -11,7 +11,6 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.List;
 
 // TODO: Add scrollable version in the future
@@ -30,8 +29,7 @@ public class ChooseItemGUIConfig extends GUIConfigFile {
     }
 
     @Override
-    public void reload() throws IOException {
-        super.reload();
+    public void reload() {
         title = config.getString("title");
         rows = config.getInteger("rows");
         sortsOrderConfig.reload(config);

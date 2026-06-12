@@ -28,7 +28,7 @@ public class ConfigMigration {
         // No migration needed
         if (configVersion == Config.CURRENT_CONFIG_VERSION) {
             config.setDefaults();
-            config.reload();
+            config.reloadGUIs();
             config.load();
             return;
         }

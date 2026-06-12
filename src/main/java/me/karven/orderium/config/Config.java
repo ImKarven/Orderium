@@ -50,6 +50,7 @@ public class Config {
     public String deliverSelf;
     public String collectingTooFast;
     public String exceedMaxCollect;
+    public String orderCreationBroadcast;
 
     public Sound nextPageSound;
     public Sound previousPageSound;
@@ -64,6 +65,7 @@ public class Config {
     public int maxCollectPerMinute;
     public int maxCollect;
     public boolean shulkerDelivering;
+    public boolean broadcastOrderCreation;
 
     public final List<@NotNull String> orderCommandAliases = new ArrayList<>();
 
@@ -91,8 +93,6 @@ public class Config {
             save();
             load();
         } else ConfigMigration.perform(this);
-
-//        else reload();
     }
 
     public void save() throws Exception {
@@ -159,6 +159,7 @@ public class Config {
         ));
 
         configFile.addDefault("shulker-delivering", true);
+        configFile.addDefault("broadcast-order-creation", false);
 
         configFile.addDefault("order-command-aliases", List.of("order", "orders"));
 
@@ -192,11 +193,11 @@ public class Config {
 
     public void reload() throws Exception {
         configFile = ConfigFile.loadConfig(javaConfigFile);
-        reloadGUIs();
+        reloadGUIsFromFile();
         load();
     }
 
-    public void reloadGUIs() throws Exception {
+    public void reloadGUIs() {
         mainGUIConfig.reload();
         yourOrdersGUIConfig.reload();
         chooseItemGUIConfig.reload();
@@ -207,6 +208,19 @@ public class Config {
         confirmDeliveryDialogConfig.reload();
         manageOrderDialogConfig.reload();
     }
+
+    public void reloadGUIsFromFile() {
+        mainGUIConfig.reloadFromFile();
+        yourOrdersGUIConfig.reloadFromFile();
+        chooseItemGUIConfig.reloadFromFile();
+        signGUIConfig.reloadFromFile();
+        enchantGUIConfig.reloadFromFile();
+        deliverGUIConfig.reloadFromFile();
+        newOrderDialogConfig.reloadFromFile();
+        confirmDeliveryDialogConfig.reloadFromFile();
+        manageOrderDialogConfig.reloadFromFile();
+    }
+
 
     public void load() {
         for (final SortType sort : SortType.values()) {
@@ -229,6 +243,7 @@ public class Config {
         maxCollect = configFile.getInteger("max-collect");
         maxCollectPerMinute = configFile.getInteger(("max-collect-per-minute"));
         shulkerDelivering = configFile.getBoolean("shulker-delivering");
+        broadcastOrderCreation = configFile.getBoolean("broadcast-order-creation");
 
         final List<String> rawDataComponents = configFile.getStringList("similarity-check");
         similarityCheck.clear();
@@ -252,6 +267,7 @@ public class Config {
         deliverSelf = configFile.getString("messages.deliver-self");
         exceedMaxCollect = configFile.getString("messages.exceeded-max-collect");
         collectingTooFast = configFile.getString("messages.collecting-too-fast");
+        orderCreationBroadcast = configFile.getString("messages.order-creation-broadcast");
 
         nextPageSound = getSound("next-page");
         previousPageSound = getSound("previous-page");
@@ -259,6 +275,8 @@ public class Config {
         sortSound = getSound("sort");
         newOrderSound = getSound("new-order");
         deliverSound = getSound("deliver");
+
+        plugin.reloadBStats(this);
     }
 
     private Sound getSound(String name) {
@@ -304,5 +322,6 @@ public class Config {
         configFile.addDefault("messages.deliver-self", "<red>You cannot deliver your own order");
         configFile.addDefault("messages.exceeded-max-collect", "<red>You are collecting too many items");
         configFile.addDefault("messages.collecting-too-fast", "<red>You are collecting items too fast. Wait a minute...");
+        configFile.addDefault("messages.order-creation-broadcast", "<green><player> <white>has just created a new order for <green><item> <white>in <gray>/orders");
     }
 }

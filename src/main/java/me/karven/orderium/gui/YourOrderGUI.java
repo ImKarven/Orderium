@@ -30,7 +30,6 @@ public class YourOrderGUI {
         int currentSlotIndex = 0;
         for (Order order : orders) {
             gui.addItem(order.item(rawLore, event -> {
-                PlayerUtils.closeInv(p);
                 Dialog dialog = ManageOrderDialog.getDialog(order);
                 PlayerUtils.openDialog(p, dialog);
             }), config.yourOrdersGUIConfig.orderConfig.slots.get(currentSlotIndex++));
