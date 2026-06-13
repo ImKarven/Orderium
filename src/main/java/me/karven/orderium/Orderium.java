@@ -2,6 +2,7 @@ package me.karven.orderium;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
+import dev.faststats.bukkit.BukkitContext;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.AdminToolGUI;
@@ -19,7 +20,6 @@ import me.karven.orderium.utils.PDCUtils;
 import me.karven.orderium.utils.UpdateUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
-import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -32,8 +32,13 @@ import static me.karven.orderium.config.Config.config;
 public final class Orderium extends JavaPlugin {
     public static Orderium plugin;
     public final int bStatsID = 27569;
-    public Metrics metrics = null;
+    public final String faststatsToken = "241271513528286847e7c7ee08df7ec9";
+    public org.bstats.bukkit.Metrics bStatsMetrics = null;
     public static boolean isFolia;
+
+    private final BukkitContext faststatsContext = new BukkitContext.Factory(this, faststatsToken)
+            .metrics(dev.faststats.Metrics.Factory::create)
+            .create();
 
     private Storage storage;
     private Economy economy = null;
@@ -62,6 +67,11 @@ public final class Orderium extends JavaPlugin {
         Log.info("Orderium enabled");
     }
 
+    @Override
+    public void onDisable() {
+        faststatsContext.shutdown();
+    }
+
     public void postEconomyRegistration() {
         if (economy == null) {
             Log.severe("No economy plugin found. Orderium cannot work without an economy.");
@@ -71,6 +81,8 @@ public final class Orderium extends JavaPlugin {
         checkUpdates();
         registerListeners();
         startCollectLimitResetLoop();
+
+        faststatsContext.ready();
 
         Log.info("Orderium initialization complete");
     }
@@ -129,11 +141,11 @@ public final class Orderium extends JavaPlugin {
 
     public void reloadBStats(final Config config) {
         if (config.bStats) {
-            if (metrics == null)
-                metrics = new Metrics(plugin, bStatsID);
-        } else if (metrics != null) {
-            metrics.shutdown();
-            metrics = null;
+            if (bStatsMetrics == null)
+                bStatsMetrics = new org.bstats.bukkit.Metrics(plugin, bStatsID);
+        } else if (bStatsMetrics != null) {
+            bStatsMetrics.shutdown();
+            bStatsMetrics = null;
         }
     }
 }
