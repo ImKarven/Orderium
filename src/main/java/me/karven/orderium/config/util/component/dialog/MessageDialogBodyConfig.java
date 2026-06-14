@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 public class MessageDialogBodyConfig extends ComponentConfig {
     public String contents;
     public int width;
-    public PlainMessageDialogBody body;
 
     public MessageDialogBodyConfig(final @NotNull String path) {
         super(path);

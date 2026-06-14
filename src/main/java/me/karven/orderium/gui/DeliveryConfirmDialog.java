@@ -12,11 +12,11 @@ import java.util.Collection;
 import static me.karven.orderium.config.Config.config;
 
 public class DeliveryConfirmDialog {
-    public static Dialog getDialog(Player p, Order order, int amount, Collection<ItemStack> items) {
-        final String amountText = ConvertUtils.formatNumber(amount);
+    public static Dialog getDialog(Player p, Order order, int amount, double reward, Collection<ItemStack> items) {
         final Dialog dialog = config.confirmDeliveryDialogConfig.dialog(
                 order.itemStack(config.mainGUIConfig.orderConfig.lore),
-                amountText,
+                ConvertUtils.formatNumber(amount),
+                ConvertUtils.formatNumber(reward),
                 (view, audience) -> {
                     DialogListener.removeItems(p);
                     order.deliver(p, items, false);

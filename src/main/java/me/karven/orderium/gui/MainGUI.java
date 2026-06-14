@@ -126,7 +126,7 @@ public class MainGUI {
                 return;
             }
 
-            Dialog dialog = DeliveryConfirmDialog.getDialog(p, order, amount, items);
+            Dialog dialog = DeliveryConfirmDialog.getDialog(p, order, amount, order.moneyPer * amount, items);
 
             PlayerUtils.openDialog(p, dialog);
         });
