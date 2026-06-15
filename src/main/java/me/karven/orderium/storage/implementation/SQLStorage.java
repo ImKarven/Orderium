@@ -249,8 +249,8 @@ public class SQLStorage extends Storage {
         ItemContainerContents shulkerContent = shulkerBox.getData(DataComponentTypes.CONTAINER);
         List<ItemStack> declinedItems = new ArrayList<>();
         if (shulkerContent == null) return deliverable;
-        for (ItemStack item : shulkerContent.contents()) {
-            if (item.isEmpty()) {
+        for (final ItemStack item : shulkerContent.contents()) {
+            if (item == null || item.isEmpty()) {
                 // Add empty items to keep the order of the items in the shulker
                 declinedItems.add(ItemStack.empty());
                 continue;

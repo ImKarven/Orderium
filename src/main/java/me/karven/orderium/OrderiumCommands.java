@@ -6,6 +6,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.karven.orderium.config.Config;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
 import me.karven.orderium.utils.PlayerUtils;
@@ -63,7 +64,7 @@ public class OrderiumCommands {
                         .executes(ctx -> {
                             final Entity executor = ctx.getSource().getExecutor();
                             assert executor != null;
-                            config.reloadAsync().thenAccept(ignored -> executor.sendRichMessage("<green>Orderium reloaded"));
+                            Config.reloadAsync().thenAccept(ignored -> executor.sendRichMessage("<green>Orderium reloaded"));
 
                             return 1;
                         })

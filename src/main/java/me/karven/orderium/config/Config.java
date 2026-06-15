@@ -23,21 +23,21 @@ import java.util.concurrent.CompletableFuture;
 import static me.karven.orderium.Orderium.plugin;
 
 public class Config {
-    public static Config config;
+    public static volatile Config config;
     public static final int CURRENT_CONFIG_VERSION = 5;
     public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
 
     public ConfigFile configFile;
 
-    public final MainGUIConfig mainGUIConfig;
-    public final YourOrdersGUIConfig yourOrdersGUIConfig;
-    public final ChooseItemGUIConfig chooseItemGUIConfig;
-    public final SignGUIConfig signGUIConfig;
-    public final EnchantGUIConfig enchantGUIConfig;
-    public final DeliverGUIConfig deliverGUIConfig;
-    public final NewOrderDialogConfig newOrderDialogConfig;
-    public final ConfirmDeliveryDialogConfig confirmDeliveryDialogConfig;
-    public final ManageOrderDialogConfig manageOrderDialogConfig;
+    public final MainGUIConfig mainGUIConfig = new MainGUIConfig();
+    public final YourOrdersGUIConfig yourOrdersGUIConfig = new YourOrdersGUIConfig();
+    public final ChooseItemGUIConfig chooseItemGUIConfig = new ChooseItemGUIConfig();
+    public final SignGUIConfig signGUIConfig = new SignGUIConfig();
+    public final EnchantGUIConfig enchantGUIConfig = new EnchantGUIConfig();
+    public final DeliverGUIConfig deliverGUIConfig = new DeliverGUIConfig();
+    public final NewOrderDialogConfig newOrderDialogConfig = new NewOrderDialogConfig();
+    public final ConfirmDeliveryDialogConfig confirmDeliveryDialogConfig = new ConfirmDeliveryDialogConfig();
+    public final ManageOrderDialogConfig manageOrderDialogConfig = new ManageOrderDialogConfig();
 
     public boolean bStats;
     public boolean checkForUpdates;
@@ -72,15 +72,6 @@ public class Config {
     public final List<NamespacedKey> similarityCheck = new ArrayList<>();
 
     public Config() throws Exception {
-        mainGUIConfig = new MainGUIConfig();
-        yourOrdersGUIConfig = new YourOrdersGUIConfig();
-        chooseItemGUIConfig = new ChooseItemGUIConfig();
-        signGUIConfig = new SignGUIConfig();
-        enchantGUIConfig = new EnchantGUIConfig();
-        deliverGUIConfig = new DeliverGUIConfig();
-        newOrderDialogConfig = new NewOrderDialogConfig();
-        confirmDeliveryDialogConfig = new ConfirmDeliveryDialogConfig();
-        manageOrderDialogConfig = new ManageOrderDialogConfig();
 
         try {
             configFile = ConfigFile.loadConfig(javaConfigFile);
@@ -176,7 +167,7 @@ public class Config {
         setDefaultSounds();
     }
 
-    public CompletableFuture<Void> reloadAsync() {
+    public static CompletableFuture<Void> reloadAsync() {
         final CompletableFuture<Void> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
             try {
@@ -191,10 +182,8 @@ public class Config {
         return future;
     }
 
-    public void reload() throws Exception {
-        configFile = ConfigFile.loadConfig(javaConfigFile);
-        reloadGUIsFromFile();
-        load();
+    public static void reload() throws Exception {
+        config = new Config();
     }
 
     public void reloadGUIs() {
