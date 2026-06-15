@@ -131,7 +131,8 @@ public abstract class NBTSerializer<T> {
         return castedValue;
     }
 
-    public static final NBTSerializer<DyeColor> DYED_COLOR = new NBTSerializer<>() {
+
+    public static final NBTSerializer<DyeColor> BASE_COLOR = new NBTSerializer<>() {
 
         @Override
         @NotNull Object serialize(final Object color) {
@@ -143,6 +144,8 @@ public abstract class NBTSerializer<T> {
             return DyeColor.valueOf(value.toString().toUpperCase());
         }
     };
+
+
     public static final NBTSerializer<BundleContents> BUNDLE_CONTENTS = new NBTSerializer<>() {
         @Override
         @NotNull Object serialize(final Object value) {
@@ -173,7 +176,7 @@ public abstract class NBTSerializer<T> {
 
     static {
         serializers = Map.of(
-                "minecraft:dyed_color", DYED_COLOR,
+                "minecraft:base_color", BASE_COLOR,
                 "minecraft:bundle_contents", BUNDLE_CONTENTS
         );
     }
