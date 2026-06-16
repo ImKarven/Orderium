@@ -53,8 +53,8 @@ public final class Orderium extends JavaPlugin {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        OrderiumCommands.register();
         isFolia = isFolia();
+        OrderiumCommands.register();
         storage = createStorage();
         AdminToolGUI.init();
         ChooseItemGUI.init();

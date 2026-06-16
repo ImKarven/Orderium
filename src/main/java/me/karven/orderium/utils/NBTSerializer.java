@@ -1,5 +1,6 @@
 package me.karven.orderium.utils;
 
+import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.item.BannerPatternLayers;
 import io.papermc.paper.datacomponent.item.BundleContents;
@@ -33,16 +34,16 @@ public abstract class NBTSerializer<T> {
                 return Map.of("id", "minecraft:air");
             }
             final Map<String, Object> result = new LinkedHashMap<>();
-            final ItemType type = item.getType().asItemType();
-            if (type == null) result.put("id", "minecraft:air");
-            else result.put("id", type.getKey().asString());
+            ItemType type = item.getType().asItemType();
+            if (type == null) type = ItemType.AIR;
+            result.put("id", type.getKey().asString());
             result.put("count", item.getAmount());
             final Map<String, Object> components = new LinkedHashMap<>();
-
             for (final DataComponentType component : item.getDataTypes()) {
                 final String componentKey = component.getKey().asString();
+                final boolean hasDefault = type.hasDefaultData(component);
                 if (component instanceof DataComponentType.NonValued) {
-                    components.put(componentKey, true);
+                    if (!hasDefault) components.put(componentKey, true);
                     continue;
                 }
                 if (!(component instanceof DataComponentType.Valued<?> valuedComponent)) {
@@ -54,6 +55,8 @@ public abstract class NBTSerializer<T> {
                     Log.error("Data of component in item is null. This is a bug", new IllegalStateException());
                     continue;
                 }
+                if (hasDefault && componentData.equals(type.getDefaultData(valuedComponent))) continue;
+
                 final NBTSerializer<?> serializer = componentSerializers.get(componentKey);
                 if (serializer == null) {
                     Log.error("No serializer for component " + componentKey + ". This is a bug.", new IllegalStateException());
@@ -304,4 +307,25 @@ public abstract class NBTSerializer<T> {
     abstract @NotNull Object serialize(final Object value);
 
     abstract @NotNull T deserialize(final @NotNull Object value);
+
+    public static Object serializeItemStack(final @NotNull ItemStack itemStack) {
+        return ITEM_STACK.serialize(itemStack);
+    }
+
+    public static ItemStack deserializeItemStack(final @NotNull ConfigSection section) {
+        return ITEM_STACK.deserialize(resolveSection(section));
+    }
+
+    private static Map<String, Object> resolveSection(final ConfigSection section) {
+        final Map<String, Object> map = new LinkedHashMap<>();
+        for (final String key : section.getKeys(false, true)) {
+            final Object value = section.get(key);
+            if (value instanceof ConfigSection nestedSection) {
+                map.put(key, resolveSection(nestedSection));
+            } else {
+                map.put(key, value);
+            }
+        }
+        return map;
+    }
 }

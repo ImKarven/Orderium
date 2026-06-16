@@ -39,14 +39,14 @@ public class EnchantmentConfig {
     public void save(@NotNull ConfigFile config) {
         config.set("name.active", activeName);
         config.set("name.inactive", inactiveName);
-        config.set("item", itemRepresentation.serialize());
+        config.set("item", ConvertUtils.serializeItem(itemRepresentation));
         config.set("slots", slots);
     }
 
     public void setDefault(@NotNull ConfigFile config) {
         config.addDefault("name.active", activeName);
         config.addDefault("name.inactive", inactiveName);
-        config.addDefault("item", itemRepresentation.serialize());
+        config.addDefault("item", ConvertUtils.serializeItem(itemRepresentation));
         config.addDefault("slots", slots);
     }
 

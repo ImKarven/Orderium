@@ -34,13 +34,13 @@ public class ButtonConfig extends ComponentConfig {
 
     @Override
     public void save(final @NotNull ConfigFile config) {
-        config.set(path + ".item", itemStack.serialize());
+        config.set(path + ".item", ConvertUtils.serializeItem(itemStack));
         config.set(path + ".slot", slot);
     }
 
     @Override
     public void setDefault(final @NotNull ConfigFile config) {
-        config.addDefault(path + ".item", itemStack.serialize());
+        config.addDefault(path + ".item", ConvertUtils.serializeItem(itemStack));
         config.addDefault(path + ".slot", slot);
     }
 

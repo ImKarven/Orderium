@@ -37,13 +37,13 @@ public class OrderConfig extends ComponentConfig {
     public void save(final @NotNull ConfigFile config) {
         config.set(path + ".slots", slots);
         config.set(path + ".lore", lore);
-        config.set(path + ".item", itemRepresentation.serialize());
+        config.set(path + ".item", ConvertUtils.serializeItem(itemRepresentation));
     }
 
     public void setDefault(final @NotNull ConfigFile config) {
         config.addDefault(path + ".slots", slots);
         config.addDefault(path + ".lore", lore);
-        config.addDefault(path + ".item", itemRepresentation.serialize());
+        config.addDefault(path + ".item", ConvertUtils.serializeItem(itemRepresentation));
     }
 
     public void migrateV5(final @NotNull ConfigFile config, final @NotNull String oldPath) {

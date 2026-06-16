@@ -165,21 +165,10 @@ public class ConvertUtils {
     }
 
     public static @NotNull ItemStack deserializeItem(final @NotNull ConfigSection section) {
-        final HashMap<String, Object> serialized = new HashMap<>();
-        for (final String key : section.getKeys(false, true)) {
-            if (!key.equals("components")) {
-                serialized.put(key, section.get(key));
-                continue;
-            }
+        return NBTSerializer.deserializeItemStack(section);
+    }
 
-            final HashMap<String, String> componentMap = new HashMap<>();
-            final ConfigSection componentSection = section.getConfigSection(key);
-            for (final String componentKey : componentSection.getKeys(false, true)) {
-                componentMap.put(componentKey, componentSection.getString(componentKey));
-            }
-            serialized.put(key, componentMap);
-        }
-
-        return ItemStack.deserialize(serialized);
+    public static @NotNull Object serializeItem(final @NotNull ItemStack item) {
+        return NBTSerializer.serializeItemStack(item);
     }
 }
