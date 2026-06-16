@@ -3,6 +3,8 @@ package me.karven.orderium.utils;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.item.BannerPatternLayers;
 import io.papermc.paper.datacomponent.item.BundleContents;
+import io.papermc.paper.datacomponent.item.ItemLore;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.DyeColor;
 import org.bukkit.NamespacedKey;
@@ -223,11 +225,32 @@ public abstract class NBTSerializer<T> {
         }
     };
 
+    public static final NBTSerializer<Key> KEY = new NBTSerializer<>() {
+        @Override
+        @NotNull Object serialize(final Object value) {
+            if (!(value instanceof Key key)) {
+                throw new IllegalArgumentException("object to serialize is not a Key, it is " + value.getClass() + ". This is a bug");
+            }
+            return key.asString();
+        }
+
+        @Override
+        @NonNull Key deserialize(final @NotNull Object value) {
+            if (!(value instanceof String string)) {
+                throw new IllegalArgumentException("object to deserialize is not a String, it is " + value.getClass());
+            }
+            final String[] keyComponents = string.split(":");
+            if (keyComponents.length == 1) return NamespacedKey.minecraft(keyComponents[0]);
+            if (keyComponents.length == 2) return new NamespacedKey(keyComponents[0], keyComponents[1]);
+            throw new IllegalArgumentException("object to deserialize has invalid format of " + value);
+        }
+    };
+
     public static final NBTSerializer<Component> TEXT_COMPONENT = new NBTSerializer<>() {
         @Override
         @NotNull Object serialize(final Object value) {
             if (!(value instanceof Component component))
-                throw new IllegalArgumentException("object to serialize is not a Component, it is " + value.getClass());
+                throw new IllegalArgumentException("object to serialize is not a Component, it is " + value.getClass() + ". This is a bug");
 
             return Values.minimessage.serialize(component);
         }
@@ -242,13 +265,40 @@ public abstract class NBTSerializer<T> {
         }
     };
 
+    public static final NBTSerializer<ItemLore> LORE = new NBTSerializer<>() {
+        @Override
+        @NotNull Object serialize(final Object value) {
+            if (!(value instanceof ItemLore itemLore)) {
+                throw new IllegalArgumentException("object to deserialize is not a ItemLore, it is " + value.getClass() + ". This is a bug");
+            }
+            return itemLore.lines().stream().map(Values.minimessage::serialize).toList();
+        }
+
+        @Override
+        @NonNull ItemLore deserialize(final @NotNull Object value) {
+            if (!(value instanceof List<?> list)) {
+                throw new IllegalArgumentException("object to deserialize is not a List, it is " + value.getClass());
+            }
+            final List<Component> lines = new ArrayList<>();
+            for (final Object serializedText : list) {
+                if (!(serializedText instanceof String text)) {
+                    throw new IllegalArgumentException("lore line to deserialize is not a String, it is " + value.getClass());
+                }
+                lines.add(Values.minimessage.deserialize(text));
+            }
+            return ItemLore.lore(lines);
+        }
+    };
+
     private static final Map<String, NBTSerializer<?>> componentSerializers = Map.of(
             "minecraft:banner_patterns", BANNER_PATTERNS,
             "minecraft:base_color", BASE_COLOR,
             "minecraft:bundle_contents", BUNDLE_CONTENTS,
             "minecraft:custom_name", TEXT_COMPONENT,
             "minecraft:enchantment_glint_override", BOOLEAN,
-            "minecraft:item_name", TEXT_COMPONENT
+            "minecraft:item_model", KEY,
+            "minecraft:item_name", TEXT_COMPONENT,
+            "minecraft:lore", LORE
     );
 
     abstract @NotNull Object serialize(final Object value);
