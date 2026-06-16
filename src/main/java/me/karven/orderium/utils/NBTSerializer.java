@@ -3,6 +3,7 @@ package me.karven.orderium.utils;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.item.BannerPatternLayers;
 import io.papermc.paper.datacomponent.item.BundleContents;
+import net.kyori.adventure.text.Component;
 import org.bukkit.DyeColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -24,7 +25,7 @@ public abstract class NBTSerializer<T> {
         @Override
         @NotNull Object serialize(Object itemObject) {
             if (!(itemObject instanceof ItemStack item)) {
-                throw new IllegalStateException("object to serialize is not an ItemStack, it is " + itemObject.getClass() + ". This is a bug");
+                throw new IllegalArgumentException("object to serialize is not an ItemStack, it is " + itemObject.getClass() + ". This is a bug");
             }
             if (item.isEmpty()) {
                 return Map.of("id", "minecraft:air");
@@ -51,7 +52,7 @@ public abstract class NBTSerializer<T> {
                     Log.error("Data of component in item is null. This is a bug", new IllegalStateException());
                     continue;
                 }
-                final NBTSerializer<?> serializer = serializers.get(componentKey);
+                final NBTSerializer<?> serializer = componentSerializers.get(componentKey);
                 if (serializer == null) {
                     Log.error("No serializer for component " + componentKey + ". This is a bug.", new IllegalStateException());
                     continue;
@@ -66,7 +67,7 @@ public abstract class NBTSerializer<T> {
         @Override
         @NonNull ItemStack deserialize(@NotNull Object value) {
             if (!(value instanceof Map<?, ?> data)) {
-                throw new IllegalStateException("object to deserialize is not a Map, it is " + value.getClass());
+                throw new IllegalArgumentException("object to deserialize is not a Map, it is " + value.getClass());
             }
             final int amount;
             if (data.get("amount") instanceof Integer intAmount) amount = intAmount;
@@ -111,7 +112,7 @@ public abstract class NBTSerializer<T> {
                     Log.error("Component type is neither valued nor non-valued. This is a bug.", new IllegalStateException());
                     continue;
                 }
-                final NBTSerializer<?> serializer = serializers.get(componentKey);
+                final NBTSerializer<?> serializer = componentSerializers.get(componentKey);
                 if (serializer == null) {
                     Log.error("No serializer for component " + componentKey, new IllegalStateException());
                     continue;
@@ -139,7 +140,7 @@ public abstract class NBTSerializer<T> {
         @Override
         @NotNull Object serialize(final Object value) {
             if (!(value instanceof BannerPatternLayers layers)) {
-                throw new IllegalStateException("object to serialize is not a BannerPatternLayers, it is " + value.getClass() + ". This is a bug");
+                throw new IllegalArgumentException("object to serialize is not a BannerPatternLayers, it is " + value.getClass() + ". This is a bug");
             }
             final List<Map<String, Object>> result = new ArrayList<>();
             for (final Pattern pattern : layers.patterns()) {
@@ -152,12 +153,12 @@ public abstract class NBTSerializer<T> {
         @Override
         @NonNull BannerPatternLayers deserialize(final @NotNull Object value) {
             if (!(value instanceof List<?> list)) {
-                throw new IllegalStateException("object to deserialize is not a List, it is " + value.getClass());
+                throw new IllegalArgumentException("object to deserialize is not a List, it is " + value.getClass());
             }
             final List<Pattern> patterns = new ArrayList<>();
             for (final Object patternObject : list) {
                 if (!(patternObject instanceof Map<?, ?> patternData)) {
-                    Log.error("pattern is not a Map, it is " + patternObject.getClass(), new IllegalStateException());
+                    Log.error("pattern is not a Map, it is " + patternObject.getClass(), new IllegalArgumentException());
                     continue;
                 }
                 @SuppressWarnings("unchecked") final Map<String, Object> serializedPattern = (Map<String, Object>) patternData;
@@ -198,7 +199,7 @@ public abstract class NBTSerializer<T> {
         @Override
         @NonNull BundleContents deserialize(final @NotNull Object value) {
             if (!(value instanceof List<?> data)) {
-                throw new IllegalStateException("object to deserialize is not a List, it is " + value.getClass());
+                throw new IllegalArgumentException("object to deserialize is not a List, it is " + value.getClass());
             }
             final List<ItemStack> contents = new ArrayList<>();
             for (final Object serializedItem : data) {
@@ -208,15 +209,47 @@ public abstract class NBTSerializer<T> {
         }
     };
 
-    private static final Map<String, NBTSerializer<?>> serializers;
+    public static final NBTSerializer<Boolean> BOOLEAN = new NBTSerializer<>() {
+        @Override
+        @NotNull Object serialize(final Object value) {
+            return value;
+        }
 
-    static {
-        serializers = Map.of(
-                "minecraft:banner_patterns", BANNER_PATTERNS,
-                "minecraft:base_color", BASE_COLOR,
-                "minecraft:bundle_contents", BUNDLE_CONTENTS
-        );
-    }
+        @Override
+        @NonNull Boolean deserialize(final @NotNull Object value) {
+            if (value instanceof Boolean bool) return bool;
+            if (value instanceof String string) return Boolean.valueOf(string);
+            throw new IllegalArgumentException("object to deserialize is not a Boolean, it is " + value.getClass());
+        }
+    };
+
+    public static final NBTSerializer<Component> TEXT_COMPONENT = new NBTSerializer<>() {
+        @Override
+        @NotNull Object serialize(final Object value) {
+            if (!(value instanceof Component component))
+                throw new IllegalArgumentException("object to serialize is not a Component, it is " + value.getClass());
+
+            return Values.minimessage.serialize(component);
+        }
+
+        @Override
+        @NonNull Component deserialize(final @NotNull Object value) {
+            if (!(value instanceof String text)) {
+                throw new IllegalArgumentException("object to deserialize is not a String, it is " + value.getClass());
+            }
+
+            return Values.minimessage.deserialize(text);
+        }
+    };
+
+    private static final Map<String, NBTSerializer<?>> componentSerializers = Map.of(
+            "minecraft:banner_patterns", BANNER_PATTERNS,
+            "minecraft:base_color", BASE_COLOR,
+            "minecraft:bundle_contents", BUNDLE_CONTENTS,
+            "minecraft:custom_name", TEXT_COMPONENT,
+            "minecraft:enchantment_glint_override", BOOLEAN,
+            "minecraft:item_name", TEXT_COMPONENT
+    );
 
     abstract @NotNull Object serialize(final Object value);
 
