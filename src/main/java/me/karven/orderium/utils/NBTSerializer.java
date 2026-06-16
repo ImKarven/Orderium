@@ -1,10 +1,12 @@
 package me.karven.orderium.utils;
 
 import io.papermc.paper.datacomponent.DataComponentType;
+import io.papermc.paper.datacomponent.item.BannerPatternLayers;
 import io.papermc.paper.datacomponent.item.BundleContents;
 import org.bukkit.DyeColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
+import org.bukkit.block.banner.Pattern;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
@@ -132,6 +134,40 @@ public abstract class NBTSerializer<T> {
     }
 
 
+    public static final NBTSerializer<BannerPatternLayers> BANNER_PATTERNS = new NBTSerializer<>() {
+
+        @Override
+        @NotNull Object serialize(final Object value) {
+            if (!(value instanceof BannerPatternLayers layers)) {
+                throw new IllegalStateException("object to serialize is not a BannerPatternLayers, it is " + value.getClass() + ". This is a bug");
+            }
+            final List<Map<String, Object>> result = new ArrayList<>();
+            for (final Pattern pattern : layers.patterns()) {
+                result.add(pattern.serialize());
+            }
+
+            return result;
+        }
+
+        @Override
+        @NonNull BannerPatternLayers deserialize(final @NotNull Object value) {
+            if (!(value instanceof List<?> list)) {
+                throw new IllegalStateException("object to deserialize is not a List, it is " + value.getClass());
+            }
+            final List<Pattern> patterns = new ArrayList<>();
+            for (final Object patternObject : list) {
+                if (!(patternObject instanceof Map<?, ?> patternData)) {
+                    Log.error("pattern is not a Map, it is " + patternObject.getClass(), new IllegalStateException());
+                    continue;
+                }
+                @SuppressWarnings("unchecked") final Map<String, Object> serializedPattern = (Map<String, Object>) patternData;
+                final Pattern pattern = new Pattern(serializedPattern);
+                patterns.add(pattern);
+            }
+            return BannerPatternLayers.bannerPatternLayers(patterns);
+        }
+    };
+
     public static final NBTSerializer<DyeColor> BASE_COLOR = new NBTSerializer<>() {
 
         @Override
@@ -160,7 +196,7 @@ public abstract class NBTSerializer<T> {
         }
 
         @Override
-        @NonNull BundleContents deserialize(@NotNull Object value) {
+        @NonNull BundleContents deserialize(final @NotNull Object value) {
             if (!(value instanceof List<?> data)) {
                 throw new IllegalStateException("object to deserialize is not a List, it is " + value.getClass());
             }
@@ -176,6 +212,7 @@ public abstract class NBTSerializer<T> {
 
     static {
         serializers = Map.of(
+                "minecraft:banner_patterns", BANNER_PATTERNS,
                 "minecraft:base_color", BASE_COLOR,
                 "minecraft:bundle_contents", BUNDLE_CONTENTS
         );
