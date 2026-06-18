@@ -26,10 +26,8 @@ import java.util.Map;
 public abstract class NBTSerializer<T> {
     public static final NBTSerializer<ItemStack> ITEM_STACK = new NBTSerializer<>() {
         @Override
-        @NotNull Object serialize(Object itemObject) {
-            if (!(itemObject instanceof ItemStack item)) {
-                throw new IllegalArgumentException("object to serialize is not an ItemStack, it is " + itemObject.getClass() + ". This is a bug");
-            }
+        @NotNull Object serialize(final Object itemObject) {
+            final ItemStack item = cast(itemObject);
             if (item.isEmpty()) {
                 return Map.of("id", "minecraft:air");
             }
@@ -144,9 +142,7 @@ public abstract class NBTSerializer<T> {
 
         @Override
         @NotNull Object serialize(final Object value) {
-            if (!(value instanceof BannerPatternLayers layers)) {
-                throw new IllegalArgumentException("object to serialize is not a BannerPatternLayers, it is " + value.getClass() + ". This is a bug");
-            }
+            final BannerPatternLayers layers = cast(value);
             final List<Map<String, Object>> result = new ArrayList<>();
             for (final Pattern pattern : layers.patterns()) {
                 result.add(pattern.serialize());
@@ -191,8 +187,7 @@ public abstract class NBTSerializer<T> {
     public static final NBTSerializer<BundleContents> BUNDLE_CONTENTS = new NBTSerializer<>() {
         @Override
         @NotNull Object serialize(final Object value) {
-            if (!(value instanceof BundleContents bundleContents))
-                throw new IllegalArgumentException("value is not a BundleContents, it is " + value.getClass() + ". This is a bug");
+            final BundleContents bundleContents = cast(value);
             final List<Map<String, Object>> serializedContents = new ArrayList<>();
             for (final ItemStack item : bundleContents.contents()) {
                 @SuppressWarnings("unchecked") final Map<String, Object> serializedItem = (Map<String, Object>) ITEM_STACK.serialize(item);
@@ -231,10 +226,7 @@ public abstract class NBTSerializer<T> {
     public static final NBTSerializer<Key> KEY = new NBTSerializer<>() {
         @Override
         @NotNull Object serialize(final Object value) {
-            if (!(value instanceof Key key)) {
-                throw new IllegalArgumentException("object to serialize is not a Key, it is " + value.getClass() + ". This is a bug");
-            }
-            return key.asString();
+            return cast(value).asString();
         }
 
         @Override
@@ -252,9 +244,7 @@ public abstract class NBTSerializer<T> {
     public static final NBTSerializer<Component> TEXT_COMPONENT = new NBTSerializer<>() {
         @Override
         @NotNull Object serialize(final Object value) {
-            if (!(value instanceof Component component))
-                throw new IllegalArgumentException("object to serialize is not a Component, it is " + value.getClass() + ". This is a bug");
-
+            final Component component = cast(value);
             return Values.minimessage.serialize(component);
         }
 
@@ -271,10 +261,7 @@ public abstract class NBTSerializer<T> {
     public static final NBTSerializer<ItemLore> LORE = new NBTSerializer<>() {
         @Override
         @NotNull Object serialize(final Object value) {
-            if (!(value instanceof ItemLore itemLore)) {
-                throw new IllegalArgumentException("object to deserialize is not a ItemLore, it is " + value.getClass() + ". This is a bug");
-            }
-            return itemLore.lines().stream().map(Values.minimessage::serialize).toList();
+            return cast(value).lines().stream().map(Values.minimessage::serialize).toList();
         }
 
         @Override
@@ -307,6 +294,17 @@ public abstract class NBTSerializer<T> {
     abstract @NotNull Object serialize(final Object value);
 
     abstract @NotNull T deserialize(final @NotNull Object value);
+
+    protected T cast(final @NotNull Object value) {
+        try {
+            final @SuppressWarnings("unchecked") T typedValue = (T) value;
+            return typedValue;
+        } catch (Exception e) {
+            final RuntimeException exception = new RuntimeException("Failed to serialize value from type " + value.getClass().getName() + ". This is a bug");
+            // TODO: add faststats context aware error tracker
+            throw exception;
+        }
+    }
 
     public static Object serializeItemStack(final @NotNull ItemStack itemStack) {
         return ITEM_STACK.serialize(itemStack);
