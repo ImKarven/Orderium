@@ -4,6 +4,7 @@ import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.item.BannerPatternLayers;
 import io.papermc.paper.datacomponent.item.BundleContents;
+import io.papermc.paper.datacomponent.item.ChargedProjectiles;
 import io.papermc.paper.datacomponent.item.ItemLore;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -209,6 +210,30 @@ public abstract class NBTSerializer<T> {
         }
     };
 
+    public static final NBTSerializer<ChargedProjectiles> CHARGED_PROJECTILES = new NBTSerializer<>() {
+        @Override
+        @NotNull Object serialize(final Object value) {
+            final ChargedProjectiles chargedProjectiles = cast(value);
+            final List<Object> serializedProjectiles = new ArrayList<>();
+            for (final ItemStack item : chargedProjectiles.projectiles()) {
+                serializedProjectiles.add(ITEM_STACK.serialize(item));
+            }
+            return serializedProjectiles;
+        }
+
+        @Override
+        @NonNull ChargedProjectiles deserialize(final @NotNull Object value) {
+            if (!(value instanceof List<?> data)) {
+                throw new IllegalArgumentException("object to deserialize is not a List, it is " + value.getClass());
+            }
+            final List<ItemStack> projectiles = new ArrayList<>();
+            for (final Object serializedItem : data) {
+                projectiles.add(ITEM_STACK.deserialize(serializedItem));
+            }
+            return ChargedProjectiles.chargedProjectiles(projectiles);
+        }
+    };
+
     public static final NBTSerializer<Boolean> BOOLEAN = new NBTSerializer<>() {
         @Override
         @NotNull Object serialize(final Object value) {
@@ -284,6 +309,7 @@ public abstract class NBTSerializer<T> {
             "minecraft:banner_patterns", BANNER_PATTERNS,
             "minecraft:base_color", BASE_COLOR,
             "minecraft:bundle_contents", BUNDLE_CONTENTS,
+            "minecraft:charged_projectiles", CHARGED_PROJECTILES,
             "minecraft:custom_name", TEXT_COMPONENT,
             "minecraft:enchantment_glint_override", BOOLEAN,
             "minecraft:item_model", KEY,
