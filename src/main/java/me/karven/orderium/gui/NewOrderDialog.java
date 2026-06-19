@@ -1,6 +1,7 @@
 package me.karven.orderium.gui;
 
 import io.papermc.paper.dialog.Dialog;
+import me.karven.orderium.config.Config;
 import me.karven.orderium.guiframework.InventoryGUI;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.orderitem.OrderItem;
@@ -9,11 +10,10 @@ import me.karven.orderium.utils.PlayerUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import static me.karven.orderium.config.Config.config;
-
 @SuppressWarnings("UnstableApiUsage")
 public class NewOrderDialog {
     public static Dialog getDialog(OrderItem orderItem) {
+        final Config config = Config.config;
         final ItemStack item = orderItem instanceof SearchableItem searchableItem ? searchableItem.getParsedItemStack() : orderItem.getItemStack();
 
         return config.newOrderDialogConfig.dialog(

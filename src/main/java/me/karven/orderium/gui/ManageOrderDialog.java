@@ -1,16 +1,16 @@
 package me.karven.orderium.gui;
 
 import io.papermc.paper.dialog.Dialog;
+import me.karven.orderium.config.Config;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.PlayerUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import static me.karven.orderium.config.Config.config;
-
 @SuppressWarnings("UnstableApiUsage")
 public class ManageOrderDialog {
     public static Dialog getDialog(Order order) {
+        final Config config = Config.config;
         final ItemStack item = order.itemStack(config.yourOrdersGUIConfig.orderConfig.lore);
         final Dialog collectItemsDialog = config.manageOrderDialogConfig.collectItems.dialog(
                 item,

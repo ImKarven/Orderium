@@ -1,5 +1,6 @@
 package me.karven.orderium.gui;
 
+import me.karven.orderium.config.Config;
 import me.karven.orderium.guiframework.InteractLocation;
 import me.karven.orderium.guiframework.InventoryGUI;
 import me.karven.orderium.guiframework.InventoryItem;
@@ -23,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static me.karven.orderium.Orderium.plugin;
-import static me.karven.orderium.config.Config.config;
 
 /**
  * GUI that lets players select enchantments of their item
@@ -49,6 +49,7 @@ public class EnchantGUI {
             return;
         }
         MiniMessage mm = plugin.mm;
+        final Config config = Config.config;
         this.gui = new InventoryGUI(config.enchantGUIConfig.rows, mm.deserialize(config.enchantGUIConfig.title));
         gui.setOnClick(event -> event.setCancelled(true), InteractLocation.GLOBAL);
         gui.setOnDrag(event -> event.setCancelled(true), InteractLocation.GLOBAL);
