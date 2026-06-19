@@ -18,7 +18,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 
-// Serialize an nbt data to a Map<String, Object> to store in config file
+// Serialize an nbt data to a Map, List, etc. to store it in config file
 @SuppressWarnings("UnstableApiUsage")
 public abstract class NBTSerializer<T> {
     public static final NBTSerializer<ItemStack> ITEM_STACK = new NBTSerializer<>() {
@@ -283,6 +283,44 @@ public abstract class NBTSerializer<T> {
         }
     };
 
+    public static final NBTSerializer<TooltipDisplay> TOOLTIP_DISPLAY = new NBTSerializer<>() {
+        @Override
+        @NotNull Object serialize(final Object value) {
+            final TooltipDisplay tooltipDisplay = cast(value);
+            return Map.of(
+                    "hide_tooltip", tooltipDisplay.hideTooltip(),
+                    "hidden_components", tooltipDisplay.hiddenComponents().stream().map(component -> component.getKey().asString()).toList()
+            );
+        }
+
+        @Override
+        @NonNull TooltipDisplay deserialize(final @NotNull Object value) {
+            if (!(value instanceof Map<?, ?> data)) {
+                throw new IllegalArgumentException("object to deserialize is not a Map, it is " + value.getClass());
+            }
+            final TooltipDisplay.Builder builder = TooltipDisplay.tooltipDisplay();
+            builder.hideTooltip((boolean) data.get("hide_tooltip"));
+            for (final Object componentObject : (List<?>) data.get("hidden_components")) {
+                if (!(componentObject instanceof String componentString)) {
+                    Log.error("hidden component is not a String, it is " + componentObject.getClass(), new IllegalArgumentException());
+                    continue;
+                }
+                final String[] keyComponents = componentString.split(":");
+                final NamespacedKey key = switch (keyComponents.length) {
+                    case 1 -> NamespacedKey.minecraft(keyComponents[0]);
+                    case 2 -> new NamespacedKey(keyComponents[0], keyComponents[1]);
+                    default -> throw new IllegalStateException("Unexpected key: " + componentString);
+                };
+                final DataComponentType component = Registry.DATA_COMPONENT_TYPE.get(key);
+                if (component == null) {
+                    throw new IllegalStateException("Unknown component type: " + key);
+                }
+                builder.addHiddenComponents(component);
+            }
+            return builder.build();
+        }
+    };
+
     public static final NBTSerializer<Boolean> BOOLEAN = new NBTSerializer<>() {
         @Override
         @NotNull Object serialize(final Object value) {
@@ -379,6 +417,7 @@ public abstract class NBTSerializer<T> {
         componentSerializers.put("minecraft:item_name", TEXT_COMPONENT);
         componentSerializers.put("minecraft:max_stack_size", OBJECT);
         componentSerializers.put("minecraft:profile", PROFILE);
+        componentSerializers.put("minecraft:tooltip_display", TOOLTIP_DISPLAY);
         componentSerializers.put("minecraft:lore", LORE);
     }
 
