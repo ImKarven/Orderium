@@ -2,6 +2,7 @@ package me.karven.orderium.config.util.component;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.Log;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -28,8 +29,7 @@ public class EnchantmentConfig {
         try {
             itemRepresentation = ConvertUtils.deserializeItem(config.getConfigSection("item"));
         } catch (Exception e) {
-            itemRepresentation = ItemStack.of(Material.ENCHANTED_BOOK);
-            itemRepresentation.editMeta(meta -> meta.setEnchantmentGlintOverride(true));
+            Log.error("Failed to deserialize item", e);
         }
         slots.clear();
         final List<Integer> slotsFromConfig = config.getList("slots");

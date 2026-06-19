@@ -2,6 +2,7 @@ package me.karven.orderium.config.util.component;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.utils.Log;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +31,7 @@ public class OrderConfig extends ComponentConfig {
         try {
             itemRepresentation = ConvertUtils.deserializeItem(config.getConfigSection(path + ".item"));
         } catch (Exception e) {
-            itemRepresentation = ItemStack.of(Material.STONE);
+            Log.error("Failed to deserialize item", e);
         }
     }
 
