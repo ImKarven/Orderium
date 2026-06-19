@@ -10,6 +10,7 @@ import me.karven.orderium.config.Config;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
 import me.karven.orderium.utils.PlayerUtils;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -21,9 +22,11 @@ import static me.karven.orderium.config.Config.config;
 
 public class OrderiumCommands {
     private static @NotNull Predicate<CommandSourceStack> permission(@NotNull String permission) {
-        return predicate ->
-                predicate.getExecutor() != null &&
-                        predicate.getExecutor().hasPermission("orderium." + permission);
+        return predicate -> {
+            final Entity executor = predicate.getExecutor();
+            final String perm = "orderium." + permission;
+            return executor == null ? predicate.getSender().hasPermission(perm) : executor.hasPermission(perm);
+        };
     }
 
     private static @NotNull Predicate<CommandSourceStack> playerAndPermission(@NotNull String permission) {
@@ -63,8 +66,8 @@ public class OrderiumCommands {
                         .requires(permission("admin.reload"))
                         .executes(ctx -> {
                             final Entity executor = ctx.getSource().getExecutor();
-                            assert executor != null;
-                            Config.reloadAsync().thenAccept(ignored -> executor.sendRichMessage("<green>Orderium reloaded"));
+                            final CommandSender sender = executor == null ? ctx.getSource().getSender() : executor;
+                            Config.reloadAsync().thenAccept(ignored -> sender.sendRichMessage("<green>Orderium reloaded"));
 
                             return 1;
                         })
