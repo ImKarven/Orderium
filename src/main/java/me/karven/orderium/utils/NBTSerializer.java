@@ -69,9 +69,8 @@ public abstract class NBTSerializer<T> {
             if (!(value instanceof Map<?, ?> data)) {
                 throw new IllegalArgumentException("object to deserialize is not a Map, it is " + value.getClass());
             }
-            final int amount;
-            if (data.get("amount") instanceof Integer intAmount) amount = intAmount;
-            else amount = 1;
+            if (!(data.get("count") instanceof Integer amount))
+                throw new IllegalArgumentException("count is not an Integer, it is " + data.get("count").getClass());
             final String typeKey = (String) data.get("id");
             final ItemType type = ConvertUtils.getItemType(typeKey);
             final ItemStack item = typeKey.equals("minecraft:air") ? ItemStack.empty() : type.createItemStack(amount);
