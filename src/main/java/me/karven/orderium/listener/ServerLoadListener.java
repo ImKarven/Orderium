@@ -17,7 +17,6 @@ public class ServerLoadListener implements Listener {
     public void onPostWorldInitialization(final @NotNull ServerLoadEvent event) {
         if (event.getType().equals(ServerLoadEvent.LoadType.RELOAD)) {
             Log.warn("Bukkit reloading is NOT supported. Expect bugs and errors.");
-            return;
         }
         plugin.setupEconomy();
 

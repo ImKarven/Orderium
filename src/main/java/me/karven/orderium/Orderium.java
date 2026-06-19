@@ -49,13 +49,13 @@ public final class Orderium extends JavaPlugin {
     public void onEnable() {
         plugin = this;
         isFolia = isFolia();
-        storage = createStorage();
         AdminToolGUI.init();
         try {
             Config.reload();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        storage = createStorage();
         OrderiumCommands.register();
         Bukkit.getPluginManager().registerEvents(new ServerLoadListener(), this);
         Log.info("Orderium enabled");
