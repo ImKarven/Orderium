@@ -18,6 +18,8 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 
+import static me.karven.orderium.utils.Values.ERROR_TRACKER;
+
 // Serialize an nbt data to a Map, List, etc. to store it in config file
 @SuppressWarnings("UnstableApiUsage")
 public abstract class NBTSerializer<T> {
@@ -430,7 +432,7 @@ public abstract class NBTSerializer<T> {
             return typedValue;
         } catch (Exception e) {
             final RuntimeException exception = new RuntimeException("Failed to serialize value from type " + value.getClass().getName() + ". This is a bug");
-            // TODO: add faststats context aware error tracker
+            ERROR_TRACKER.trackError(exception);
             throw exception;
         }
     }

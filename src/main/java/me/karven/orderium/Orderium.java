@@ -2,7 +2,6 @@ package me.karven.orderium;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
-import dev.faststats.ErrorTracker;
 import dev.faststats.bukkit.BukkitContext;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.data.DataCache;
@@ -29,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.TimeUnit;
 
 import static me.karven.orderium.config.Config.config;
+import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 
 public final class Orderium extends JavaPlugin {
     public static Orderium plugin;
@@ -36,7 +36,6 @@ public final class Orderium extends JavaPlugin {
     public org.bstats.bukkit.Metrics bStatsMetrics = null;
     public static boolean isFolia;
 
-    public static final ErrorTracker ERROR_TRACKER = ErrorTracker.contextAware();
     public final String faststatsToken = "241271513528286847e7c7ee08df7ec9";
     private final BukkitContext faststatsContext = new BukkitContext.Factory(this, faststatsToken)
             .errorTrackerService(ERROR_TRACKER)
