@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static me.karven.orderium.Orderium.plugin;
+import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 
 public class Config {
     private static volatile boolean reloading = false;
@@ -187,7 +188,7 @@ public class Config {
         });
         if (reloading) {
             final AssertionError error = new AssertionError("Reloading is still true after reloadAsync() completed. This should never happen.");
-            // TODO: error tracker
+            ERROR_TRACKER.trackError(error);
             throw error;
         }
         reloading = false;
