@@ -112,12 +112,12 @@ public class ChooseItemGUI {
     }
 
     private static void createPages(List<InventoryGUI> pages, SortType sortType, Collection<OrderItem> items) {
-        final int pagesAmount = ConvertUtils.ceil_div(items.size(), 45);
+        final int pagesAmount = ConvertUtils.ceil_div(items.size(), config.chooseItemGUIConfig.slots.size());
 
         InventoryGUI gui = initPage(pages, sortType, 0, pagesAmount);
         int idx = 0, cnt = 0;
         for (OrderItem orderItem : items) {
-            if (cnt == 45) {
+            if (cnt == config.chooseItemGUIConfig.slots.size()) {
                 cnt = 0;
                 idx++;
                 pages.add(gui);
@@ -151,7 +151,7 @@ public class ChooseItemGUI {
                 p.sendRichMessage("<green>Item added to blacklist. Reload to take effects");
                 guiItemStack.editMeta(PDCUtils::setBlacklist);
             });
-            gui.addItem(guiItem, cnt);
+            gui.addItem(guiItem, config.chooseItemGUIConfig.slots.get(cnt));
 
             cnt++;
         }

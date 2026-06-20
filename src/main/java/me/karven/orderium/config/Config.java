@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import static me.karven.orderium.Orderium.plugin;
 
 public class Config {
+    private static volatile boolean reloading = false;
     public static volatile Config config;
     public static final int CURRENT_CONFIG_VERSION = 5;
     public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
@@ -170,8 +171,11 @@ public class Config {
     }
 
     public static CompletableFuture<Void> reloadAsync() {
+        if (reloading) return null;
+        reloading = true;
         final CompletableFuture<Void> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
+
             try {
                 reload();
             } catch (Exception e) {
@@ -181,6 +185,12 @@ public class Config {
             }
             future.complete(null);
         });
+        if (reloading) {
+            final AssertionError error = new AssertionError("Reloading is still true after reloadAsync() completed. This should never happen.");
+            // TODO: error tracker
+            throw error;
+        }
+        reloading = false;
         return future;
     }
 
