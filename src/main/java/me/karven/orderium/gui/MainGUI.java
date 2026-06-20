@@ -46,7 +46,7 @@ public class MainGUI {
         Collection<Order> allOrders = plugin.getDataCache().getSortedOrders(sortType);
         orders = allOrders.stream().filter(Order::isActive).toList();
 
-        this.amount = ceil_div(orders.size(), 45);
+        this.amount = ceil_div(orders.size(), config.mainGUIConfig.orderConfig.slots.size());
         setupPages();
     }
 
@@ -59,7 +59,7 @@ public class MainGUI {
         Collection<Order> allOrders = AlgoUtils.searchOrder(search, plugin.getDataCache().getSortedOrders(sortType));
         orders = allOrders.stream().filter(Order::isActive).toList();
 
-        this.amount = ceil_div(orders.size(), 45);
+        this.amount = ceil_div(orders.size(), config.mainGUIConfig.orderConfig.slots.size());
         setupPages();
     }
 
