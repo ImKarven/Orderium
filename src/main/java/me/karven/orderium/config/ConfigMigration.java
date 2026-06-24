@@ -37,6 +37,16 @@ public class ConfigMigration {
             throw new RuntimeException("Downgrading config is not supported. Please use the latest version");
         }
 
+        // Migrate config version 5 -> 6: Add orders limit in config.yml
+        if (configVersion == 5) {
+            config.configFile.set("config-version", 6);
+            config.setDefaults();
+            config.configFile.save();
+            config.reloadGUIs();
+            config.load();
+            return;
+        }
+
         // Backup old config file
         final File backupConfig = new File(plugin.getDataFolder(), "config.yml.old");
         Files.copy(new File(plugin.getDataFolder(), "config.yml"), backupConfig);
@@ -73,7 +83,9 @@ public class ConfigMigration {
         config.configFile.set("sort-types", null);
         config.configFile.set("enchantments", null);
 
-        config.configFile.set("config-version", 5);
+        // Migrate config version 5 -> 6: Add orders limit in config.yml
+        config.configFile.addDefault("orders-limit.default", 27);
+        config.configFile.set("config-version", 6);
 
         config.load();
 

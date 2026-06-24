@@ -1,6 +1,7 @@
 package me.karven.orderium.config;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
+import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
 import me.karven.orderium.config.util.SignGUIConfig;
 import me.karven.orderium.config.util.chestgui.*;
 import me.karven.orderium.config.util.dialog.ConfirmDeliveryDialogConfig;
@@ -19,7 +20,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static me.karven.orderium.Orderium.plugin;
@@ -28,7 +31,7 @@ import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 public class Config {
     private static volatile boolean reloading = false;
     public static volatile Config config;
-    public static final int CURRENT_CONFIG_VERSION = 5;
+    public static final int CURRENT_CONFIG_VERSION = 6;
     public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
 
     public ConfigFile configFile;
@@ -75,6 +78,8 @@ public class Config {
 
     public final List<NamespacedKey> similarityCheck = new ArrayList<>();
 
+    public final Map<String, Integer> ordersLimit = new HashMap<>();
+
     public Config() throws Exception {
 
         try {
@@ -91,7 +96,7 @@ public class Config {
     }
 
     public void save() throws Exception {
-        configFile.set("config-version", 5);
+        configFile.set("config-version", CURRENT_CONFIG_VERSION);
         configFile.save();
         mainGUIConfig.saveToFile();
         yourOrdersGUIConfig.saveToFile();
@@ -166,6 +171,8 @@ public class Config {
         for (final OrderStatus status : OrderStatus.values()) {
             configFile.addDefault("order-status." + status.getIdentifier(), status.getText());
         }
+
+        configFile.addDefault("orders-limit.default", 27);
 
         setDefaultMessages();
         setDefaultSounds();
@@ -266,6 +273,12 @@ public class Config {
 
         orderCommandAliases.clear();
         orderCommandAliases.addAll(configFile.getStringList("order-command-aliases"));
+
+        ordersLimit.clear();
+        final ConfigSection ordersLimitSection = configFile.getConfigSection("orders-limit");
+        for (final String key : ordersLimitSection.getKeys(false, true)) {
+            ordersLimit.put(key, ordersLimitSection.getInteger(key));
+        }
 
         orderCreationSuccessful = configFile.getString("messages.create-order-success");
         invalidInput = configFile.getString("messages.invalid-input");
