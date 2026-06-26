@@ -24,12 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static me.karven.orderium.Orderium.plugin;
 import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 
 public class Config {
-    private static volatile boolean reloading = false;
+    private static final AtomicBoolean reloading = new AtomicBoolean(false);
     public static volatile Config config;
     public static final int CURRENT_CONFIG_VERSION = 6;
     public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
@@ -179,8 +180,8 @@ public class Config {
     }
 
     public static CompletableFuture<Void> reloadAsync() {
-        if (reloading) return null;
-        reloading = true;
+        if (reloading.get()) return null;
+        reloading.set(true);
         final CompletableFuture<Void> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
 
@@ -192,13 +193,14 @@ public class Config {
                 return;
             }
             future.complete(null);
+            if (!reloading.get()) {
+                final AssertionError error = new AssertionError("Reloading is false. This should never happen.");
+                ERROR_TRACKER.trackError(error);
+                Log.error("", error);
+                throw error;
+            }
+            reloading.set(false);
         });
-        if (!reloading) {
-            final AssertionError error = new AssertionError("Reloading is false. This should never happen.");
-            ERROR_TRACKER.trackError(error);
-            throw error;
-        }
-        reloading = false;
         return future;
     }
 

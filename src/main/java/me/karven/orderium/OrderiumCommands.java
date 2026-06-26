@@ -15,6 +15,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
 import static me.karven.orderium.Orderium.plugin;
@@ -42,7 +43,7 @@ public class OrderiumCommands {
                 .executes(ctx -> {
                     if (!(ctx.getSource().getExecutor() instanceof Player player)) return 2;
                     MainGUI mainGUI = new MainGUI(player, 0);
-                    PlayerUtils.openGUI(player, mainGUI.getGUI(), true);
+                    PlayerUtils.openGUI(player, mainGUI.getGUI(), false);
                     return 1;
                 })
                 .then(Commands.argument("search", StringArgumentType.greedyString())
@@ -50,7 +51,7 @@ public class OrderiumCommands {
                             if (!(ctx.getSource().getExecutor() instanceof Player player)) return 2;
                             final String search = StringArgumentType.getString(ctx, "search");
                             MainGUI mainGUI = new MainGUI(player, 0, search);
-                            PlayerUtils.openGUI(player, mainGUI.getGUI(), true);
+                            PlayerUtils.openGUI(player, mainGUI.getGUI(), false);
                             return 1;
                         })
                 )
@@ -67,7 +68,12 @@ public class OrderiumCommands {
                         .executes(ctx -> {
                             final Entity executor = ctx.getSource().getExecutor();
                             final CommandSender sender = executor == null ? ctx.getSource().getSender() : executor;
-                            Config.reloadAsync().thenAccept(ignored -> sender.sendRichMessage("<green>Orderium reloaded"));
+                            final CompletableFuture<Void> reloadConfigFuture = Config.reloadAsync();
+                            if (reloadConfigFuture == null) {
+                                sender.sendRichMessage("<red>Config is already reloading");
+                                return 1;
+                            }
+                            reloadConfigFuture.thenAccept(ignored -> sender.sendRichMessage("<green>Orderium reloaded"));
 
                             return 1;
                         })
@@ -77,7 +83,7 @@ public class OrderiumCommands {
                         .executes(ctx -> {
                             if (!(ctx.getSource().getExecutor() instanceof final Player p)) return 2;
 
-                            PlayerUtils.openGUI(p, AdminToolGUI.getBlacklistGUI(), true);
+                            PlayerUtils.openGUI(p, AdminToolGUI.getBlacklistGUI(), false);
 
                             return 1;
                         })
@@ -87,7 +93,7 @@ public class OrderiumCommands {
                         .executes(ctx -> {
                             if (!(ctx.getSource().getExecutor() instanceof final Player p)) return 2;
 
-                            PlayerUtils.openGUI(p, AdminToolGUI.getCustomItemsGUI(), true);
+                            PlayerUtils.openGUI(p, AdminToolGUI.getCustomItemsGUI(), false);
 
                             return 1;
                         })
