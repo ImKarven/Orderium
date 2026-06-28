@@ -29,7 +29,6 @@ import static me.karven.orderium.utils.ConvertUtils.formatNumber;
 // TODO: Replace `item` with OrderItem instead of ItemStack.
 // Problem: how to store it in database?
 public class Order implements me.karven.orderium.api.Order {
-    private final TagResolver[] placeholders;
     public final int id;
     public final UUID owner;
     public final ItemStack item;
@@ -48,39 +47,6 @@ public class Order implements me.karven.orderium.api.Order {
         this.delivered = delivered;
         this.inStorage = inStorage;
         this.expiresAt = expiresAt;
-
-        // Initialize placeholders
-        final OfflinePlayer player = Bukkit.getOfflinePlayer(owner);
-        final String playerName = player.getName() == null ? owner.toString() : player.getName();
-        long millis = expiresAt - System.currentTimeMillis();
-        long sec = millis / 1000;
-        long min = sec / 60;
-        long hour = min / 60;
-        final long day = hour / 24;
-        hour %= 24;
-        min %= 60;
-        sec %= 60;
-        millis %= 1000;
-        final ItemMeta meta = item.getItemMeta();
-        final Component itemName = meta.hasCustomName() ? meta.customName() : Component.translatable(item.translationKey());
-        assert itemName != null;
-        placeholders = new TagResolver[]{
-                Placeholder.unparsed("money-per", formatNumber(moneyPer)),
-                Placeholder.unparsed("paid", formatNumber(moneyPer * delivered)),
-                Placeholder.unparsed("total", formatNumber(moneyPer * amount)),
-                Placeholder.unparsed("delivered", formatNumber(delivered)),
-                Placeholder.unparsed("amount", formatNumber(amount)),
-                Placeholder.unparsed("in-storage", formatNumber(inStorage)),
-                Placeholder.unparsed("player", playerName),
-                Placeholder.component("item", itemName),
-                Placeholder.component("order-status", Values.minimessage.deserialize(getStatus().getText(),
-                        Placeholder.unparsed("day", String.valueOf(day)),
-                        Placeholder.unparsed("hour", String.valueOf(hour)),
-                        Placeholder.unparsed("minute", String.valueOf(min)),
-                        Placeholder.unparsed("second", String.valueOf(sec)),
-                        Placeholder.unparsed("millisecond", String.valueOf(millis))
-                ))
-        };
     }
 
 
@@ -102,7 +68,37 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     public @NotNull TagResolver[] placeholders() {
-        return placeholders;
+        final OfflinePlayer player = Bukkit.getOfflinePlayer(owner);
+        final String playerName = player.getName() == null ? owner.toString() : player.getName();
+        long millis = expiresAt - System.currentTimeMillis();
+        long sec = millis / 1000;
+        long min = sec / 60;
+        long hour = min / 60;
+        final long day = hour / 24;
+        hour %= 24;
+        min %= 60;
+        sec %= 60;
+        millis %= 1000;
+        final ItemMeta meta = item.getItemMeta();
+        final Component itemName = meta.hasCustomName() ? meta.customName() : Component.translatable(item.translationKey());
+        assert itemName != null;
+        return new TagResolver[]{
+                Placeholder.unparsed("money-per", formatNumber(moneyPer)),
+                Placeholder.unparsed("paid", formatNumber(moneyPer * delivered)),
+                Placeholder.unparsed("total", formatNumber(moneyPer * amount)),
+                Placeholder.unparsed("delivered", formatNumber(delivered)),
+                Placeholder.unparsed("amount", formatNumber(amount)),
+                Placeholder.unparsed("in-storage", formatNumber(inStorage)),
+                Placeholder.unparsed("player", playerName),
+                Placeholder.component("item", itemName),
+                Placeholder.component("order-status", Values.minimessage.deserialize(getStatus().getText(),
+                        Placeholder.unparsed("day", String.valueOf(day)),
+                        Placeholder.unparsed("hour", String.valueOf(hour)),
+                        Placeholder.unparsed("minute", String.valueOf(min)),
+                        Placeholder.unparsed("second", String.valueOf(sec)),
+                        Placeholder.unparsed("millisecond", String.valueOf(millis))
+                ))
+        };
     }
 
     /// Must be called in the player region
