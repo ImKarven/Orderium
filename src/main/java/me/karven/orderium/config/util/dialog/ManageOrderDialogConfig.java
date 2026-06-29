@@ -312,7 +312,12 @@ public class ManageOrderDialogConfig extends GUIConfigFile {
             noButton.label = "<red>Cancel";
             noButton.tooltip = "Click to cancel the cancellation of this order";
             noButton.width = 150;
-            body.description.contents = "You are cancelling this order. It will be expired";
+            body.description.contents =
+            """
+            You are cancelling this order. It will be expired.
+            You will earn <green>$<earn></green> in return.
+            """
+            ;
             body.description.width = 250;
             body.width = 16;
             body.height = 16;
