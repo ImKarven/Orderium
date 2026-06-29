@@ -16,6 +16,10 @@ import static me.karven.orderium.Orderium.plugin;
 
 public class ConfigMigration {
 
+    private static int configVersion(final @NotNull Config config) {
+        return config.configFile.getInteger("config-version");
+    }
+
     /**
      * Perform config migration
      *
@@ -23,20 +27,28 @@ public class ConfigMigration {
      */
     public static void perform(final @NotNull Config config) throws Exception {
         config.configFile.loadContent();
-        final int configVersion = config.configFile.getInteger("config-version");
 
         // No migration needed
-        if (configVersion == Config.CURRENT_CONFIG_VERSION) {
+        if (configVersion(config) == Config.CURRENT_CONFIG_VERSION) {
             config.setDefaults();
             config.reloadGUIs();
             config.load();
             return;
         }
 
-        if (configVersion > Config.CURRENT_CONFIG_VERSION) {
+        if (configVersion(config) > Config.CURRENT_CONFIG_VERSION) {
             throw new RuntimeException("Downgrading config is not supported. Please use the latest version");
         }
 
+        if (configVersion(config) <= 4) {
+            migrateV5(config);
+        }
+
+        // Migrate config version 5 -> 6: Add new order's cost and cancel order return display
+        migrateV6(config);
+    }
+
+    private static void migrateV5(final @NotNull Config config) throws Exception {
         // Backup old config file
         final File backupConfig = new File(plugin.getDataFolder(), "config.yml.old");
         Files.copy(new File(plugin.getDataFolder(), "config.yml"), backupConfig);
@@ -72,12 +84,16 @@ public class ConfigMigration {
         config.configFile.set("sort-prefix", null);
         config.configFile.set("sort-types", null);
         config.configFile.set("enchantments", null);
+    }
 
-        config.configFile.set("config-version", 5);
-
-        config.load();
-
+    private static void migrateV6(final @NotNull Config config) throws Exception {
+        config.setDefaults();
+        config.configFile.set("config-version", 6);
+        config.reloadGUIs();
+        config.newOrderDialogConfig.saveToFile();
+        config.manageOrderDialogConfig.saveToFile();
         config.configFile.save();
+        config.load();
     }
 
     // Set default values for config with version 4 or below

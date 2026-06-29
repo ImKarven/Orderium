@@ -21,8 +21,12 @@ public class DialogButtonConfig extends ComponentConfig {
     }
 
     public @NotNull ActionButton button(final @Nullable DialogActionCallback clickAction, final @NotNull TagResolver... placeholders) {
+        return button(clickAction, tooltip, placeholders);
+    }
+
+    public @NotNull ActionButton button(final @Nullable DialogActionCallback clickAction, final @NotNull String overrideTooltip, final @NotNull TagResolver... placeholders) {
         return ActionButton.builder(Values.minimessage.deserialize(label, placeholders))
-                .tooltip(Values.minimessage.deserialize(tooltip, placeholders))
+                .tooltip(Values.minimessage.deserialize(overrideTooltip, placeholders))
                 .width(width)
                 .action(clickAction == null ? null : DialogAction.customClick(clickAction, Values.CLICK_CALLBACK_DEFAULT_OPTIONS))
                 .build();

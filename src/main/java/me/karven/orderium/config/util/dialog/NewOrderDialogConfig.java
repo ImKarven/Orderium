@@ -8,8 +8,9 @@ import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.config.util.component.dialog.DialogButtonConfig;
 import me.karven.orderium.config.util.component.dialog.ItemlessItemDialogBodyConfig;
 import me.karven.orderium.config.util.component.dialog.TextDialogInputConfig;
-import me.karven.orderium.config.util.dialog.dialogtype.ConfirmationDialogConfig;
+import me.karven.orderium.config.util.dialog.dialogtype.RequiresConfirmationDialogConfig;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +18,7 @@ import java.util.List;
 
 // TODO: Make a paginated dialog alternative
 @SuppressWarnings("UnstableApiUsage")
-public class NewOrderDialogConfig extends ConfirmationDialogConfig {
+public class NewOrderDialogConfig extends RequiresConfirmationDialogConfig {
     public final @NotNull ItemlessItemDialogBodyConfig bodyConfig = new ItemlessItemDialogBodyConfig("body");
     public final @NotNull TextDialogInputConfig amountInputConfig = new TextDialogInputConfig("inputs.amount");
     public final @NotNull TextDialogInputConfig moneyPerItemInputConfig = new TextDialogInputConfig("inputs.money-per-item");
@@ -36,12 +37,32 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
                                 .builder(mm.deserialize(title))
                                 .body(List.of(bodyConfig.body(item)))
                                 .canCloseWithEscape(canCloseWithEsc)
-                                .afterAction(DialogBase.DialogAfterAction.CLOSE)
+                                .afterAction(DialogBase.DialogAfterAction.NONE)
+                                .pause(false)
                                 .inputs(List.of(amountInputConfig.input("amount"), moneyPerItemInputConfig.input("money_per")))
                                 .build()
                         )
                         .type(DialogType.confirmation(
                                 yesButton.button(yesAction),
+                                noButton.button(noAction)
+                        ))
+        );
+    }
+
+    public @NotNull Dialog confirmDialog(final @NotNull ItemStack item, final @NotNull DialogActionCallback yesAction, final @NotNull DialogActionCallback noAction, final @NotNull TagResolver... placeholders) {
+        final MiniMessage mm = MiniMessage.miniMessage();
+        return Dialog.create(builder ->
+                builder.empty()
+                        .base(DialogBase
+                                .builder(mm.deserialize(title))
+                                .body(List.of(bodyConfig.body(item)))
+                                .canCloseWithEscape(canCloseWithEsc)
+                                .afterAction(DialogBase.DialogAfterAction.NONE)
+                                .pause(false)
+                                .build()
+                        )
+                        .type(DialogType.confirmation(
+                                yesButton.button(yesAction, confirmTooltip, placeholders),
                                 noButton.button(noAction)
                         ))
         );
@@ -101,6 +122,7 @@ public class NewOrderDialogConfig extends ConfirmationDialogConfig {
         noButton.label = "Change Item...";
         noButton.tooltip = "Click to change the item";
         noButton.width = 150;
+        confirmTooltip = "This order costs you <green>$<cost></green>. Click to confirm";
         amountInputConfig.label = "Amount";
         amountInputConfig.width = 200;
         amountInputConfig.initial = "1";

@@ -28,7 +28,8 @@ import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 public class Config {
     private static volatile boolean reloading = false;
     public static volatile Config config;
-    public static final int CURRENT_CONFIG_VERSION = 5;
+    // TODO: update to 6 to add confirm-tooltip
+    public static final int CURRENT_CONFIG_VERSION = 6;
     public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
 
     public ConfigFile configFile;
@@ -91,7 +92,7 @@ public class Config {
     }
 
     public void save() throws Exception {
-        configFile.set("config-version", 5);
+        configFile.set("config-version", CURRENT_CONFIG_VERSION);
         configFile.save();
         mainGUIConfig.saveToFile();
         yourOrdersGUIConfig.saveToFile();
