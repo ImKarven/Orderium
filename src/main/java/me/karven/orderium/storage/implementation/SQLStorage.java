@@ -89,7 +89,7 @@ public class SQLStorage extends Storage {
     @Override
     public CompletableFuture<Order> createOrder(UUID owner, ItemStack item, int amount, double moneyPer) {
         CompletableFuture<Order> future = new CompletableFuture<>();
-
+        // TODO: Add order limit check here
         DispatchUtil.async(() -> {
             try (
                     Connection connection = data.getConnection();

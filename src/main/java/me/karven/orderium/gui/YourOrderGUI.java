@@ -10,9 +10,11 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static me.karven.orderium.Orderium.plugin;
+import static me.karven.orderium.config.Config.config;
 
 public class YourOrderGUI {
     public static void open(Player player) {
@@ -36,7 +38,7 @@ public class YourOrderGUI {
             }), config.yourOrdersGUIConfig.orderConfig.slots.get(currentSlotIndex++));
         }
 
-        if (orders.size() < config.yourOrdersGUIConfig.rows * 9) {
+        if (orders.size() < config.yourOrdersGUIConfig.rows * 9 && orders.size() < getOrderLimit(p)) {
             gui.addItem(
                     config.yourOrdersGUIConfig.newOrderButton.item(event -> {
                         InventoryGUI chooseItemGUI = ChooseItemGUI.getGUI(0, 0);
@@ -46,5 +48,14 @@ public class YourOrderGUI {
         }
 
         PlayerUtils.openGUI(p, gui, isAsync);
+    }
+
+    private static int getOrderLimit(final Player player) {
+        int result = config.ordersLimit.get("default");
+        for (final Map.Entry<String, Integer> entry : config.ordersLimit.entrySet()) {
+            if (player.hasPermission(entry.getKey()))
+                result = Math.max(result, entry.getValue());
+        }
+        return result;
     }
 }

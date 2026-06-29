@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import static me.karven.orderium.Orderium.plugin;
 
@@ -44,7 +45,12 @@ public class ConfigMigration {
             migrateV5(config);
         }
 
-        // Migrate config version 5 -> 6: Add new order's cost and cancel order return display
+        /*
+         Migrate config version 5 -> 6:
+         - Fix cancel order GUI buttons having wrong config paths
+         - Add confirmation tooltip for new order GUI
+         - Add orders limit for different permissions
+         */
         migrateV6(config);
     }
 

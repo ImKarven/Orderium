@@ -19,14 +19,17 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static me.karven.orderium.Orderium.plugin;
 import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 
 public class Config {
-    private static volatile boolean reloading = false;
+    private static final AtomicBoolean reloading = new AtomicBoolean(false);
     public static volatile Config config;
     public static final int CURRENT_CONFIG_VERSION = 6;
     public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
@@ -74,6 +77,8 @@ public class Config {
     public final List<@NotNull String> orderCommandAliases = new ArrayList<>();
 
     public final List<NamespacedKey> similarityCheck = new ArrayList<>();
+
+    public final Map<String, Integer> ordersLimit = new HashMap<>();
 
     public Config() throws Exception {
 
@@ -167,13 +172,15 @@ public class Config {
             configFile.addDefault("order-status." + status.getIdentifier(), status.getText());
         }
 
+        configFile.addDefault("orders-limit", List.of(Map.of("permission", "default", "limit", 27)));
+
         setDefaultMessages();
         setDefaultSounds();
     }
 
     public static CompletableFuture<Void> reloadAsync() {
-        if (reloading) return null;
-        reloading = true;
+        if (reloading.get()) return null;
+        reloading.set(true);
         final CompletableFuture<Void> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
 
@@ -185,13 +192,14 @@ public class Config {
                 return;
             }
             future.complete(null);
+            if (!reloading.get()) {
+                final AssertionError error = new AssertionError("Reloading is false. This should never happen.");
+                ERROR_TRACKER.trackError(error);
+                Log.error("", error);
+                throw error;
+            }
+            reloading.set(false);
         });
-        if (!reloading) {
-            final AssertionError error = new AssertionError("Reloading is false. This should never happen.");
-            ERROR_TRACKER.trackError(error);
-            throw error;
-        }
-        reloading = false;
         return future;
     }
 
@@ -266,6 +274,12 @@ public class Config {
 
         orderCommandAliases.clear();
         orderCommandAliases.addAll(configFile.getStringList("order-command-aliases"));
+
+        ordersLimit.clear();
+        final List<Map<String, Object>> ordersLimitList = configFile.getList("orders-limit");
+        for (final Map<String, Object> limit : ordersLimitList) {
+            ordersLimit.put((String) limit.get("permission"), (int) limit.get("limit"));
+        }
 
         orderCreationSuccessful = configFile.getString("messages.create-order-success");
         invalidInput = configFile.getString("messages.invalid-input");
