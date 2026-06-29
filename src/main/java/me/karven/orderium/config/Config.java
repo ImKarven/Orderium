@@ -1,7 +1,6 @@
 package me.karven.orderium.config;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
-import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
 import me.karven.orderium.config.util.SignGUIConfig;
 import me.karven.orderium.config.util.chestgui.*;
 import me.karven.orderium.config.util.dialog.ConfirmDeliveryDialogConfig;
@@ -173,7 +172,7 @@ public class Config {
             configFile.addDefault("order-status." + status.getIdentifier(), status.getText());
         }
 
-        configFile.addDefault("orders-limit.default", 27);
+        configFile.addDefault("orders-limit", List.of(Map.of("permission", "default", "limit", 27)));
 
         setDefaultMessages();
         setDefaultSounds();
@@ -277,9 +276,9 @@ public class Config {
         orderCommandAliases.addAll(configFile.getStringList("order-command-aliases"));
 
         ordersLimit.clear();
-        final ConfigSection ordersLimitSection = configFile.getConfigSection("orders-limit");
-        for (final String key : ordersLimitSection.getKeys(false, true)) {
-            ordersLimit.put(key, ordersLimitSection.getInteger(key));
+        final List<Map<String, Object>> ordersLimitList = configFile.getList("orders-limit");
+        for (final Map<String, Object> limit : ordersLimitList) {
+            ordersLimit.put((String) limit.get("permission"), (int) limit.get("limit"));
         }
 
         orderCreationSuccessful = configFile.getString("messages.create-order-success");

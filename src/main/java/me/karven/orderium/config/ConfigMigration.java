@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import static me.karven.orderium.Orderium.plugin;
 
@@ -84,7 +85,7 @@ public class ConfigMigration {
         config.configFile.set("enchantments", null);
 
         // Migrate config version 5 -> 6: Add orders limit in config.yml
-        config.configFile.addDefault("orders-limit.default", 27);
+        config.configFile.addDefault("orders-limit", List.of(Map.of("permission", "default", "limit", 27)));
         config.configFile.set("config-version", 6);
 
         config.load();
