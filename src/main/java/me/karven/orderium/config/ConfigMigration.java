@@ -40,8 +40,8 @@ public class ConfigMigration {
 
         // Migrate config version 5 -> 6: Add orders limit in config.yml
         if (configVersion == 5) {
-            config.configFile.set("config-version", 6);
             config.setDefaults();
+            config.configFile.set("config-version", 6);
             config.configFile.save();
             config.reloadGUIs();
             config.load();
