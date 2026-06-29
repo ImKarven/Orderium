@@ -28,7 +28,6 @@ import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 public class Config {
     private static volatile boolean reloading = false;
     public static volatile Config config;
-    // TODO: update to 6 to add confirm-tooltip
     public static final int CURRENT_CONFIG_VERSION = 6;
     public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
 
