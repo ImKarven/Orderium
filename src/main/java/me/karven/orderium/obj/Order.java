@@ -148,8 +148,17 @@ public class Order implements me.karven.orderium.api.Order {
             p.sendRichMessage(config.deliver, Placeholder.unparsed("money", formatNumber(moneyReceived)));
             PlayerUtils.playSound(p, config.deliverSound);
 
+            if (config.webhookConfig.deliverOrderOption.enabled) {
+                config.webhookConfig.deliverOrderOption.send(stringPlaceholders(), "<deliverer>", p.getName());
+            }
+
+            final PlayerDeliverOrderEvent.Post postEvent = new PlayerDeliverOrderEvent.Post(p, this, isAsync);
+
             final Player ownerPlayer = Bukkit.getPlayer(owner);
-            if (ownerPlayer == null || !ownerPlayer.isOnline()) return;
+            if (ownerPlayer == null || !ownerPlayer.isOnline()) {
+                postEvent.callEvent();
+                return;
+            }
             final ItemMeta meta = item.getItemMeta();
             final Component displayName = meta == null ? null : meta.displayName();
             assert item.getType().getItemTranslationKey() != null;
@@ -159,12 +168,6 @@ public class Order implements me.karven.orderium.api.Order {
                     Placeholder.unparsed("amount",  formatNumber((int) (moneyReceived / moneyPer))),
                     Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
             );
-
-            if (config.webhookConfig.deliverOrderOption.enabled) {
-                config.webhookConfig.deliverOrderOption.send(stringPlaceholders(), "<deliverer>", p.getName());
-            }
-
-            PlayerDeliverOrderEvent.Post postEvent = new PlayerDeliverOrderEvent.Post(p, this, isAsync);
             postEvent.callEvent();
         });
     }
