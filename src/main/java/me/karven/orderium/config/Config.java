@@ -2,6 +2,7 @@ package me.karven.orderium.config;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.SignGUIConfig;
+import me.karven.orderium.config.util.WebhookConfig;
 import me.karven.orderium.config.util.chestgui.*;
 import me.karven.orderium.config.util.dialog.ConfirmDeliveryDialogConfig;
 import me.karven.orderium.config.util.dialog.ManageOrderDialogConfig;
@@ -35,6 +36,8 @@ public class Config {
     public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
 
     public ConfigFile configFile;
+
+    public final WebhookConfig webhookConfig = new WebhookConfig();
 
     public final MainGUIConfig mainGUIConfig = new MainGUIConfig();
     public final YourOrdersGUIConfig yourOrdersGUIConfig = new YourOrdersGUIConfig();
@@ -98,6 +101,7 @@ public class Config {
     public void save() throws Exception {
         configFile.set("config-version", CURRENT_CONFIG_VERSION);
         configFile.save();
+        webhookConfig.saveToFile();
         mainGUIConfig.saveToFile();
         yourOrdersGUIConfig.saveToFile();
         chooseItemGUIConfig.saveToFile();
@@ -110,6 +114,7 @@ public class Config {
     }
 
     public void setDefaults() {
+        webhookConfig.applyDefaultValues();
         mainGUIConfig.applyDefaultValues();
         yourOrdersGUIConfig.applyDefaultValues();
         chooseItemGUIConfig.applyDefaultValues();
@@ -120,6 +125,7 @@ public class Config {
         confirmDeliveryDialogConfig.applyDefaultValues();
         manageOrderDialogConfig.applyDefaultValues();
 
+        webhookConfig.setDefault();
         mainGUIConfig.setDefault();
         yourOrdersGUIConfig.setDefault();
         chooseItemGUIConfig.setDefault();

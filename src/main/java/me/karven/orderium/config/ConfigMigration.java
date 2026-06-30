@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import static me.karven.orderium.Orderium.plugin;
 
@@ -33,6 +32,7 @@ public class ConfigMigration {
         if (configVersion(config) == Config.CURRENT_CONFIG_VERSION) {
             config.setDefaults();
             config.reloadGUIs();
+            config.webhookConfig.reload();
             config.load();
             return;
         }
@@ -98,6 +98,7 @@ public class ConfigMigration {
         config.reloadGUIs();
         config.newOrderDialogConfig.saveToFile();
         config.manageOrderDialogConfig.saveToFile();
+        config.webhookConfig.saveToFile();
         config.configFile.save();
         config.load();
     }
