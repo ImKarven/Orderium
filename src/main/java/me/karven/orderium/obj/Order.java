@@ -376,11 +376,11 @@ public class Order implements me.karven.orderium.api.Order {
         return Response.SUCCESS;
     }
 
-    public enum Response {
-        INVALID,
-        SUCCESS,
-        FAIL,
-        CANCELLED,
-        SCHEDULED
+    public interface Response {
+        Response INVALID = new Response() {};
+        Response SUCCESS = new Response() {};
+        Response FAIL = new Response() {};
+        Response CANCELLED = new Response() {};
+        Response SCHEDULED = new Response() {};
     }
 }

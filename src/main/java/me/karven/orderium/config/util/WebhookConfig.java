@@ -78,7 +78,7 @@ public class WebhookConfig implements IConfigFile {
         deliverOrderOption.embedConfig.title = "Order Delivered";
         deliverOrderOption.embedConfig.color = Colors.AQUA;
         deliverOrderOption.embedConfig.description = """
-                Player **<deliverer>** delivered **<deliver-amount>** items to **<player>**'s order.
+                Player **<deliverer>** delivered items to **<player>**'s order.
                 """;
 
         orderCompleteOption.embedConfig.title = "Order Completed";

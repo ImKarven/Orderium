@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import static me.karven.orderium.config.Config.config;
+import static me.karven.orderium.obj.Order.Response.*;
 import static me.karven.orderium.utils.ConvertUtils.formatNumber;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -57,13 +58,11 @@ public class NewOrderDialog {
                         final Order.Response response = Order.create(p, item, moneyPer, amount);
 
                         final Config nestedConfig = Config.config;
-                        switch (response) {
-                            case INVALID -> p.sendRichMessage(nestedConfig.invalidInput);
-                            case FAIL -> p.sendRichMessage(nestedConfig.notEnoughMoney);
-                            case SUCCESS -> {
-                                p.sendRichMessage(nestedConfig.orderCreationSuccessful);
-                                PlayerUtils.playSound(p, nestedConfig.newOrderSound);
-                            }
+                        if (response == INVALID) p.sendRichMessage(nestedConfig.invalidInput);
+                        else if (response == FAIL) p.sendRichMessage(nestedConfig.notEnoughMoney);
+                        else if (response == SUCCESS) {
+                            p.sendRichMessage(nestedConfig.orderCreationSuccessful);
+                            PlayerUtils.playSound(p, nestedConfig.newOrderSound);
                         }
                     };
 
