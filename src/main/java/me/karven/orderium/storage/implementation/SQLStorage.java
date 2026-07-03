@@ -150,6 +150,11 @@ public class SQLStorage extends Storage {
                     future.complete(-1.0);
                     return;
                 }
+
+                if (delivered == orderAmount) {
+                    future.complete(-1.0);
+                    return;
+                }
                 double payBack = (orderAmount - delivered) * moneyPer;
                 if (inStorage == 0) {
                     deleteOrder.setInt(1, orderId);
