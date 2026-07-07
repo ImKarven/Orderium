@@ -242,25 +242,25 @@ public class ManageOrderDialogConfig extends GUIConfigFile {
         private final ManageOrderDialogConfig parent;
         public String title;
         public boolean canCloseWithEsc;
-        public final @NotNull DialogButtonConfig yesButton = new DialogButtonConfig("collect-items.buttons.confirm");
-        public final @NotNull DialogButtonConfig noButton = new DialogButtonConfig("collect-items.buttons.cancel");
+        public final @NotNull DialogButtonConfig yesButton = new DialogButtonConfig("cancel-order.buttons.confirm");
+        public final @NotNull DialogButtonConfig noButton = new DialogButtonConfig("cancel-order.buttons.cancel");
         public final @NotNull ItemlessItemDialogBodyConfig body = new ItemlessItemDialogBodyConfig("cancel-order.body");
 
         public CancelOrder(final @NotNull ManageOrderDialogConfig parent) {
             this.parent = parent;
         }
 
-        public @NotNull Dialog dialog(final @NotNull ItemStack item, final @NotNull DialogActionCallback yesAction, final @Nullable DialogActionCallback noAction) {
+        public @NotNull Dialog dialog(final @NotNull ItemStack item, final @NotNull DialogActionCallback yesAction, final @Nullable DialogActionCallback noAction, final @NotNull TagResolver... placeholders) {
             return Dialog.create(builder -> builder.empty()
                     .type(DialogType.confirmation(
-                            yesButton.button(yesAction),
-                            noButton.button(noAction)
+                            yesButton.button(yesAction, placeholders),
+                            noButton.button(noAction, placeholders)
                     ))
-                    .base(DialogBase.builder(Values.minimessage.deserialize(title))
+                    .base(DialogBase.builder(Values.minimessage.deserialize(title, placeholders))
                             .canCloseWithEscape(canCloseWithEsc)
                             .pause(false)
                             .afterAction(DialogBase.DialogAfterAction.NONE)
-                            .body(List.of(body.body(item)))
+                            .body(List.of(body.body(item, placeholders)))
                             .build()
                     )
             );
@@ -312,7 +312,12 @@ public class ManageOrderDialogConfig extends GUIConfigFile {
             noButton.label = "<red>Cancel";
             noButton.tooltip = "Click to cancel the cancellation of this order";
             noButton.width = 150;
-            body.description.contents = "You are cancelling this order. It will be expired";
+            body.description.contents =
+            """
+            You are cancelling this order. It will be expired.
+            You will earn <green>$<earn></green> in return.
+            """
+            ;
             body.description.width = 250;
             body.width = 16;
             body.height = 16;

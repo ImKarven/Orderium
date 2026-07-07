@@ -10,6 +10,7 @@ import me.karven.orderium.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -100,6 +101,40 @@ public class Order implements me.karven.orderium.api.Order {
                 ))
         };
     }
+    public @NotNull String[] stringPlaceholders() {
+        final OfflinePlayer player = Bukkit.getOfflinePlayer(owner);
+        final String playerName = player.getName() == null ? owner.toString() : player.getName();
+        long millis = expiresAt - System.currentTimeMillis();
+        long sec = millis / 1000;
+        long min = sec / 60;
+        long hour = min / 60;
+        final long day = hour / 24;
+        hour %= 24;
+        min %= 60;
+        sec %= 60;
+        millis %= 1000;
+        final ItemMeta meta = item.getItemMeta();
+        final Component customName = item.getItemMeta().customName();
+        @SuppressWarnings("deprecation")
+        final String itemName = meta.hasCustomName() && customName != null ? PlainTextComponentSerializer.plainText().serialize(customName) : item.getI18NDisplayName();
+        assert itemName != null;
+        return new String[]{
+                "<money-per>", formatNumber(moneyPer),
+                "<paid>", formatNumber(moneyPer * delivered),
+                "<total>", formatNumber(moneyPer * amount),
+                "<delivered>", formatNumber(delivered),
+                "<amount>", formatNumber(amount),
+                "<in-storage>", formatNumber(inStorage),
+                "<player>", playerName,
+                "<item>", itemName,
+                "<order-status>", getStatus().getText()
+                .replaceAll("<day>", String.valueOf(day))
+                .replaceAll("<hour>", String.valueOf(hour))
+                .replaceAll("<minute>", String.valueOf(min))
+                .replaceAll("<second>", String.valueOf(sec))
+                .replaceAll("<millisecond>", String.valueOf(millis))
+        };
+    }
 
     /// Must be called in the player region
     public void deliver(Player p, Iterable<ItemStack> items, boolean isAsync) {
@@ -113,11 +148,17 @@ public class Order implements me.karven.orderium.api.Order {
             p.sendRichMessage(config.deliver, Placeholder.unparsed("money", formatNumber(moneyReceived)));
             PlayerUtils.playSound(p, config.deliverSound);
 
-            PlayerDeliverOrderEvent.Post postEvent = new PlayerDeliverOrderEvent.Post(p, this, isAsync);
-            postEvent.callEvent();
+            if (config.webhookConfig.deliverOrderOption.enabled) {
+                config.webhookConfig.deliverOrderOption.send(stringPlaceholders(), "<deliverer>", p.getName());
+            }
+
+            final PlayerDeliverOrderEvent.Post postEvent = new PlayerDeliverOrderEvent.Post(p, this, isAsync);
 
             final Player ownerPlayer = Bukkit.getPlayer(owner);
-            if (ownerPlayer == null || !ownerPlayer.isOnline()) return;
+            if (ownerPlayer == null || !ownerPlayer.isOnline()) {
+                postEvent.callEvent();
+                return;
+            }
             final ItemMeta meta = item.getItemMeta();
             final Component displayName = meta == null ? null : meta.displayName();
             assert item.getType().getItemTranslationKey() != null;
@@ -127,6 +168,7 @@ public class Order implements me.karven.orderium.api.Order {
                     Placeholder.unparsed("amount",  formatNumber((int) (moneyReceived / moneyPer))),
                     Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
             );
+            postEvent.callEvent();
         });
     }
 
@@ -174,6 +216,10 @@ public class Order implements me.karven.orderium.api.Order {
 
             CustomMetrics.ITEMS_COLLECTED_CACHE.addAndGet(amount);
 
+            if (config.webhookConfig.collectItemsOption.enabled) {
+                config.webhookConfig.collectItemsOption.send(stringPlaceholders(), "<collect-amount>", String.valueOf(amount));
+            }
+
             PlayerCollectItemsEvent.Post postEvent = new PlayerCollectItemsEvent.Post(p, amount, this, true);
             postEvent.callEvent();
         });
@@ -196,6 +242,9 @@ public class Order implements me.karven.orderium.api.Order {
             this.expiresAt = System.currentTimeMillis() - 1;
             YourOrderGUI.open(p, true);
             EconUtils.addMoney(Bukkit.getOfflinePlayer(getOwnerUniqueId()), reward);
+            if (config.webhookConfig.cancelOrderOption.enabled) {
+                config.webhookConfig.cancelOrderOption.send(stringPlaceholders(), "<earn>", formatNumber(reward));
+            }
             PlayerCancelOrderEvent.Post postEvent = new PlayerCancelOrderEvent.Post(p, this, true);
             postEvent.callEvent();
         });
@@ -317,17 +366,21 @@ public class Order implements me.karven.orderium.api.Order {
                         }
                     }
 
+                    if (config.webhookConfig.createOrderOption.enabled) {
+                        config.webhookConfig.createOrderOption.send(order.stringPlaceholders());
+                    } else Log.info("webhook not enabled");
+
                     PlayerCreateOrderEvent.Post postEvent = new PlayerCreateOrderEvent.Post(owner, order, true);
                     postEvent.callEvent();
                 });
         return Response.SUCCESS;
     }
 
-    public enum Response {
-        INVALID,
-        SUCCESS,
-        FAIL,
-        CANCELLED,
-        SCHEDULED
+    public interface Response {
+        Response INVALID = new Response() {};
+        Response SUCCESS = new Response() {};
+        Response FAIL = new Response() {};
+        Response CANCELLED = new Response() {};
+        Response SCHEDULED = new Response() {};
     }
 }

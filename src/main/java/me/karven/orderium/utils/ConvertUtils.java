@@ -112,6 +112,14 @@ public class ConvertUtils {
         return 1 + ((a - 1) / b);
     }
 
+    public static String replaceText(final String text, final String... replacements) {
+        String result = text;
+        for (int i = 0; i < replacements.length; i += 2) {
+            result = result.replaceAll(replacements[i], replacements[i + 1]);
+        }
+        return result;
+    }
+
     private static final HashMap<String, Double> unit = new HashMap<>();
 
     static {

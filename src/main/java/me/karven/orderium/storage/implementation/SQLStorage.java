@@ -89,7 +89,7 @@ public class SQLStorage extends Storage {
     @Override
     public CompletableFuture<Order> createOrder(UUID owner, ItemStack item, int amount, double moneyPer) {
         CompletableFuture<Order> future = new CompletableFuture<>();
-
+        // TODO: Add order limit check here
         DispatchUtil.async(() -> {
             try (
                     Connection connection = data.getConnection();
@@ -147,6 +147,11 @@ public class SQLStorage extends Storage {
                 double moneyPer = raw.getDouble("money_per");
                 long expiresAt = raw.getLong("expires_at");
                 if (expiresAt < System.currentTimeMillis()) {
+                    future.complete(-1.0);
+                    return;
+                }
+
+                if (delivered == orderAmount) {
                     future.complete(-1.0);
                     return;
                 }

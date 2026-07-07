@@ -24,7 +24,11 @@ public class TextDialogInputConfig extends ComponentConfig {
     }
 
     public @NotNull TextDialogInput input(final @NotNull String key) {
-        return DialogInput.text(key, width, MiniMessage.miniMessage().deserialize(label), labelVisible, initial, maxLength, null);
+        return input(key, initial);
+    }
+
+    public @NotNull TextDialogInput input(final @NotNull String key, final @NotNull String overrideInitial) {
+        return DialogInput.text(key, width, MiniMessage.miniMessage().deserialize(label), labelVisible, overrideInitial, maxLength, null);
     }
 
     @Override

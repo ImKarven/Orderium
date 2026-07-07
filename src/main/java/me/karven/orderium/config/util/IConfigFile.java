@@ -13,7 +13,7 @@ public interface IConfigFile {
 
     void setDefault() throws Exception;
 
-    void migrateV5(final @NotNull ConfigFile oldConfig);
+    default void migrateV5(final @NotNull ConfigFile oldConfig) {}
 
     void applyDefaultValues();
 }

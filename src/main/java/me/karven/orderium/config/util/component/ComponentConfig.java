@@ -17,5 +17,5 @@ public abstract class ComponentConfig {
 
     public abstract void setDefault(final @NotNull ConfigFile config);
 
-    public abstract void migrateV5(final @NotNull ConfigFile oldConfig, final @NotNull String path);
+    public void migrateV5(final @NotNull ConfigFile oldConfig, final @NotNull String path) {}
 }
