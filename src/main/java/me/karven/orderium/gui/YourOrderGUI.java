@@ -29,11 +29,10 @@ public class YourOrderGUI {
         final InventoryGUI gui = new InventoryGUI(config.yourOrdersGUIConfig.rows, mm.deserialize(config.yourOrdersGUIConfig.title));
         gui.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
         gui.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
-        final List<String> rawLore = config.yourOrdersGUIConfig.orderConfig.lore;
         int currentSlotIndex = 0;
         for (Order order : orders) {
             if (currentSlotIndex == config.yourOrdersGUIConfig.rows * 9) break;
-            gui.addItem(order.item(rawLore, _ -> {
+            gui.addItem(order.yourOrdersInventoryItem(_ -> {
                 Dialog dialog = ManageOrderDialog.getDialog(order);
                 PlayerUtils.openDialog(p, dialog);
             }), config.yourOrdersGUIConfig.orderConfig.slots.get(currentSlotIndex++));

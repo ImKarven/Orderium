@@ -58,7 +58,7 @@ public class MainGUI extends PaginatedGUI<Order> {
                 config.mainGUIConfig.rows,
                 mm.deserialize(config.mainGUIConfig.title),
                 matchedOrders,
-                order -> order.itemStack(config.mainGUIConfig.orderConfig.lore),
+                Order::mainGUIItemStack,
                 clickAction,
                 player,
                 config.mainGUIConfig.orderConfig.slots

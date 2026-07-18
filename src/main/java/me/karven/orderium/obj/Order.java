@@ -4,6 +4,7 @@ import me.karven.orderium.api.events.PlayerCancelOrderEvent;
 import me.karven.orderium.api.events.PlayerCollectItemsEvent;
 import me.karven.orderium.api.events.PlayerCreateOrderEvent;
 import me.karven.orderium.api.events.PlayerDeliverOrderEvent;
+import me.karven.orderium.config.Config;
 import me.karven.orderium.gui.YourOrderGUI;
 import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.utils.*;
@@ -24,12 +25,15 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import static me.karven.orderium.Orderium.plugin;
-import static me.karven.orderium.config.Config.config;
 import static me.karven.orderium.utils.ConvertUtils.formatNumber;
+
+//import static me.karven.orderium.config.Config.config;
 
 // TODO: Replace `item` with OrderItem instead of ItemStack.
 // Problem: how to store it in database?
 public class Order implements me.karven.orderium.api.Order {
+    private ItemStack mainGUIItemStack;
+    private ItemStack yourOrdersGUIItemStack;
     public final int id;
     public final UUID owner;
     public final ItemStack item;
@@ -50,18 +54,34 @@ public class Order implements me.karven.orderium.api.Order {
         this.expiresAt = expiresAt;
     }
 
+    public void reload() {
+        final Config config = Config.config;
+        this.mainGUIItemStack = syncItemStack(config.mainGUIConfig.orderConfig.lore.stream().map(this::deserializeText).toList());
+        this.yourOrdersGUIItemStack = syncItemStack(config.yourOrdersGUIConfig.orderConfig.lore.stream().map(this::deserializeText).toList());
+    }
+
+    private @NotNull ItemStack syncItemStack(final List<Component> lore) {
+        final ItemStack result = item.clone();
+        result.lore(lore);
+        return result;
+    }
 
     public boolean isActive() { return delivered < amount && expiresAt > System.currentTimeMillis(); }
 
-    public @NotNull InventoryItem item(final @NotNull List<@NotNull String> lore, final Consumer<InventoryClickEvent> action) {
-        return new InventoryItem(itemStack(lore), action);
+    public @NotNull InventoryItem yourOrdersInventoryItem(final Consumer<InventoryClickEvent> action) {
+        return new InventoryItem(yourOrdersGUIItemStack, action);
     }
 
-    public @NotNull ItemStack itemStack(final @NotNull List<@NotNull String> lore) {
-        final List<Component> parsedLore = lore.stream().map(this::deserializeText).toList();
-        final ItemStack itemStack = item.clone();
-        itemStack.lore(parsedLore);
-        return itemStack;
+    public @NotNull InventoryItem mainInventoryItem(final Consumer<InventoryClickEvent> action) {
+        return new InventoryItem(mainGUIItemStack, action);
+    }
+
+    public @NotNull ItemStack yourOrdersItemStack() {
+        return yourOrdersGUIItemStack;
+    }
+
+    public @NotNull ItemStack mainGUIItemStack() {
+        return mainGUIItemStack;
     }
 
     public @NotNull Component deserializeText(final @NotNull String text) {
@@ -144,6 +164,7 @@ public class Order implements me.karven.orderium.api.Order {
         plugin.getStorage().deliverOrder(p, this, items).thenAccept(receive -> {
             double moneyReceived = receive; // I don't like working with wrapped class at all so will use primitive
             if (moneyReceived == 0.0) return;
+            final Config config = Config.config;
             EconUtils.addMoney(p, moneyReceived);
             p.sendRichMessage(config.deliver, Placeholder.unparsed("money", formatNumber(moneyReceived)));
             PlayerUtils.playSound(p, config.deliverSound);
@@ -156,6 +177,7 @@ public class Order implements me.karven.orderium.api.Order {
 
             final Player ownerPlayer = Bukkit.getPlayer(owner);
             if (ownerPlayer == null || !ownerPlayer.isOnline()) {
+                reload();
                 postEvent.callEvent();
                 return;
             }
@@ -179,7 +201,7 @@ public class Order implements me.karven.orderium.api.Order {
         final double dAmount = formatNumber(rawAmount);
         final int amount = (int) dAmount;
         if (dAmount == -1 || dAmount != amount) {
-            p.sendRichMessage(config.invalidInput);
+            p.sendRichMessage(Config.config.invalidInput);
             return Response.INVALID;
         }
         return collect(amount);
@@ -189,6 +211,8 @@ public class Order implements me.karven.orderium.api.Order {
     public Response collect(int amount) {
         final Player p = Bukkit.getPlayer(this.getOwnerUniqueId());
         if (p == null || !p.isOnline()) return Response.INVALID;
+        final Config config = Config.config;
+
         if (amount > config.maxCollect && !p.hasPermission("orderium.bypass.max-collect")) {
             p.sendRichMessage(config.exceedMaxCollect);
             return Response.FAIL;
@@ -220,6 +244,8 @@ public class Order implements me.karven.orderium.api.Order {
                 config.webhookConfig.collectItemsOption.send(stringPlaceholders(), "<collect-amount>", String.valueOf(amount));
             }
 
+            reload();
+
             PlayerCollectItemsEvent.Post postEvent = new PlayerCollectItemsEvent.Post(p, amount, this, true);
             postEvent.callEvent();
         });
@@ -242,9 +268,11 @@ public class Order implements me.karven.orderium.api.Order {
             this.expiresAt = System.currentTimeMillis() - 1;
             YourOrderGUI.open(p, true);
             EconUtils.addMoney(Bukkit.getOfflinePlayer(getOwnerUniqueId()), reward);
+            final Config config = Config.config;
             if (config.webhookConfig.cancelOrderOption.enabled) {
                 config.webhookConfig.cancelOrderOption.send(stringPlaceholders(), "<earn>", formatNumber(reward));
             }
+            reload();
             PlayerCancelOrderEvent.Post postEvent = new PlayerCancelOrderEvent.Post(p, this, true);
             postEvent.callEvent();
         });
@@ -331,7 +359,7 @@ public class Order implements me.karven.orderium.api.Order {
             plugin.getStorage().deleteOrder(this);
             return;
         }
-        plugin.getStorage().updateOrder(this, var, value);
+        plugin.getStorage().updateOrder(this, var, value).thenAccept(_ -> reload());
     }
 
     /// Must be called in the player region
@@ -340,7 +368,7 @@ public class Order implements me.karven.orderium.api.Order {
         final double dAmount = formatNumber(rawAmount);
         final int amount = (int) dAmount;
         final double moneyPer = formatNumber(rawMoneyPer);
-        if (dAmount == -1 || moneyPer == -1 || moneyPer < config.minPrice || dAmount != amount) return Response.INVALID;
+        if (dAmount == -1 || moneyPer == -1 || moneyPer < Config.config.minPrice || dAmount != amount) return Response.INVALID;
 
         return create(p, item, moneyPer, amount);
     }
@@ -358,6 +386,7 @@ public class Order implements me.karven.orderium.api.Order {
         plugin.getStorage().createOrder(owner.getUniqueId(), strippedItem, amount, moneyPer)
                 .thenAccept(order -> {
                     CustomMetrics.ORDER_AMOUNT_CACHE.incrementAndGet();
+                    final Config config = Config.config;
                     if (config.broadcastOrderCreation) {
                         final Component message = order.deserializeText(config.orderCreationBroadcast);
 

@@ -14,14 +14,14 @@ public class DeliveryConfirmDialog {
     public static Dialog getDialog(Player p, Order order, int amount, double reward, Collection<ItemStack> items) {
         final Config config = Config.config;
         final Dialog dialog = config.confirmDeliveryDialogConfig.dialog(
-                order.itemStack(config.mainGUIConfig.orderConfig.lore),
+                order.mainGUIItemStack(),
                 ConvertUtils.formatNumber(amount),
                 ConvertUtils.formatNumber(reward),
-                (view, audience) -> {
+                (_, _) -> {
                     DialogListener.removeItems(p);
                     order.deliver(p, items, false);
                 },
-                (view, audience) -> {
+                (_, audience) -> {
                     if (!(audience instanceof final Player player)) return;
                     DialogListener.onCancel(player);
                 }

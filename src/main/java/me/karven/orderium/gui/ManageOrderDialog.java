@@ -14,7 +14,7 @@ import static me.karven.orderium.utils.ConvertUtils.formatNumber;
 public class ManageOrderDialog {
     public static Dialog getDialog(Order order) {
         final Config config = Config.config;
-        final ItemStack item = order.itemStack(config.yourOrdersGUIConfig.orderConfig.lore);
+        final ItemStack item = order.yourOrdersItemStack();
         final Dialog collectItemsDialog = config.manageOrderDialogConfig.collectItems.dialog(
                 item,
                 order.placeholders(),
@@ -30,11 +30,11 @@ public class ManageOrderDialog {
 
         final Dialog cancelOrderDialog = config.manageOrderDialogConfig.cancelOrder.dialog(
                 item,
-                (view, player) -> {
+                (_, player) -> {
                     if (!(player instanceof Player p)) return;
                     order.cancel(p);
                 },
-                (view, audience) -> {
+                (_, audience) -> {
                     if (!(audience instanceof Player player)) return;
                     YourOrderGUI.open(player);
                 },
@@ -42,11 +42,11 @@ public class ManageOrderDialog {
         );
 
         return config.manageOrderDialogConfig.manageOrder.dialog(
-                (view, player) -> {
+                (_, player) -> {
                     if (!(player instanceof Player p)) return;
                     PlayerUtils.openDialog(p, collectItemsDialog);
                 },
-                (view, player) -> {
+                (_, player) -> {
                     if (!(player instanceof Player p)) return;
                     PlayerUtils.openDialog(p, cancelOrderDialog);
                 }

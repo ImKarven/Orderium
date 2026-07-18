@@ -7,8 +7,10 @@ import me.karven.orderium.config.util.chestgui.*;
 import me.karven.orderium.config.util.dialog.ConfirmDeliveryDialogConfig;
 import me.karven.orderium.config.util.dialog.ManageOrderDialogConfig;
 import me.karven.orderium.config.util.dialog.NewOrderDialogConfig;
+import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.ChooseItemGUI;
+import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.OrderStatus;
 import me.karven.orderium.obj.SortType;
 import me.karven.orderium.utils.DispatchUtil;
@@ -197,6 +199,7 @@ public class Config {
                 future.completeExceptionally(e);
                 return;
             }
+
             future.complete(null);
             if (!reloading.get()) {
                 final AssertionError error = new AssertionError("Reloading is false. This should never happen.");
@@ -217,6 +220,10 @@ public class Config {
 
         AdminToolGUI.createBlacklist();
         AdminToolGUI.createCustomItems();
+
+        for (final Order order : DataCache.getInstance().getSortedOrders(SortType.MOST_MONEY_PER_ITEM)) {
+            order.reload();
+        }
     }
 
     public void reloadGUIs() {
