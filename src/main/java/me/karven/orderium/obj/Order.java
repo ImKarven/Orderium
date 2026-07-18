@@ -368,7 +368,7 @@ public class Order implements me.karven.orderium.api.Order {
 
                     if (config.webhookConfig.createOrderOption.enabled) {
                         config.webhookConfig.createOrderOption.send(order.stringPlaceholders());
-                    } else Log.info("webhook not enabled");
+                    }
 
                     PlayerCreateOrderEvent.Post postEvent = new PlayerCreateOrderEvent.Post(owner, order, true);
                     postEvent.callEvent();

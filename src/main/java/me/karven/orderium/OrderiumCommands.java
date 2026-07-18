@@ -42,16 +42,16 @@ public class OrderiumCommands {
                 .requires(playerAndPermission("use"))
                 .executes(ctx -> {
                     if (!(ctx.getSource().getExecutor() instanceof Player player)) return 2;
-                    MainGUI mainGUI = new MainGUI(player, 0);
-                    PlayerUtils.openGUI(player, mainGUI.getGUI(), false);
+                    final MainGUI mainGUI = new MainGUI(player);
+                    mainGUI.open();
                     return 1;
                 })
                 .then(Commands.argument("search", StringArgumentType.greedyString())
                         .executes(ctx -> {
                             if (!(ctx.getSource().getExecutor() instanceof Player player)) return 2;
                             final String search = StringArgumentType.getString(ctx, "search");
-                            MainGUI mainGUI = new MainGUI(player, 0, search);
-                            PlayerUtils.openGUI(player, mainGUI.getGUI(), false);
+                            final MainGUI mainGUI = new MainGUI(player, search);
+                            mainGUI.open();
                             return 1;
                         })
                 )

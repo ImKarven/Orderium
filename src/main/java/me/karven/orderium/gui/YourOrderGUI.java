@@ -32,7 +32,8 @@ public class YourOrderGUI {
         final List<String> rawLore = config.yourOrdersGUIConfig.orderConfig.lore;
         int currentSlotIndex = 0;
         for (Order order : orders) {
-            gui.addItem(order.item(rawLore, event -> {
+            if (currentSlotIndex == config.yourOrdersGUIConfig.rows * 9) break;
+            gui.addItem(order.item(rawLore, _ -> {
                 Dialog dialog = ManageOrderDialog.getDialog(order);
                 PlayerUtils.openDialog(p, dialog);
             }), config.yourOrdersGUIConfig.orderConfig.slots.get(currentSlotIndex++));
@@ -40,7 +41,7 @@ public class YourOrderGUI {
 
         if (orders.size() < config.yourOrdersGUIConfig.rows * 9 && orders.size() < getOrderLimit(p)) {
             gui.addItem(
-                    config.yourOrdersGUIConfig.newOrderButton.item(event -> {
+                    config.yourOrdersGUIConfig.newOrderButton.item(_ -> {
                         InventoryGUI chooseItemGUI = ChooseItemGUI.getGUI(0, 0);
                         PlayerUtils.openGUI(p, chooseItemGUI, false);
                     }), config.yourOrdersGUIConfig.newOrderButton.slot
