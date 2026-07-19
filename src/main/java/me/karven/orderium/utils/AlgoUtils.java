@@ -10,7 +10,10 @@ import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortType;
 import me.karven.orderium.obj.orderitem.OrderItem;
 import me.karven.orderium.obj.orderitem.SearchableItem;
-import org.bukkit.*;
+import org.bukkit.Material;
+import org.bukkit.MusicInstrument;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -49,10 +52,9 @@ public class AlgoUtils {
     }
 
     private static boolean search(Order order, String q) {
-        String pName = Bukkit.getOfflinePlayer(order.getOwnerUniqueId()).getName();
-        if (pName == null) return searchLegacyItem(order.getItem(), q);
+        if (order.getOwnerName() == null) return searchLegacyItem(order.getItem(), q);
 
-        return searchLegacyItem(order.getItem(), q) || fixQuery(pName).contains(q);
+        return searchLegacyItem(order.getItem(), q) || fixQuery(order.getOwnerName()).contains(q);
     }
 
     private static boolean searchWrappedItem(final OrderItem item, String q) {

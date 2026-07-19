@@ -19,6 +19,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,11 +28,11 @@ import java.util.function.Consumer;
 import static me.karven.orderium.Orderium.plugin;
 import static me.karven.orderium.utils.ConvertUtils.formatNumber;
 
-//import static me.karven.orderium.config.Config.config;
-
 // TODO: Replace `item` with OrderItem instead of ItemStack.
 // Problem: how to store it in database?
 public class Order implements me.karven.orderium.api.Order {
+    private final @NotNull OfflinePlayer ownerPlayer;
+    private final @Nullable String ownerName;
     private ItemStack mainGUIItemStack;
     private ItemStack yourOrdersGUIItemStack;
     public final int id;
@@ -52,6 +53,9 @@ public class Order implements me.karven.orderium.api.Order {
         this.delivered = delivered;
         this.inStorage = inStorage;
         this.expiresAt = expiresAt;
+
+        this.ownerPlayer = Bukkit.getOfflinePlayer(owner);
+        this.ownerName = ownerPlayer.getName();
     }
 
     public void reload() {
@@ -89,8 +93,7 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     public @NotNull TagResolver[] placeholders() {
-        final OfflinePlayer player = Bukkit.getOfflinePlayer(owner);
-        final String playerName = player.getName() == null ? owner.toString() : player.getName();
+        final String playerName = ownerName == null ? owner.toString() : ownerName;
         long millis = expiresAt - System.currentTimeMillis();
         long sec = millis / 1000;
         long min = sec / 60;
@@ -122,8 +125,7 @@ public class Order implements me.karven.orderium.api.Order {
         };
     }
     public @NotNull String[] stringPlaceholders() {
-        final OfflinePlayer player = Bukkit.getOfflinePlayer(owner);
-        final String playerName = player.getName() == null ? owner.toString() : player.getName();
+        final String playerName = ownerName == null ? owner.toString() : ownerName;
         long millis = expiresAt - System.currentTimeMillis();
         long sec = millis / 1000;
         long min = sec / 60;
@@ -267,7 +269,7 @@ public class Order implements me.karven.orderium.api.Order {
             }
             this.expiresAt = System.currentTimeMillis() - 1;
             YourOrderGUI.open(p, true);
-            EconUtils.addMoney(Bukkit.getOfflinePlayer(getOwnerUniqueId()), reward);
+            EconUtils.addMoney(ownerPlayer, reward);
             final Config config = Config.config;
             if (config.webhookConfig.cancelOrderOption.enabled) {
                 config.webhookConfig.cancelOrderOption.send(stringPlaceholders(), "<earn>", formatNumber(reward));
@@ -293,6 +295,11 @@ public class Order implements me.karven.orderium.api.Order {
     @Override
     public int getId() {
         return this.id;
+    }
+
+
+    public @Nullable String getOwnerName() {
+        return ownerName;
     }
 
     @Override
@@ -398,6 +405,8 @@ public class Order implements me.karven.orderium.api.Order {
                     if (config.webhookConfig.createOrderOption.enabled) {
                         config.webhookConfig.createOrderOption.send(order.stringPlaceholders());
                     }
+
+                    order.reload();
 
                     PlayerCreateOrderEvent.Post postEvent = new PlayerCreateOrderEvent.Post(owner, order, true);
                     postEvent.callEvent();
