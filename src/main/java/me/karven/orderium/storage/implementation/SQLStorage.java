@@ -8,6 +8,7 @@ import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.StorageMethod;
 import me.karven.orderium.storage.Storage;
 import me.karven.orderium.utils.*;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -87,7 +88,7 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public CompletableFuture<Order> createOrder(UUID owner, ItemStack item, int amount, double moneyPer) {
+    public CompletableFuture<Order> createOrder(final OfflinePlayer owner, ItemStack item, int amount, double moneyPer) {
         CompletableFuture<Order> future = new CompletableFuture<>();
         // TODO: Add order limit check here
         DispatchUtil.async(() -> {
@@ -96,8 +97,9 @@ public class SQLStorage extends Storage {
                     PreparedStatement create = connection.prepareStatement(CREATE_ORDER, Statement.RETURN_GENERATED_KEYS)
             ) {
                 long expiresAt = System.currentTimeMillis() + config.expiresAfter;
-                create.setLong(1, owner.getMostSignificantBits());
-                create.setLong(2, owner.getLeastSignificantBits());
+                final UUID ownerUUID = owner.getUniqueId();
+                create.setLong(1, ownerUUID.getMostSignificantBits());
+                create.setLong(2, ownerUUID.getLeastSignificantBits());
                 create.setBytes(3, item.serializeAsBytes());
                 create.setDouble(4, moneyPer);
                 create.setInt(5, amount);

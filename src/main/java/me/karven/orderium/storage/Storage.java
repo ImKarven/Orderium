@@ -15,6 +15,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.CreativeModeTab;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -161,7 +162,7 @@ public abstract class Storage {
 
     public abstract CompletableFuture<Collection<Order>> loadOrders();
 
-    public abstract CompletableFuture<Order> createOrder(UUID owner, ItemStack item, int amount, double moneyPer);
+    public abstract CompletableFuture<Order> createOrder(OfflinePlayer owner, ItemStack item, int amount, double moneyPer);
 
     public abstract CompletableFuture<Double> cancelOrder(Order order);
 

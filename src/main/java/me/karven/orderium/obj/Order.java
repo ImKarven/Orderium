@@ -44,9 +44,9 @@ public class Order implements me.karven.orderium.api.Order {
     public int inStorage;
     public long expiresAt;
 
-    public Order(int id, UUID owner, ItemStack item, double moneyPer, int amount, int delivered, int inStorage, long expiresAt) {
+    public Order(int id, final OfflinePlayer owner, ItemStack item, double moneyPer, int amount, int delivered, int inStorage, long expiresAt) {
         this.id = id;
-        this.owner = owner;
+        this.owner = owner.getUniqueId();
         this.item = item;
         this.moneyPer = moneyPer;
         this.amount = amount;
@@ -54,8 +54,12 @@ public class Order implements me.karven.orderium.api.Order {
         this.inStorage = inStorage;
         this.expiresAt = expiresAt;
 
-        this.ownerPlayer = Bukkit.getOfflinePlayer(owner);
-        this.ownerName = ownerPlayer.getName();
+        this.ownerPlayer = owner;
+        this.ownerName = owner.getName();
+    }
+
+    public Order(int id, final UUID owner, ItemStack item, double moneyPer, int amount, int delivered, int inStorage, long expiresAt) {
+        this(id, Bukkit.getOfflinePlayer(owner), item, moneyPer, amount, delivered, inStorage, expiresAt);
     }
 
     public void reload() {
@@ -137,7 +141,6 @@ public class Order implements me.karven.orderium.api.Order {
         millis %= 1000;
         final ItemMeta meta = item.getItemMeta();
         final Component customName = item.getItemMeta().customName();
-        @SuppressWarnings("deprecation")
         final String itemName = meta.hasCustomName() && customName != null ? PlainTextComponentSerializer.plainText().serialize(customName) : item.getI18NDisplayName();
         assert itemName != null;
         return new String[]{
@@ -390,7 +393,7 @@ public class Order implements me.karven.orderium.api.Order {
         }
         ItemStack strippedItem = item.clone();
         strippedItem.setItemMeta(PDCUtils.removeOrderiumPD(strippedItem.getItemMeta()));
-        plugin.getStorage().createOrder(owner.getUniqueId(), strippedItem, amount, moneyPer)
+        plugin.getStorage().createOrder(owner, strippedItem, amount, moneyPer)
                 .thenAccept(order -> {
                     CustomMetrics.ORDER_AMOUNT_CACHE.incrementAndGet();
                     final Config config = Config.config;
