@@ -49,6 +49,12 @@ dependencies {
     implementation("com.zaxxer:HikariCP:7.0.2")
 }
 
+paperweight {
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 tasks {
     runServer {
         minecraftVersion("26.2")
