@@ -7,7 +7,5 @@ Orderium is a plugin that allows players on your server to create and deliver or
 Documentation for usage of Orderium can be found in [this repository wiki](https://github.com/ImKarven/Orderium/wiki).
 
 # Compiling
-UPDATE: As of now, the plugin cannot be compiled because `paperweight-userdev` has not been updated for while and it is not compatible with Java 25 or Gradle 9.6.1.
-<br>Requirements: JDK 25+
 <br>Once the repository is cloned, run `./gradlew shadowJar` to compile the plugin.
 <br>Compiled jar file can be found in build/libs
