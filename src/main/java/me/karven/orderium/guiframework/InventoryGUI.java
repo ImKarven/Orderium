@@ -2,7 +2,6 @@ package me.karven.orderium.guiframework;
 
 import com.google.common.base.Preconditions;
 import me.karven.orderium.utils.DispatchUtil;
-import me.karven.orderium.utils.PDCUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
@@ -12,7 +11,6 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,10 +37,9 @@ public class InventoryGUI implements InventoryHolder {
 
     public InventoryGUI(int rows, @NotNull Component title) {
         Preconditions.checkArgument(rows >= 1 && rows <= 6, "Rows must be between 1 and 6, found " + rows);
-
         this.rows = rows;
         this.title = title;
-        this.handle = Bukkit.createInventory(this, rows * 9, title);
+        initializeInventory();
     }
 
     public void open(@NotNull HumanEntity player) {
@@ -54,21 +51,16 @@ public class InventoryGUI implements InventoryHolder {
     public @NotNull Map<@NotNull Integer, @NotNull InventoryItem> getItems() { return items; }
     public int getRows() { return rows; }
 
-    public void click(@NotNull InventoryClickEvent event) {
-        ItemStack clickedItem = event.getCurrentItem();
-        if (clickedItem == null) return;
-        ItemMeta meta = clickedItem.getItemMeta();
-        if (meta == null) return;
-        int id = PDCUtils.getID(meta);
-        if (id == -1) return;
-        InventoryItem item = items.get(id);
+    public void click(final @NotNull InventoryClickEvent event) {
+        // Raw slot indexing: https://minecraft.wiki/w/Java_Edition_protocol/Inventory#Large_Chest
+        final InventoryItem item = items.get(event.getRawSlot());
         if (item == null) return;
         item.callAction(event);
     }
 
     public void addItem(@NotNull InventoryItem item, int slot) {
-        Preconditions.checkArgument(slot >= 0 && slot < rows * 9, "Slot must be between 1 and " + (rows * 9 - 1) + ", found " + slot);
-        items.put(item.getId(), item);
+        Preconditions.checkArgument(slot >= 0 && slot < rows * 9, "Slot must be between 0 and " + (rows * 9 - 1) + ", found " + slot);
+        items.put(slot, item);
         handle.setItem(slot, item.getItem());
     }
 
@@ -146,24 +138,27 @@ public class InventoryGUI implements InventoryHolder {
         action.accept(event);
     }
 
+    private void initializeInventory() {
+        this.handle = Bukkit.createInventory(this, rows * 9, title);
+    }
+
     public void update() {
         List<HumanEntity> oldViewers = handle.getViewers();
         ItemStack[] oldContents = handle.getContents();
-        handle = Bukkit.createInventory(this, rows * 9, title);
+        initializeInventory();
 
         ItemStack[] newContents = new ItemStack[oldContents.length];
         for (int i = 0; i < oldContents.length; i++) {
-            ItemStack item =  oldContents[i];
+            ItemStack item = oldContents[i];
             if (item == null || item.isEmpty()) {
                 newContents[i] = item;
                 continue;
             }
-            int id = PDCUtils.getID(item.getItemMeta());
-            if (id == -1) {
+            if (!items.containsKey(i)) {
                 newContents[i] = item;
                 continue;
             }
-            newContents[i] = items.get(id).getItem();
+            newContents[i] = items.get(i).getItem();
         }
 
         handle.setContents(newContents);
