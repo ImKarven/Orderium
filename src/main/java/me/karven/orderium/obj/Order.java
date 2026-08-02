@@ -7,6 +7,7 @@ import me.karven.orderium.api.events.PlayerDeliverOrderEvent;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.gui.YourOrderGUI;
 import me.karven.orderium.guiframework.InventoryItem;
+import me.karven.orderium.obj.orderitem.OrderItem;
 import me.karven.orderium.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -41,14 +42,14 @@ public class Order implements me.karven.orderium.api.Order {
     private boolean hasOrderStatusInYourOrdersGUIOrderConfigLore = true;
     public final int id;
     public final UUID owner;
-    public final ItemStack item;
+    public final OrderItem item;
     public volatile double moneyPer;
     public volatile int amount;
     public volatile int delivered;
     public volatile int inStorage;
     public volatile long expiresAt;
 
-    public Order(int id, final OfflinePlayer owner, ItemStack item, double moneyPer, int amount, int delivered, int inStorage, long expiresAt) {
+    public Order(int id, final OfflinePlayer owner, OrderItem item, double moneyPer, int amount, int delivered, int inStorage, long expiresAt) {
         this.id = id;
         this.owner = owner.getUniqueId();
         this.item = item;
@@ -62,7 +63,7 @@ public class Order implements me.karven.orderium.api.Order {
         this.ownerName = owner.getName();
     }
 
-    public Order(int id, final UUID owner, ItemStack item, double moneyPer, int amount, int delivered, int inStorage, long expiresAt) {
+    public Order(int id, final UUID owner, OrderItem item, double moneyPer, int amount, int delivered, int inStorage, long expiresAt) {
         this(id, Bukkit.getOfflinePlayer(owner), item, moneyPer, amount, delivered, inStorage, expiresAt);
     }
 
@@ -98,7 +99,7 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     private @NotNull ItemStack syncItemStack(final List<Component> lore) {
-        final ItemStack result = item.clone();
+        final ItemStack result = item.getItemStack();
         result.lore(lore);
         return result;
     }
@@ -133,10 +134,11 @@ public class Order implements me.karven.orderium.api.Order {
         final String playerName = ownerName == null ? owner.toString() : ownerName;
         long millis = expiresAt - System.currentTimeMillis();
         final Duration duration = Duration.ofMillis(millis);
-        final ItemMeta meta = item.getItemMeta();
-        Component itemName = meta.hasCustomName() ? meta.customName() : Component.translatable(item.translationKey());
-        if (itemName == null) itemName = Component.translatable(item.translationKey());
-        itemName = itemName.hoverEvent(item.asHoverEvent());
+        final ItemStack itemStack = item.getItemStack();
+        final ItemMeta meta = itemStack.getItemMeta();
+        Component itemName = meta.hasCustomName() ? meta.customName() : Component.translatable(itemStack.translationKey());
+        if (itemName == null) itemName = Component.translatable(itemStack.translationKey());
+        itemName = itemName.hoverEvent(itemStack.asHoverEvent());
         return new TagResolver[]{
                 Placeholder.unparsed("money-per", formatNumber(moneyPer)),
                 Placeholder.unparsed("paid", formatNumber(moneyPer * delivered)),
@@ -159,9 +161,10 @@ public class Order implements me.karven.orderium.api.Order {
         final String playerName = ownerName == null ? owner.toString() : ownerName;
         long millis = expiresAt - System.currentTimeMillis();
         final Duration duration = Duration.ofMillis(millis);
-        final ItemMeta meta = item.getItemMeta();
-        final Component customName = item.getItemMeta().customName();
-        final String itemName = meta.hasCustomName() && customName != null ? PlainTextComponentSerializer.plainText().serialize(customName) : item.getI18NDisplayName();
+        final ItemStack itemStack = item.getItemStack();
+        final ItemMeta meta = itemStack.getItemMeta();
+        final Component customName = meta.customName();
+        final String itemName = meta.hasCustomName() && customName != null ? PlainTextComponentSerializer.plainText().serialize(customName) : itemStack.getI18NDisplayName();
         assert itemName != null;
         return new String[]{
                 "<money-per>", formatNumber(moneyPer),
@@ -212,14 +215,15 @@ public class Order implements me.karven.orderium.api.Order {
                         postEvent.callEvent();
                         return;
                     }
-                    final ItemMeta meta = item.getItemMeta();
+                    final ItemStack itemStack = item.getItemStack();
+                    final ItemMeta meta = itemStack.getItemMeta();
                     final Component displayName = meta == null ? null : meta.displayName();
-                    assert item.getType().getItemTranslationKey() != null;
+                    assert itemStack.getType().getItemTranslationKey() != null;
                     ownerPlayer.sendRichMessage(
                             config.receiveDelivery,
                             Placeholder.unparsed("deliverer", p.getName()),
                             Placeholder.unparsed("amount", formatNumber((int) (moneyReceived / moneyPer))),
-                            Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
+                            Placeholder.component("item", (displayName == null ? Component.translatable(itemStack.getType().getItemTranslationKey()) : displayName))
                     );
                     postEvent.callEvent();
                 });
@@ -272,7 +276,7 @@ public class Order implements me.karven.orderium.api.Order {
 
                     PDCUtils.setCollected(p, collectedInMinute + amount);
 
-                    PlayerUtils.give(p, getItem().clone(), amount, true);
+                    PlayerUtils.give(p, getOrderItem().getItemStack(), amount, true);
 
                     CustomMetrics.ITEMS_COLLECTED_CACHE.addAndGet(amount);
 
@@ -346,9 +350,15 @@ public class Order implements me.karven.orderium.api.Order {
         return owner;
     }
 
+    // TODO: Replace ItemStack with OrderItem entirely
     @Override
+    @Deprecated(forRemoval = true)
     public ItemStack getItem() {
-        return this.item;
+        return item.getItemStack();
+    }
+
+    public OrderItem getOrderItem() {
+        return item;
     }
 
     @Override

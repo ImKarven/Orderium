@@ -24,7 +24,7 @@ public class DeliverGUI {
     private final InventoryGUI deliverGUI;
 
     public DeliverGUI(final @NotNull Order order) {
-        final ItemStack comparer = order.getItem();
+        final ItemStack comparer = order.getOrderItem().getItemStack();
         final Config currentConfig = Config.config;
         this.deliverGUI = new InventoryGUI(currentConfig.deliverGUIConfig.rows, mm.deserialize(currentConfig.deliverGUIConfig.title));
 

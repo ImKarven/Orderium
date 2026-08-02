@@ -7,6 +7,7 @@ import io.papermc.paper.datacomponent.item.ItemContainerContents;
 import me.karven.orderium.api.events.OrderRemoveEvent;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.StorageMethod;
+import me.karven.orderium.obj.orderitem.VanillaItem;
 import me.karven.orderium.storage.Storage;
 import me.karven.orderium.storage.object.RetryOperationException;
 import me.karven.orderium.storage.object.order.OrderRow;
@@ -128,9 +129,10 @@ public class SQLStorage extends Storage {
                 ResultSet generated = create.getGeneratedKeys();
                 if (!(generated.next())) throw new RuntimeException("Failed to create order. No generated keys found");
 
+                // TODO: .
                 Order order = new Order(
                         generated.getInt(1),
-                        owner, item, moneyPer, amount,
+                        owner, new VanillaItem(item, true), moneyPer, amount,
                         0, 0, expiresAt
                 );
                 plugin.getDataCache().addOrder(order);
@@ -225,11 +227,11 @@ public class SQLStorage extends Storage {
                 double moneyPer = row.moneyPer();
 
                 int deliverable = orderAmount - delivered;
-
+                final ItemStack comparingItemStack = order.getOrderItem().getItemStack();
                 for (ItemStack item : items) {
-                    if (!AlgoUtils.isSimilar(item, order.getItem())) {
+                    if (!AlgoUtils.isSimilar(item, comparingItemStack)) {
                         if (isShulkerBox(item) && config.shulkerDelivering) {
-                            deliverable = scanShulkerBox(item, order.getItem(), deliverable);
+                            deliverable = scanShulkerBox(item, comparingItemStack, deliverable);
                         }
                         PlayerUtils.give(deliverer, item, true);
                         continue;

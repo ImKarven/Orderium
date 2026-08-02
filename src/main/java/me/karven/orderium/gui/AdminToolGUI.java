@@ -262,8 +262,7 @@ public class AdminToolGUI {
 
     @SuppressWarnings("UnstableApiUsage")
     public static Dialog createEditOrder(Order order) {
-
-        DialogBody body = DialogBody.item(order.getItem()).description(DialogBody.plainMessage(Component.text("You're editing this order"))).build();
+        DialogBody body = DialogBody.item(order.getOrderItem().getItemStack()).description(DialogBody.plainMessage(Component.text("You're editing this order"))).build();
 
         DialogInput option = DialogInput.singleOption("option", Component.text("Action"), List.of(
                 SingleOptionDialogInput.OptionEntry.create("change_amount", Component.text("Change Amount"), true),
