@@ -52,9 +52,9 @@ public class AlgoUtils {
     }
 
     private static boolean search(Order order, String q) {
-        if (order.getOwnerName() == null) return searchLegacyItem(order.getItem(), q);
+        if (order.getOwnerName() == null) return searchLegacyItem(order.getOrderItem().getItemStack(), q);
 
-        return searchLegacyItem(order.getItem(), q) || fixQuery(order.getOwnerName()).contains(q);
+        return searchLegacyItem(order.getOrderItem().getItemStack(), q) || fixQuery(order.getOwnerName()).contains(q);
     }
 
     private static boolean searchWrappedItem(final OrderItem item, String q) {
