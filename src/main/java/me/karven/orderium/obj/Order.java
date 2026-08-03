@@ -30,8 +30,6 @@ import java.util.function.Consumer;
 import static me.karven.orderium.Orderium.plugin;
 import static me.karven.orderium.utils.ConvertUtils.formatNumber;
 
-// TODO: Replace `item` with OrderItem instead of ItemStack.
-// Problem: how to store it in database?
 public class Order implements me.karven.orderium.api.Order {
     private final Object lock = new Object();
     private final @NotNull OfflinePlayer ownerPlayer;
@@ -422,7 +420,7 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     /// Must be called in the player region
-    public static Response create(Player p, ItemStack item, String rawMoneyPer, String rawAmount) {
+    public static Response create(Player p, OrderItem item, String rawMoneyPer, String rawAmount) {
         if (rawAmount == null || rawMoneyPer == null) return Response.INVALID;
         final double dAmount = formatNumber(rawAmount);
         final int amount = (int) dAmount;
@@ -433,16 +431,16 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     /// Must be called in the player region
-    public static Response create(Player owner, ItemStack item, double moneyPer, int amount) {
-        PlayerCreateOrderEvent.Pre event = new PlayerCreateOrderEvent.Pre(owner, item, moneyPer, amount, false);
+    public static Response create(Player owner, OrderItem item, double moneyPer, int amount) {
+
+        // TODO: Provide OrderItem to API
+        PlayerCreateOrderEvent.Pre event = new PlayerCreateOrderEvent.Pre(owner, item.getItemStack(), moneyPer, amount, false);
         if (!event.callEvent()) return Response.CANCELLED;
 
         if (!EconUtils.removeMoney(owner, moneyPer * amount)) {
             return Response.FAIL;
         }
-        ItemStack strippedItem = item.clone();
-        strippedItem.setItemMeta(PDCUtils.removeOrderiumPD(strippedItem.getItemMeta()));
-        plugin.getStorage().createOrder(owner, strippedItem, amount, moneyPer)
+        plugin.getStorage().createOrder(owner, item, amount, moneyPer)
                 .thenAccept(order -> {
                     CustomMetrics.ORDER_AMOUNT_CACHE.incrementAndGet();
                     final Config config = Config.config;

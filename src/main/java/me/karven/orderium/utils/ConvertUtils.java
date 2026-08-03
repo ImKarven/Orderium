@@ -5,6 +5,7 @@ import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.CustomItem;
+import me.karven.orderium.obj.orderitem.OrderItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -46,7 +47,7 @@ public class ConvertUtils {
                 orders.add(
                         new Order(raw.getInt(1),
                                 new UUID(raw.getLong(2), raw.getLong(3)),
-                                ItemStack.deserializeBytes(raw.getBytes(4)),
+                                OrderItem.fromBytes(raw.getBytes(4)),
                                 raw.getDouble(5),
                                 raw.getInt(6),
                                 raw.getInt(7),

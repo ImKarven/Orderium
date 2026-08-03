@@ -6,6 +6,7 @@ import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.Pair;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.CustomItem;
+import me.karven.orderium.obj.orderitem.OrderItem;
 import me.karven.orderium.obj.orderitem.VanillaItem;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.Log;
@@ -162,7 +163,7 @@ public abstract class Storage {
 
     public abstract CompletableFuture<Collection<Order>> loadOrders();
 
-    public abstract CompletableFuture<Order> createOrder(OfflinePlayer owner, ItemStack item, int amount, double moneyPer);
+    public abstract CompletableFuture<Order> createOrder(OfflinePlayer owner, OrderItem item, int amount, double moneyPer);
 
     public abstract CompletableFuture<Double> cancelOrder(Order order);
 

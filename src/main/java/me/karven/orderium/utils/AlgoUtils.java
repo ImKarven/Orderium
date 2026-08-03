@@ -52,9 +52,9 @@ public class AlgoUtils {
     }
 
     private static boolean search(Order order, String q) {
-        if (order.getOwnerName() == null) return searchLegacyItem(order.getOrderItem().getItemStack(), q);
-
-        return searchLegacyItem(order.getOrderItem().getItemStack(), q) || fixQuery(order.getOwnerName()).contains(q);
+        final boolean searchItem = searchWrappedItem(order.getOrderItem(), q);
+        final boolean searchOwnerName = order.getOwnerName() != null && fixQuery(order.getOwnerName()).contains(q);
+        return searchItem || searchOwnerName;
     }
 
     private static boolean searchWrappedItem(final OrderItem item, String q) {
@@ -67,11 +67,6 @@ public class AlgoUtils {
     }
 
     private static boolean searchLegacyItem(final ItemStack item, String q) {
-        if (PDCUtils.hasCustomSearch(item.getItemMeta())) {
-            final String customSearch = PDCUtils.getSearch(item.getItemMeta());
-            return customSearch.contains(q); // Not perfect with searches contain commas, but it is fast and simply works
-        }
-
         final Material type = item.getType();
         final String name = item.getType().getKey().value().toLowerCase();
         if (name.contains(q)) return true;
