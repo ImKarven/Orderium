@@ -31,6 +31,11 @@ public class CustomItem implements SearchableItem, SerializedItem {
         this.searches.addAll(searches);
     }
 
+    public CustomItem(byte @NotNull [] itemAsBytes, @NotNull ItemStack item, String @NotNull [] searches) {
+        this(itemAsBytes, searches);
+        this.item = item;
+    }
+
     public CustomItem(byte @NotNull [] itemAsBytes, @NotNull ItemStack item, @NotNull List<@NotNull String> searches) {
         this(itemAsBytes, searches);
         this.item = item;

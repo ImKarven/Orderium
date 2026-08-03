@@ -6,6 +6,9 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemContainerContents;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.StorageMethod;
+import me.karven.orderium.obj.orderitem.CustomItem;
+import me.karven.orderium.obj.orderitem.OrderItem;
+import me.karven.orderium.obj.orderitem.SearchableItem;
 import me.karven.orderium.obj.orderitem.VanillaItem;
 import me.karven.orderium.storage.Storage;
 import me.karven.orderium.utils.*;
@@ -89,7 +92,7 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public CompletableFuture<Order> createOrder(final OfflinePlayer owner, ItemStack item, int amount, double moneyPer) {
+    public CompletableFuture<Order> createOrder(final OfflinePlayer owner, final OrderItem item, final int amount, final double moneyPer) {
         CompletableFuture<Order> future = new CompletableFuture<>();
         // TODO: Add order limit check here
         DispatchUtil.async(() -> {
@@ -97,11 +100,12 @@ public class SQLStorage extends Storage {
                     Connection connection = data.getConnection();
                     PreparedStatement create = connection.prepareStatement(CREATE_ORDER, Statement.RETURN_GENERATED_KEYS)
             ) {
+                final ItemStack itemStack = item instanceof SearchableItem searchableItem ? searchableItem.getParsedItemStack() : item.getItemStack();
                 long expiresAt = System.currentTimeMillis() + config.expiresAfter;
                 final UUID ownerUUID = owner.getUniqueId();
                 create.setLong(1, ownerUUID.getMostSignificantBits());
                 create.setLong(2, ownerUUID.getLeastSignificantBits());
-                create.setBytes(3, item.serializeAsBytes());
+                create.setBytes(3, itemStack.serializeAsBytes());
                 create.setDouble(4, moneyPer);
                 create.setInt(5, amount);
                 create.setLong(6, expiresAt);
@@ -110,10 +114,9 @@ public class SQLStorage extends Storage {
                 ResultSet generated = create.getGeneratedKeys();
                 if (!(generated.next())) throw new RuntimeException("Failed to create order. No generated keys found");
 
-                // TODO: .
                 Order order = new Order(
                         generated.getInt(1),
-                        owner, new VanillaItem(item, true), moneyPer, amount,
+                        owner, item, moneyPer, amount,
                         0, 0, expiresAt
                 );
                 plugin.getDataCache().addOrder(order);

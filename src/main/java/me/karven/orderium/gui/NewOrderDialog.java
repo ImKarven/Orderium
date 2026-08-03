@@ -19,7 +19,7 @@ import static me.karven.orderium.utils.ConvertUtils.formatNumber;
 @SuppressWarnings("UnstableApiUsage")
 public class NewOrderDialog {
     public static Dialog getDialog(OrderItem orderItem) {
-        final ItemStack item = orderItem instanceof SearchableItem searchableItem ? searchableItem.getParsedItemStack() : orderItem.getItemStack();
+        final ItemStack item = orderItem.getItemStack();
 
         final DialogActionCallback cancelAction = (view, player) -> {
             if (!(player instanceof Player p)) return;
@@ -55,7 +55,7 @@ public class NewOrderDialog {
                     final Runnable confirmAction = () -> {
                         PlayerUtils.closeInv(p);
                         // Create new order
-                        final Order.Response response = Order.create(p, item, moneyPer, amount);
+                        final Order.Response response = Order.create(p, orderItem, moneyPer, amount);
 
                         final Config nestedConfig = Config.config;
                         if (response == INVALID) p.sendRichMessage(nestedConfig.invalidInput);

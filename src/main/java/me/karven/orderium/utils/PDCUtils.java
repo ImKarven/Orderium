@@ -22,13 +22,6 @@ public class PDCUtils {
         DispatchUtil.entity(p, () -> p.getPersistentDataContainer().set(collectedKey, PersistentDataType.INTEGER, amount));
     }
 
-    public static ItemMeta removeOrderiumPD(ItemMeta meta) {
-        for  (NamespacedKey key : KEYS) {
-            meta.getPersistentDataContainer().remove(key);
-        }
-        return meta;
-    }
-
     public static void removeCollected(Player p) {
         p.getPersistentDataContainer().remove(collectedKey);
     }
