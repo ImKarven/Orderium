@@ -38,7 +38,6 @@ repositories {
 
 dependencies {
 //    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
-    compileOnly(files("paper/paper-api-26.2.local-SNAPSHOT.jar"))
     paperweight.paperDevBundle("1.21.7-R0.1-SNAPSHOT")
     implementation("org.bstats:bstats-bukkit:3.1.0")
     implementation("dev.faststats.metrics:bukkit:0.27.0")
@@ -66,6 +65,8 @@ tasks {
         relocate("com.zaxxer", "orderium.zaxxer")
         relocate("org.bstats", "orderium.bstats")
         relocate('dev.faststats', 'orderium.faststats')
+
+        exclude "io/papermc/paper/**"
     }
 }
 
