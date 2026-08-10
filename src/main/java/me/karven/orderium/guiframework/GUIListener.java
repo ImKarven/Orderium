@@ -1,5 +1,6 @@
 package me.karven.orderium.guiframework;
 
+import io.papermc.paper.event.inventory.PlayerBundleItemSelectEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -28,6 +29,13 @@ public class GUIListener implements Listener {
             else gui.callClickAction(event, InteractLocation.BOTTOM);
         }
         gui.click(event);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onScroll(@NotNull PlayerBundleItemSelectEvent event) {
+        final InventoryGUI gui = getGUI(event);
+        if (gui == null) return;
+        gui.scroll(event);
     }
 
     @EventHandler(ignoreCancelled = true)

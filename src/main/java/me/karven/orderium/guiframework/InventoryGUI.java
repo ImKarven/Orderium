@@ -1,6 +1,7 @@
 package me.karven.orderium.guiframework;
 
 import com.google.common.base.Preconditions;
+import io.papermc.paper.event.inventory.PlayerBundleItemSelectEvent;
 import me.karven.orderium.utils.PDCUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -63,6 +64,17 @@ public class InventoryGUI implements InventoryHolder {
         InventoryItem item = items.get(id);
         if (item == null) return;
         item.callAction(event);
+    }
+
+    public void scroll(@NotNull PlayerBundleItemSelectEvent event) {
+        ItemStack clickedItem = event.getBundle();
+        ItemMeta meta = clickedItem.getItemMeta();
+        if (meta == null) return;
+        int id = PDCUtils.getID(meta);
+        if (id == -1) return;
+        InventoryItem item = items.get(id);
+        if (item == null) return;
+        item.callScrollAction(event);
     }
 
     public void addItem(@NotNull InventoryItem item, int slot) {

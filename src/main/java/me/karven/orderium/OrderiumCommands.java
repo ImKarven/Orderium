@@ -7,11 +7,13 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.karven.orderium.config.Config;
+import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
 import me.karven.orderium.gui.scrollable.ScrollableMainGUI;
-import me.karven.orderium.guiframework.ScrollableGUI;
 import me.karven.orderium.obj.Order;
+import me.karven.orderium.obj.SortType;
+import me.karven.orderium.obj.orderitem.OrderItem;
 import me.karven.orderium.utils.PlayerUtils;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -20,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
@@ -109,9 +112,10 @@ public class OrderiumCommands {
                         .executes(ctx -> {
                             if (!(ctx.getSource().getExecutor() instanceof Player player)) return 2;
                             final Random random = new Random();
+                            final List<OrderItem> items = DataCache.getInstance().getItems(SortType.A_Z).stream().toList();
                             final Material[] materials = Material.values();
-                            for (int i = 0; i < 100; i++) {
-                                final ItemStack item = ItemStack.of(materials[random.nextInt(materials.length)]);
+                            for (int i = 0; i < 20; i++) {
+                                final ItemStack item = items.get(random.nextInt(items.size())).getItemStack();
                                 Order.create(player, item, random.nextDouble(1, 10), random.nextInt(1, 20));
                             }
                             return 1;
