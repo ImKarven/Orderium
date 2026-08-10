@@ -9,6 +9,8 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.MainGUI;
+import me.karven.orderium.gui.scrollable.ScrollableMainGUI;
+import me.karven.orderium.guiframework.ScrollableGUI;
 import me.karven.orderium.utils.PlayerUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -42,7 +44,8 @@ public class OrderiumCommands {
                 .requires(playerAndPermission("use"))
                 .executes(ctx -> {
                     if (!(ctx.getSource().getExecutor() instanceof Player player)) return 2;
-                    final MainGUI mainGUI = new MainGUI(player);
+//                    final MainGUI mainGUI = new MainGUI(player);
+                    final ScrollableMainGUI mainGUI = new ScrollableMainGUI(player); // TODO: .
                     mainGUI.open();
                     return 1;
                 })

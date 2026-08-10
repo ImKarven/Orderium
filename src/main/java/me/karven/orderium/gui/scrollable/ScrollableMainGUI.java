@@ -1,5 +1,8 @@
 package me.karven.orderium.gui.scrollable;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.BundleContents;
+import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import io.papermc.paper.dialog.Dialog;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.data.DataCache;
@@ -15,10 +18,13 @@ import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.DispatchUtil;
 import me.karven.orderium.utils.PlayerUtils;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -64,7 +70,21 @@ public class ScrollableMainGUI extends ScrollableGUI<Order> {
                 9, // TODO: .
                 mm.deserialize(config.mainGUIConfig.title),
                 matchedOrders,
-                Order::mainGUIItemStack,
+                order -> {
+                    final ItemStack item = order.mainGUIItemStack();
+                    final Key itemModel = item.getData(DataComponentTypes.ITEM_MODEL);
+                    final ItemStack bundleItem = item.withType(Material.BUNDLE); // TODO: HEAVY
+                    if (itemModel == null) {
+                        bundleItem.unsetData(DataComponentTypes.ITEM_MODEL);
+                    } else {
+                        bundleItem.setData(DataComponentTypes.ITEM_MODEL, itemModel);
+                    }
+                    final ItemStack dummyItem = ItemStack.of(Material.STONE);
+                    final BundleContents bundleContents = BundleContents.bundleContents(List.of(dummyItem, dummyItem, dummyItem));
+                    bundleItem.setData(DataComponentTypes.BUNDLE_CONTENTS, bundleContents);
+                    bundleItem.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().addHiddenComponents(DataComponentTypes.BUNDLE_CONTENTS).build());
+                    return bundleItem;
+                },
                 clickAction,
                 player,
                 config.mainGUIConfig.orderConfig.slots
