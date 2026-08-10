@@ -1,6 +1,7 @@
 package me.karven.orderium.guiframework;
 
 import io.papermc.paper.event.inventory.PlayerBundleItemSelectEvent;
+import me.karven.orderium.config.Config;
 import me.karven.orderium.obj.ItemClickContext;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -34,7 +35,8 @@ public abstract class ScrollableGUI<T> {
             final @NotNull Function<T, ItemStack> convertFunction,
             final @NotNull Consumer<ItemClickContext<T>> clickAction,
             final @NotNull Player player,
-            final @NotNull List<Integer> slots
+            final @NotNull List<Integer> slots,
+            final @NotNull Config config
             ) {
         this.rows = rows;
         this.moveAmountPerScroll = moveAmountPerScroll;
@@ -67,7 +69,7 @@ public abstract class ScrollableGUI<T> {
                     scrollAction
             );
         }
-        update();
+        update(config);
     }
 
     /**
@@ -87,12 +89,21 @@ public abstract class ScrollableGUI<T> {
         for (int i = 0; i < slots.size() && i + currentIndex < itemsArray.length; i++) {
             currentGUI.addItem(itemsArray[i + currentIndex], slots.get(i));
         }
+        populateButtons(currentGUI);
+    }
+
+    public void update(final @NotNull Config config) {
+        for (int i = 0; i < slots.size() && i + currentIndex < itemsArray.length; i++) {
+            currentGUI.addItem(itemsArray[i + currentIndex], slots.get(i));
+        }
+        populateButtons(currentGUI, config);
     }
 
     public void open() {
         currentGUI.open(player);
     }
     protected abstract void populateButtons(final @NotNull InventoryGUI gui);
+    protected abstract void populateButtons(final @NotNull InventoryGUI gui, final @NotNull Config config);
 
     /**
      * Skip to a specific index

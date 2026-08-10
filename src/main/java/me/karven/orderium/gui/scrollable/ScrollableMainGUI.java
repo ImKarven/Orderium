@@ -87,7 +87,8 @@ public class ScrollableMainGUI extends ScrollableGUI<Order> {
                 },
                 clickAction,
                 player,
-                config.mainGUIConfig.orderConfig.slots
+                config.mainGUIConfig.orderConfig.slots,
+                config
         );
         this.config = config;
         this.search = search;
@@ -96,6 +97,11 @@ public class ScrollableMainGUI extends ScrollableGUI<Order> {
 
     @Override
     protected void populateButtons(final @NotNull InventoryGUI gui) {
+        populateButtons(gui, this.config);
+    }
+
+
+    protected void populateButtons(final @NotNull InventoryGUI gui, final @NotNull Config config) {
         final int index = this.currentIndex;
 
         gui.addItem(
