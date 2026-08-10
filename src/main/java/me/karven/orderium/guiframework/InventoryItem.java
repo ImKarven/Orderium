@@ -1,5 +1,6 @@
 package me.karven.orderium.guiframework;
 
+import io.papermc.paper.event.inventory.PlayerBundleItemSelectEvent;
 import me.karven.orderium.utils.PDCUtils;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -13,11 +14,18 @@ public class InventoryItem {
     private static final AtomicInteger ID_COUNT = new AtomicInteger();
     private ItemStack item;
     private Consumer<InventoryClickEvent> onClick = null;
+    private Consumer<PlayerBundleItemSelectEvent> onScroll = null;
     private final int id;
 
     public InventoryItem(ItemStack item, Consumer<InventoryClickEvent> onClick) {
         this(item);
         this.onClick = onClick;
+    }
+
+    public InventoryItem(ItemStack item, Consumer<InventoryClickEvent> onClick, Consumer<PlayerBundleItemSelectEvent> onScroll) {
+        this(item);
+        this.onClick = onClick;
+        this.onScroll = onScroll;
     }
 
     public int getId() {
@@ -28,11 +36,17 @@ public class InventoryItem {
         if (onClick != null) onClick.accept(event);
     }
 
+    public void callScrollAction(@NotNull PlayerBundleItemSelectEvent event) {
+        if (onScroll != null) onScroll.accept(event);
+    }
+
     public InventoryItem(ItemStack item) {
         this.id = incrementAndGetID();
         item.editMeta(meta -> PDCUtils.setID(meta, id));
         this.item = item;
     }
+
+    public void setOnScroll(@NotNull Consumer<@NotNull PlayerBundleItemSelectEvent> onScroll) { this.onScroll = onScroll; }
 
     public void setOnClick(@NotNull Consumer<@NotNull InventoryClickEvent> onClick) {
         this.onClick = onClick;
