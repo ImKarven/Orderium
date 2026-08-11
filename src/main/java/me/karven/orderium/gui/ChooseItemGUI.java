@@ -162,7 +162,7 @@ public class ChooseItemGUI {
         InventoryGUI gui = new InventoryGUI(config.chooseItemGUIConfig.rows, mm.deserialize(config.chooseItemGUIConfig.title));
         addButtons(gui, pages, sortType, idx, pagesAmount);
         gui.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
-        gui.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
+        gui.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
         return gui;
     }
 }
