@@ -11,7 +11,6 @@ import me.karven.orderium.gui.DeliverGUI;
 import me.karven.orderium.gui.SignGUI;
 import me.karven.orderium.gui.YourOrderGUI;
 import me.karven.orderium.guiframework.InventoryGUI;
-import me.karven.orderium.guiframework.PaginatedGUI;
 import me.karven.orderium.guiframework.ScrollableGUI;
 import me.karven.orderium.obj.ItemClickContext;
 import me.karven.orderium.obj.Order;
@@ -19,6 +18,7 @@ import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.DispatchUtil;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -72,15 +72,20 @@ public class ScrollableMainGUI extends ScrollableGUI<Order> {
                 matchedOrders,
                 order -> {
                     final ItemStack item = order.mainGUIItemStack();
+                    final Component itemName = item.getData(DataComponentTypes.ITEM_NAME);
                     final Key itemModel = item.getData(DataComponentTypes.ITEM_MODEL);
                     final ItemStack bundleItem = item.withType(Material.BUNDLE); // TODO: HEAVY
-                    if (itemModel == null) {
-                        bundleItem.unsetData(DataComponentTypes.ITEM_MODEL);
-                    } else {
+
+                    if (itemName != null) {
+                        bundleItem.setData(DataComponentTypes.ITEM_NAME, itemName);
+                    }
+
+                    if (itemModel != null) {
                         bundleItem.setData(DataComponentTypes.ITEM_MODEL, itemModel);
                     }
+
                     final ItemStack dummyItem = ItemStack.of(Material.STONE);
-                    final BundleContents bundleContents = BundleContents.bundleContents(List.of(dummyItem, dummyItem, dummyItem));
+                    final BundleContents bundleContents = BundleContents.bundleContents(List.of(dummyItem, dummyItem, dummyItem, dummyItem, dummyItem, dummyItem, dummyItem, dummyItem, dummyItem, dummyItem));
                     bundleItem.setData(DataComponentTypes.BUNDLE_CONTENTS, bundleContents);
                     bundleItem.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().addHiddenComponents(DataComponentTypes.BUNDLE_CONTENTS).build());
                     return bundleItem;

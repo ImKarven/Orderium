@@ -34,7 +34,7 @@ public class GUIListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onScroll(@NotNull PlayerBundleItemSelectEvent event) {
         final InventoryGUI gui = getGUI(event);
-        if (gui == null) return;
+        if (gui == null || event.getInventory().getHolder() != gui) return;
         gui.scroll(event);
     }
 

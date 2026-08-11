@@ -1,6 +1,7 @@
 package me.karven.orderium.guiframework;
 
 import io.papermc.paper.event.inventory.PlayerBundleItemSelectEvent;
+import me.karven.orderium.Orderium;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.obj.ItemClickContext;
 import net.kyori.adventure.text.Component;
@@ -8,10 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -49,6 +47,9 @@ public abstract class ScrollableGUI<T> {
 
         this.currentGUI = new InventoryGUI(rows, title);
 
+        this.currentGUI.setOnClick(event -> event.setCancelled(true), InteractLocation.GLOBAL);
+        this.currentGUI.setOnDrag(event -> event.setCancelled(true), InteractLocation.GLOBAL);
+
         final Consumer<PlayerBundleItemSelectEvent> scrollAction = event -> {
             final PlayerBundleItemSelectEvent.Direction direction = event.getDirection();
             if (direction == PlayerBundleItemSelectEvent.Direction.UNKNOWN) return;
@@ -56,15 +57,25 @@ public abstract class ScrollableGUI<T> {
             int moveAmount = direction.getDelta() * moveAmountPerScroll;
             int newIndex = validateIndex(currentIndex + moveAmount);
             if (newIndex == currentIndex) return;
-            currentIndex = newIndex;
+            currentIndex = newIndex; // TODO: Folia compatible?
+
             update();
+
+            final int bundleSlot = event.getSlot();
+            final ItemStack updatedBundleItem = currentGUI.getInventory().getItem(bundleSlot);
+            currentGUI.getInventory().setItem(bundleSlot, null);
             open();
+            player.getScheduler().run(Orderium.plugin, _ -> {
+                currentGUI.getInventory().setItem(bundleSlot, updatedBundleItem); // TODO: Folia?
+                open();
+            }, null);
         };
 
         int i = 0;
         for (final T object : items) {
+            final ItemStack bundleItem = convertFunction.apply(object);
             itemsArray[i++] = new InventoryItem(
-                    convertFunction.apply(object),
+                    bundleItem,
                     event -> clickAction.accept(new ItemClickContext<>(object, event)),
                     scrollAction
             );
