@@ -17,8 +17,8 @@ import org.jetbrains.annotations.Nullable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -120,17 +120,15 @@ public class ConvertUtils {
         return result;
     }
 
-    private static final HashMap<String, Double> unit = new HashMap<>();
-
-    static {
-        unit.put("K", 1000d);
-        unit.put("M", 1000000d);
-        unit.put("B", 1000000000d);
-        unit.put("T", 1000000000000d);
-    }
+    private static final Map<String, Double> unit = Map.of(
+            "K", 1000d,
+            "M", 1000000d,
+            "B", 1000000000d,
+            "T", 1000000000000d
+    );
 
     public static String formatNumber(double a) {
-        if (a < 0) return "";
+        if (a < 0) return "-" + formatNumber(-a);
         int cnt = (int) Math.log10(a);
         if (cnt >= 12) return fancy(a / unit.get("T")) + "T";
         if (cnt >= 9) return fancy(a / unit.get("B")) + "B";
