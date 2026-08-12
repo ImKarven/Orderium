@@ -1,6 +1,7 @@
 package me.karven.orderium.guiframework;
 
 import com.google.common.base.Preconditions;
+import me.karven.orderium.utils.DispatchUtil;
 import me.karven.orderium.utils.PDCUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -168,7 +169,7 @@ public class InventoryGUI implements InventoryHolder {
         handle.setContents(newContents);
 
         for (HumanEntity player : new ArrayList<>(oldViewers)) {
-            player.openInventory(handle);
+            DispatchUtil.entity(player, () -> open(player));
         }
     }
 }
