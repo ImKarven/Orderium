@@ -8,7 +8,8 @@ import static me.karven.orderium.Orderium.plugin;
 
 public class EconUtils {
     public static void addMoney(OfflinePlayer p, double amount) {
-        final MoneyTransaction transaction = logTransactionBefore(p, amount);
+        final MoneyTransaction transaction = new MoneyTransaction(p, amount);
+        logTransactionBefore(transaction);
         plugin.getEconomy().depositPlayer(p, amount);
         logTransactionAfter(transaction);
     }
@@ -16,18 +17,16 @@ public class EconUtils {
     /// Returns `true` if the player has enough money to remove, otherwise `false`
     public static boolean removeMoney(Player p, double amount) {
         if (plugin.getEconomy().getBalance(p) < amount) return false;
-        final MoneyTransaction transaction = logTransactionBefore(p, amount);
+        final MoneyTransaction transaction = new MoneyTransaction(p, amount);
+        logTransactionBefore(transaction);
         plugin.getEconomy().withdrawPlayer(p, amount);
         logTransactionAfter(transaction);
         return true;
     }
 
-    private static MoneyTransaction logTransactionBefore(OfflinePlayer p, double amount) {
-        final MoneyTransaction transaction = new MoneyTransaction(p);
-        if (!transaction.config.logTransactions) return transaction;
-        transaction.before = plugin.getEconomy().getBalance(p);
-        transaction.amount = amount;
-        return transaction;
+    private static void logTransactionBefore(final MoneyTransaction transaction) {
+        if (!transaction.config.logTransactions) return;
+        transaction.before = plugin.getEconomy().getBalance(transaction.player);
     }
 
     private static void logTransactionAfter(final MoneyTransaction transaction) {

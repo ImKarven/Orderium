@@ -11,7 +11,8 @@ public class MoneyTransaction {
     public double amount;
     public double after;
 
-    public MoneyTransaction(final @NotNull OfflinePlayer player) {
+    public MoneyTransaction(final @NotNull OfflinePlayer player, final double amount) {
         this.player = player;
+        this.amount = amount;
     }
 }
