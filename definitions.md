@@ -36,7 +36,8 @@ a 32-bit integer.
 a 32-bit integer.
 
 #### `expiresAt`
-a [Unix time](https://en.wikipedia.org/wiki/Unix_time) that is the sum of the config option `expires-after` and the Unix time of the system at the time of creating this Orderium Order.
+
+a 64-bit integer (as explained in 32-bit integer) that is the sum of the config option `expires-after` and the difference, measured in milliseconds, between the current time and midnight, January 1, 1970 UTC.
 
 ### Creation
 An Orderium Order must be created by a Player.
