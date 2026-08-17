@@ -50,9 +50,7 @@ public abstract class PaginatedGUI<T> {
     }
 
     public @NotNull InventoryGUI getNextPage() {
-        final InventoryGUI nextPage = new InventoryGUI(this.rows, this.title);
-        nextPage.setOnClick(event -> event.setCancelled(true), InteractLocation.GLOBAL);
-        nextPage.setOnDrag(event -> event.setCancelled(true), InteractLocation.GLOBAL);
+        final InventoryGUI nextPage = new InventoryGUI(this.rows, this.title, true);
         int index = 0;
         while (itemIterator.hasNext() && index < slots.size()) {
             final T object = itemIterator.next();

@@ -40,6 +40,11 @@ public class InventoryGUI implements InventoryHolder {
         this(rows, title, false);
     }
 
+    /**
+     * @param rows amount of rows, must be between 1 and 6 (both inclusive)
+     * @param title the title of the container
+     * @param cancelGlobalClicksAndDrags if the GUI cancels all clicks and drags, cannot be false if the GUI is not empty.
+     */
     public InventoryGUI(int rows, @NotNull Component title, final boolean cancelGlobalClicksAndDrags) {
         Preconditions.checkArgument(rows >= 1 && rows <= 6, "Rows must be between 1 and 6, found " + rows);
         this.rows = rows;

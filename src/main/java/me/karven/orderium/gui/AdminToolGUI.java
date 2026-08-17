@@ -112,11 +112,8 @@ public class AdminToolGUI {
         final Set<BlacklistedItem> items = plugin.getDataCache().getBlacklist();
         int pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
-        InventoryGUI page = new InventoryGUI(6, Component.text("Blacklisted Items"));
+        InventoryGUI page = new InventoryGUI(6, Component.text("Blacklisted Items"), true);
         addBlacklistButtons(0, pageAmount, page);
-
-        page.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
-        page.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
         int cnt = 0, i = 0;
 
         for (BlacklistedItem blacklistedItem : items) {
@@ -125,11 +122,8 @@ public class AdminToolGUI {
                 i++;
                 blacklist.add(page);
 
-                page = new InventoryGUI(6, Component.text("Blacklisted Items"));
+                page = new InventoryGUI(6, Component.text("Blacklisted Items"), true);
                 addBlacklistButtons(i, pageAmount, page);
-
-                page.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
-                page.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
             }
             final int currentPage = i;
             page.addItem(new InventoryItem(ConvertUtils.addLore(blacklistedItem.getItemStack(), List.of(
@@ -153,11 +147,8 @@ public class AdminToolGUI {
         final Set<CustomItem> items = plugin.getDataCache().getCustomItems();
         int pageAmount = ConvertUtils.ceil_div(items.size(), 45);
 
-        InventoryGUI page = new InventoryGUI(6, Component.text("Custom Items"));
+        InventoryGUI page = new InventoryGUI(6, Component.text("Custom Items"), true);
         addCustomItemsButtons(0, pageAmount, page);
-
-        page.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
-        page.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
 
         page.setOnClick(addCustomItem(0), InteractLocation.BOTTOM);
 
@@ -168,11 +159,8 @@ public class AdminToolGUI {
                 i++;
                 customItems.add(page);
 
-                page = new InventoryGUI(6, Component.text("Custom Items"));
+                page = new InventoryGUI(6, Component.text("Custom Items"), true);
                 addCustomItemsButtons(i, pageAmount, page);
-
-                page.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
-                page.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
 
                 page.setOnClick(addCustomItem(i), InteractLocation.BOTTOM);
             }
