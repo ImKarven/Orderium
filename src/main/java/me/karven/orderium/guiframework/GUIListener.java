@@ -17,7 +17,7 @@ public class GUIListener implements Listener {
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
         InventoryGUI gui = getGUI(event);
         if (gui == null) return;
-
+        if (gui.isCancelGlobalClickAndDrags()) event.setCancelled(true);
         gui.callClickAction(event, InteractLocation.GLOBAL);
         Inventory clickedInventory = event.getClickedInventory();
         if (clickedInventory == null) {
@@ -34,6 +34,7 @@ public class GUIListener implements Listener {
     public void onInventoryDrag(@NotNull InventoryDragEvent event) {
         InventoryGUI gui = getGUI(event);
         if (gui == null) return;
+        if (gui.isCancelGlobalClickAndDrags()) event.setCancelled(true);
         gui.callDragAction(event, InteractLocation.GLOBAL);
     }
 
