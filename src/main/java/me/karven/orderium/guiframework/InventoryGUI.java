@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 
 public class InventoryGUI implements InventoryHolder {
     private final int rows;
+    private final boolean cancelGlobalClickAndDrags;
     private Component title;
     private Inventory handle;
     private final ConcurrentHashMap<Integer, InventoryItem> items = new ConcurrentHashMap<>();
@@ -35,12 +36,16 @@ public class InventoryGUI implements InventoryHolder {
 
     private Consumer<InventoryCloseEvent> onClose = null;
 
-    public InventoryGUI(int rows, @NotNull Component title) {
+    @Deprecated
+    public InventoryGUI(final int rows, final @NotNull Component title) {
+        this(rows, title, false);
+    }
+
+    public InventoryGUI(int rows, @NotNull Component title, final boolean cancelGlobalClicksAndDrags) {
         Preconditions.checkArgument(rows >= 1 && rows <= 6, "Rows must be between 1 and 6, found " + rows);
         this.rows = rows;
         this.title = title;
-        this.onGlobalClick = event -> event.setCancelled(true);
-        this.onGlobalDrag = event -> event.setCancelled(true);
+        this.cancelGlobalClickAndDrags = cancelGlobalClicksAndDrags;
         initializeInventory();
     }
 
@@ -168,5 +173,9 @@ public class InventoryGUI implements InventoryHolder {
         for (HumanEntity player : new ArrayList<>(oldViewers)) {
             DispatchUtil.entity(player, () -> open(player));
         }
+    }
+
+    public boolean isCancelGlobalClickAndDrags() {
+        return cancelGlobalClickAndDrags;
     }
 }
