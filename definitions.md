@@ -15,13 +15,13 @@
 ### Values
 An Orderium Order has these values:
 #### `id`
-a unique identifier for this Orderium Order in your [Paper](https://github.com/PaperMC/Paper).
+a unique identifier for this Orderium Order in your Server.
 
 #### `owner`
-the [Player UUID](https://minecraft.wiki/w/UUID#Player_UUID) of the player (as explained in Player UUID) who created this Orderium Order.
+the [Player UUID](https://minecraft.wiki/w/UUID#Player_UUID) of the Player (as explained in Player UUID) who created this Orderium Order.
 
 #### `item`
-An [Orderium Item](#orderium-item) chosen by the owner of this Orderium Order.
+An Orderium Item chosen by the owner of this Orderium Order.
 
 #### `moneyPer`
 a [double](https://en.wikipedia.org/wiki/Double-precision_floating-point_format).
@@ -60,6 +60,11 @@ The Owner Player must provide:
 If all the requirements are met, the Owner Player is given `collectAmount` copies of the Orderium Order's Orderium Item.
 
 ## Orderium Item
-Orderium Item is an [Item](https://minecraft.wiki/w/Item) in [the Creative inventory](https://minecraft.wiki/w/Creative_inventory) or the list of Custom items that is not present in the Blacklist at the time of choosing the Orderium Item when creating an Orderium Order.
+Orderium Item is an [Item](https://minecraft.wiki/w/Item) that does not have Stacking ("Amount-less Item") in [the Creative inventory](https://minecraft.wiki/w/Creative_inventory) or the list of Custom Items that is not present in the Blacklist at the time of choosing the Orderium Item when creating an Orderium Order.
 <br>
-Orderium Item does not have Stacking like regular Item.
+
+## Custom Item
+a Custom Item is an Amount-less Item.
+
+## Blacklist
+a list of Amount-less Items.

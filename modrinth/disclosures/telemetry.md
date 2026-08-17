@@ -2,7 +2,7 @@
 Orderium sends usage data to third-parties.
 
 ## Definitions
-Information: [definitions.md](../../definitions.md).
+Definitions explained in file [definitions.md](../../definitions.md) may appear in the content of this file.
 
 ## FastStats (https://faststats.dev/)
 Information: https://faststats.dev/info.
@@ -12,6 +12,7 @@ Orderium opts in to error tracking.
 
 ### Additional metrics (Custom metrics)
 Orderium provides the following additional metrics:
+- If the Server uses Orderium API;
 - Amount of Orderium Orders created;
 - Amount of copies of Orderium Items collected from all Orderium Orders.
 
