@@ -2,7 +2,6 @@ package me.karven.orderium.gui;
 
 import io.papermc.paper.dialog.Dialog;
 import me.karven.orderium.config.Config;
-import me.karven.orderium.guiframework.InteractLocation;
 import me.karven.orderium.guiframework.InventoryGUI;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.utils.PlayerUtils;
@@ -26,9 +25,7 @@ public class YourOrderGUI {
         final UUID pUUID = p.getUniqueId();
         final List<Order> orders = plugin.getDataCache().getOrders(pUUID);
         final MiniMessage mm = plugin.mm;
-        final InventoryGUI gui = new InventoryGUI(config.yourOrdersGUIConfig.rows, mm.deserialize(config.yourOrdersGUIConfig.title));
-        gui.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
-        gui.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
+        final InventoryGUI gui = new InventoryGUI(config.yourOrdersGUIConfig.rows, mm.deserialize(config.yourOrdersGUIConfig.title), true);
         int currentSlotIndex = 0;
         for (Order order : orders) {
             if (currentSlotIndex == config.yourOrdersGUIConfig.rows * 9) break;

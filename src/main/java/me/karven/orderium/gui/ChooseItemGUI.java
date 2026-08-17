@@ -1,7 +1,6 @@
 package me.karven.orderium.gui;
 
 import io.papermc.paper.dialog.Dialog;
-import me.karven.orderium.guiframework.InteractLocation;
 import me.karven.orderium.guiframework.InventoryGUI;
 import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.obj.SortType;
@@ -159,10 +158,8 @@ public class ChooseItemGUI {
     }
 
     private static InventoryGUI initPage(List<InventoryGUI> pages, SortType sortType, int idx, int pagesAmount) {
-        InventoryGUI gui = new InventoryGUI(config.chooseItemGUIConfig.rows, mm.deserialize(config.chooseItemGUIConfig.title));
+        InventoryGUI gui = new InventoryGUI(config.chooseItemGUIConfig.rows, mm.deserialize(config.chooseItemGUIConfig.title), true);
         addButtons(gui, pages, sortType, idx, pagesAmount);
-        gui.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);
-        gui.setOnDrag(e -> e.setCancelled(true), InteractLocation.GLOBAL);
         return gui;
     }
 }

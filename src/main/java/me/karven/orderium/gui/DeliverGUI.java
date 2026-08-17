@@ -26,7 +26,7 @@ public class DeliverGUI {
     public DeliverGUI(final @NotNull Order order) {
         final ItemStack comparer = order.getOrderItem().getItemStack();
         final Config currentConfig = Config.config;
-        this.deliverGUI = new InventoryGUI(currentConfig.deliverGUIConfig.rows, mm.deserialize(currentConfig.deliverGUIConfig.title));
+        this.deliverGUI = new InventoryGUI(currentConfig.deliverGUIConfig.rows, mm.deserialize(currentConfig.deliverGUIConfig.title), false);
 
         deliverGUI.setOnClose(e -> {
             if (!(e.getPlayer() instanceof Player deliveringPlayer)) return;
