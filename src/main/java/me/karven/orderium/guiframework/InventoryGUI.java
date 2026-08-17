@@ -39,6 +39,8 @@ public class InventoryGUI implements InventoryHolder {
         Preconditions.checkArgument(rows >= 1 && rows <= 6, "Rows must be between 1 and 6, found " + rows);
         this.rows = rows;
         this.title = title;
+        this.onGlobalClick = event -> event.setCancelled(true);
+        this.onGlobalDrag = event -> event.setCancelled(true);
         initializeInventory();
     }
 
