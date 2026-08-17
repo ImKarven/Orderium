@@ -71,6 +71,7 @@ public class InventoryGUI implements InventoryHolder {
 
     public void addItem(@NotNull InventoryItem item, int slot) {
         Preconditions.checkArgument(slot >= 0 && slot < rows * 9, "Slot must be between 0 and " + (rows * 9 - 1) + ", found " + slot);
+        Preconditions.checkArgument(cancelGlobalClickAndDrags, "Items cannot be added to a cancelling clicks and drags GUI.");
         items.put(slot, item);
         handle.setItem(slot, item.getItem());
     }
@@ -112,6 +113,7 @@ public class InventoryGUI implements InventoryHolder {
             case TOP -> onTopDrag = onDrag;
             case BOTTOM -> onBottomDrag = onDrag;
             case GLOBAL -> onGlobalDrag = onDrag;
+            case OUTSIDE -> throw new IllegalArgumentException("InteractLocation must not be OUTSIDE for drag events");
         }
     }
 
