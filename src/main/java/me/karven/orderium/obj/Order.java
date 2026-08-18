@@ -368,7 +368,7 @@ public class Order implements me.karven.orderium.api.Order {
             default -> throw new IllegalArgumentException("Invalid field for updating double value");
         }
 
-        updateDataCacheAndStorage(field, value);
+        updateStorage(field, value);
     }
 
     private void update(final Field field, final int value) {
@@ -380,13 +380,12 @@ public class Order implements me.karven.orderium.api.Order {
             default -> throw new IllegalArgumentException("Invalid field for updating int value");
         }
 
-        updateDataCacheAndStorage(field, value);
+        updateStorage(field, value);
     }
 
-    private void updateDataCacheAndStorage(final Field field, final Object value) {
+    private void updateStorage(final Field field, final Object value) {
 
         if (shouldBeDeleted()) {
-            plugin.getDataCache().deleteOrder(this, false);
             plugin.getStorage().deleteOrder(this);
             return;
         }
