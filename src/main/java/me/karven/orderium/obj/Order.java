@@ -32,7 +32,7 @@ import static me.karven.orderium.utils.ConvertUtils.formatNumber;
 // TODO: Replace `item` with OrderItem instead of ItemStack.
 // Problem: how to store it in database?
 public class Order implements me.karven.orderium.api.Order {
-    private final Object lock = null;
+    private final Object lock = new Object();
     private final @NotNull OfflinePlayer ownerPlayer;
     private final @Nullable String ownerName;
     private ItemStack mainGUIItemStack;
