@@ -40,11 +40,11 @@ public class Order implements me.karven.orderium.api.Order {
     public final int id;
     public final UUID owner;
     public final ItemStack item;
-    public double moneyPer;
-    public int amount;
-    public int delivered;
-    public int inStorage;
-    public long expiresAt;
+    public volatile double moneyPer;
+    public volatile int amount;
+    public volatile int delivered;
+    public volatile int inStorage;
+    public volatile long expiresAt;
 
     public Order(int id, final OfflinePlayer owner, ItemStack item, double moneyPer, int amount, int delivered, int inStorage, long expiresAt) {
         this.id = id;
