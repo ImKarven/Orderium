@@ -96,7 +96,7 @@ modrinth {
     uploadFile = shadowJar
     gameVersions = mcVersions
     loaders = ["paper", "purpur", "folia"]
-    changelog = rootProject.file("minotaur" + File.separator + "CHANGELOG.md").text
+    changelog = rootProject.file("modrinth" + File.separator + "CHANGELOG.md").text
 
-    syncBodyFrom = rootProject.file("minotaur" + File.separator + "DESCRIPTION.md").text
+    syncBodyFrom = rootProject.file("modrinth" + File.separator + "DESCRIPTION.md").text
 }
