@@ -20,8 +20,8 @@ import org.bukkit.block.sign.SignSide;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static me.karven.orderium.Orderium.plugin;
@@ -29,7 +29,7 @@ import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 
 @SuppressWarnings("UnstableApiUsage")
 public class SignGUI implements PacketListener {
-    private static final HashMap<Player, SignInfo> sessionsList = new HashMap<>();
+    private static final ConcurrentHashMap<Player, SignInfo> sessionsList = new ConcurrentHashMap<>();
     private static MiniMessage mm;
 
     public static void newSession(Player p, Consumer<String> action, List<String> lines, BlockType blockType, int line) {

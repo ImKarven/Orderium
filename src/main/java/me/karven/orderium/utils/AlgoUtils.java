@@ -109,13 +109,20 @@ public class AlgoUtils {
     public static boolean isSimilar(final ItemStack a, final ItemStack b) {
         if (!a.getType().equals(b.getType())) return false;
         for (final NamespacedKey componentKey : config.similarityCheck) {
-            final DataComponentType nonValueType = Registry.DATA_COMPONENT_TYPE.get(componentKey);
-            if (!(nonValueType instanceof DataComponentType.Valued<?> dataComponentType)) {
+            final DataComponentType type = Registry.DATA_COMPONENT_TYPE.get(componentKey);
+            if (type == null) {
                 Log.error("Data component type does not exist in similarity check: " + componentKey, new RuntimeException());
                 continue;
             }
-            final Object dataA = a.getData(dataComponentType);
-            final Object dataB = b.getData(dataComponentType);
+            final boolean aHas = a.hasData(type);
+            if (aHas != b.hasData(type)) return false;
+
+            // Both stacks don't have this component, skip early
+            if (!aHas) continue;
+
+            if (!(type instanceof DataComponentType.Valued<?> valuedType)) continue;
+            final Object dataA = a.getData(valuedType);
+            final Object dataB = b.getData(valuedType);
             if (dataA == null && dataB == null) continue;
             if (dataA == null || !dataA.equals(dataB)) return false;
         }

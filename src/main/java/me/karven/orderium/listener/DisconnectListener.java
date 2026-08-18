@@ -10,6 +10,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.InventoryView;
 
 /// This class helps things happen normally when the player disconnects
+// TODO: This does not handle if the player are in GUIs while the server is shutting down
+// Plugins are disabled before players get kicked
 @SuppressWarnings("UnstableApiUsage")
 public class DisconnectListener implements Listener {
 

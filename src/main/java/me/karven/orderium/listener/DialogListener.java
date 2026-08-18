@@ -5,12 +5,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DialogListener {
-    private static final HashMap<Player, Collection<ItemStack>> pendingItems = new HashMap<>();
+    // TODO: probably should replace `Player` with `UUID`.
+    private static final ConcurrentHashMap<Player, Collection<ItemStack>> pendingItems = new ConcurrentHashMap<>();
 
-    public static HashMap<Player, Collection<ItemStack>> pendingItems() {
+    public static Map<Player, Collection<ItemStack>> pendingItems() {
         return pendingItems;
     }
 

@@ -1,10 +1,18 @@
 package me.karven.orderium.obj;
 
-import java.util.UUID;
+import me.karven.orderium.config.Config;
+import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.NotNull;
 
 public class MoneyTransaction {
-    public UUID player;
+    public final Config config = Config.config;
+    public final OfflinePlayer player;
     public double before;
     public double amount;
     public double after;
+
+    public MoneyTransaction(final @NotNull OfflinePlayer player, final double amount) {
+        this.player = player;
+        this.amount = amount;
+    }
 }
