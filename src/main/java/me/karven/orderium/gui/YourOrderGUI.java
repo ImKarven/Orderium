@@ -24,7 +24,7 @@ public class YourOrderGUI {
     public static void open(Player p, boolean isAsync) {
         final Config config = Config.config;
         final UUID pUUID = p.getUniqueId();
-        final List<Order> orders = plugin.getDataCache().getOrders(pUUID, isAsync);
+        final List<Order> orders = plugin.getDataCache().getOrders(pUUID);
         final MiniMessage mm = plugin.mm;
         final InventoryGUI gui = new InventoryGUI(config.yourOrdersGUIConfig.rows, mm.deserialize(config.yourOrdersGUIConfig.title));
         gui.setOnClick(e -> e.setCancelled(true), InteractLocation.GLOBAL);

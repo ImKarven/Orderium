@@ -4,10 +4,12 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemContainerContents;
+import me.karven.orderium.api.events.OrderRemoveEvent;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.StorageMethod;
 import me.karven.orderium.storage.Storage;
 import me.karven.orderium.utils.*;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -133,8 +135,7 @@ public class SQLStorage extends Storage {
             try (
                     Connection connection = data.getConnection();
                     PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
-                    PreparedStatement cancelOrder = connection.prepareStatement(CANCEL_ORDER);
-                    PreparedStatement deleteOrder = connection.prepareStatement(DELETE_ORDER)
+                    PreparedStatement cancelOrder = connection.prepareStatement(CANCEL_ORDER)
             ) {
                 int orderId = order.getId();
                 getOrder.setInt(1, orderId);
@@ -159,10 +160,10 @@ public class SQLStorage extends Storage {
                 }
                 double payBack = (orderAmount - delivered) * moneyPer;
                 if (inStorage == 0) {
-                    deleteOrder.setInt(1, orderId);
-                    deleteOrder.executeUpdate();
-                    plugin.getDataCache().deleteOrder(order, true);
-                    future.complete(payBack);
+                    if (deleteOrder(order) != null) {
+                        plugin.getDataCache().deleteOrder(order);
+                        future.complete(payBack);
+                    } else future.complete(-1.0);
                     return;
                 }
                 cancelOrder.setLong(1, System.currentTimeMillis() - 1);
@@ -298,8 +299,7 @@ public class SQLStorage extends Storage {
             try (
                     Connection connection = data.getConnection();
                     PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
-                    PreparedStatement updateOrder = connection.prepareStatement(UPDATE_ORDER);
-                    PreparedStatement deleteOrder = connection.prepareStatement(DELETE_ORDER)
+                    PreparedStatement updateOrder = connection.prepareStatement(UPDATE_ORDER)
             ) {
                 int orderId = order.getId();
                 connection.setAutoCommit(false);
@@ -320,9 +320,12 @@ public class SQLStorage extends Storage {
                     return;
                 }
                 if (inStorage - amount == 0 && (delivered == orderAmount || order.getExpiresAt() < System.currentTimeMillis())) {
-                    deleteOrder.setInt(1, orderId);
-                    deleteOrder.executeUpdate();
-                    plugin.getDataCache().deleteOrder(order, true);
+                    if (deleteOrder(order) != null) plugin.getDataCache().deleteOrder(order);
+                    else {
+                        connection.commit();
+                        future.complete(false);
+                        return;
+                    }
                 } else {
                     updateOrder.setInt(1, orderAmount);
                     updateOrder.setDouble(2, moneyPer);
@@ -342,8 +345,8 @@ public class SQLStorage extends Storage {
         return future;
     }
 
-    public CompletableFuture<Void> updateOrder(Order order, Order.Field field, Object value) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
+    public CompletableFuture<Boolean> updateOrder(Order order, Order.Field field, Object value) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
             final String var = switch (field) {
                 case DELIVERED -> "delivered";
@@ -353,13 +356,45 @@ public class SQLStorage extends Storage {
             };
             try (
                     Connection connection = data.getConnection();
+                    PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
                     PreparedStatement updateOrder = connection.prepareStatement("UPDATE " + ORDER_TABLE + " SET " + var + " = ? WHERE id = ?")
             ) {
+                connection.setAutoCommit(false);
                 int orderId = order.getId();
-                updateOrder.setObject(1, value);
-                updateOrder.setInt(2, orderId);
-                updateOrder.executeUpdate();
-                future.complete(null);
+                getOrder.setInt(1, orderId);
+                ResultSet raw = getOrder.executeQuery();
+                if (!raw.next()) {
+                    connection.commit();
+                    future.complete(false);
+                    return;
+                }
+                int delivered = raw.getInt("delivered");
+                int amount = raw.getInt("amount");
+                int inStorage = raw.getInt("in_storage");
+                double moneyPer = raw.getDouble("money_per");
+                long expiresAt = raw.getLong("expires_at");
+
+                switch (field) {
+                    case DELIVERED -> delivered = (int) value;
+                    case AMOUNT -> amount = (int) value;
+                    case IN_STORAGE -> inStorage = (int) value;
+                    case MONEY_PER -> moneyPer = (double) value;
+                }
+
+                if ((delivered == amount || expiresAt <= System.currentTimeMillis()) && inStorage == 0) {
+                    if (deleteOrder(order) != null) {
+                        plugin.getDataCache().deleteOrder(order);
+                        future.complete(false);
+                    } else future.complete(null);
+                } else {
+                    updateOrder.setObject(1, value);
+                    updateOrder.setInt(2, orderId);
+                    updateOrder.executeUpdate();
+                    plugin.getDataCache().updateOrder(order, moneyPer, amount, delivered, inStorage);
+                    future.complete(true);
+                }
+
+                connection.commit();
             } catch (SQLException e) {
                 Log.error("Failed to update order", e);
             }
@@ -368,6 +403,12 @@ public class SQLStorage extends Storage {
     }
 
     public CompletableFuture<Void> deleteOrder(Order order) {
+        // TODO: I hate this stupid event
+        final OrderRemoveEvent.Pre preEvent = new OrderRemoveEvent.Pre(order, !Bukkit.isPrimaryThread());
+        if (!preEvent.callEvent()) {
+            return null;
+        }
+
         CompletableFuture<Void> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
             try (
@@ -376,7 +417,9 @@ public class SQLStorage extends Storage {
             ) {
                 deleteOrder.setInt(1, order.getId());
                 deleteOrder.executeUpdate();
-                plugin.getDataCache().deleteOrder(order, true);
+                plugin.getDataCache().deleteOrder(order);
+                final OrderRemoveEvent.Post postEvent = new OrderRemoveEvent.Post(order, true);
+                postEvent.callEvent();
                 future.complete(null);
             } catch (SQLException e) {
                 Log.error("Failed to delete order", e);

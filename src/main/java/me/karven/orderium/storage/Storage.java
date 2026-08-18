@@ -185,7 +185,14 @@ public abstract class Storage {
      */
     public abstract CompletableFuture<Boolean> collectItems(Order order, int amount);
 
-    public abstract CompletableFuture<Void> updateOrder(Order order, Order.Field field, Object value);
+    /**
+     * Update a field of an order
+     * @param order the order
+     * @param field the field
+     * @param value the name to update
+     * @return true if the order is updated, false if the order is deleted because it should be
+     */
+    public abstract CompletableFuture<Boolean> updateOrder(Order order, Order.Field field, Object value);
 
     public abstract CompletableFuture<Void> logTransaction(UUID player, double before, double amount, double after);
 

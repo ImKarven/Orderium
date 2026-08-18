@@ -5,7 +5,6 @@ import me.karven.orderium.api.events.PlayerCollectItemsEvent;
 import me.karven.orderium.api.events.PlayerCreateOrderEvent;
 import me.karven.orderium.api.events.PlayerDeliverOrderEvent;
 import me.karven.orderium.config.Config;
-import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.YourOrderGUI;
 import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.utils.*;
@@ -362,33 +361,11 @@ public class Order implements me.karven.orderium.api.Order {
         update(Field.MONEY_PER, moneyPer);
     }
 
-    private void update(final Field field, final double value) {
-        switch (field) {
-            case MONEY_PER -> plugin.getDataCache().updateOrder(this, value, this.amount, this.delivered, this.inStorage);
-            default -> throw new IllegalArgumentException("Invalid field for updating double value");
-        }
-
-        updateStorage(field, value);
-    }
-
-    private void update(final Field field, final int value) {
-        final DataCache dataCache = plugin.getDataCache();
-        switch (field) {
-            case DELIVERED -> dataCache.updateOrder(this, this.moneyPer, this.amount, value, this.inStorage);
-            case IN_STORAGE -> dataCache.updateOrder(this, this.moneyPer, this.amount, this.delivered, value);
-            case AMOUNT -> dataCache.updateOrder(this, this.moneyPer, value, this.delivered, this.inStorage);
-            default -> throw new IllegalArgumentException("Invalid field for updating int value");
-        }
-
+    private void update(final Field field, final Object value) {
         updateStorage(field, value);
     }
 
     private void updateStorage(final Field field, final Object value) {
-
-        if (shouldBeDeleted()) {
-            plugin.getStorage().deleteOrder(this);
-            return;
-        }
         plugin.getStorage().updateOrder(this, field, value).thenAccept(_ -> reload());
     }
 
