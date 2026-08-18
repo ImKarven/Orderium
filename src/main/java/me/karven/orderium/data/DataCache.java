@@ -11,6 +11,7 @@ import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.Log;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.KeyPattern;
+import org.bukkit.Bukkit;
 import org.bukkit.Registry;
 import org.bukkit.block.BlockType;
 import org.jetbrains.annotations.NotNull;
@@ -74,24 +75,31 @@ public final class DataCache {
         mostPaid.addAll(orders);
     }
     public void updateOrder(Order order, double moneyPer, int amount, int delivered, int inStorage) {
+        synchronized (order.getLock()) {
+            mostMoneyPerItem.remove(order);
+            recentlyListed.remove(order);
+            mostDelivered.remove(order);
+            mostPaid.remove(order);
 
-        mostMoneyPerItem.remove(order);
-        recentlyListed.remove(order);
-        mostDelivered.remove(order);
-        mostPaid.remove(order);
+            order.moneyPer = moneyPer;
+            order.amount = amount;
+            order.delivered = delivered;
+            order.inStorage = inStorage;
 
-        order.moneyPer = moneyPer;
-        order.amount = amount;
-        order.delivered = delivered;
-        order.inStorage = inStorage;
+            if (order.shouldBeDeleted()) {
+                deleteOrder(order, Bukkit.isPrimaryThread());
+                return;
+            }
 
-        // Re-add the order to not mess up the sorted collections after updating
-        mostMoneyPerItem.add(order);
-        recentlyListed.add(order);
-        mostDelivered.add(order);
-        mostPaid.add(order);
+            // Re-add the order to not mess up the sorted collections after updating
+            mostMoneyPerItem.add(order);
+            recentlyListed.add(order);
+            mostDelivered.add(order);
+            mostPaid.add(order);
+        }
     }
 
+    // TODO: Move event to storage update
     public void deleteOrder(Order order, boolean isAsync) {
         OrderRemoveEvent.Pre preEvent = new OrderRemoveEvent.Pre(order, isAsync);
         if (!preEvent.callEvent()) return;

@@ -5,6 +5,7 @@ import me.karven.orderium.api.events.PlayerCollectItemsEvent;
 import me.karven.orderium.api.events.PlayerCreateOrderEvent;
 import me.karven.orderium.api.events.PlayerDeliverOrderEvent;
 import me.karven.orderium.config.Config;
+import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.YourOrderGUI;
 import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.utils.*;
@@ -31,6 +32,7 @@ import static me.karven.orderium.utils.ConvertUtils.formatNumber;
 // TODO: Replace `item` with OrderItem instead of ItemStack.
 // Problem: how to store it in database?
 public class Order implements me.karven.orderium.api.Order {
+    private final Object lock = null;
     private final @NotNull OfflinePlayer ownerPlayer;
     private final @Nullable String ownerName;
     private ItemStack mainGUIItemStack;
@@ -342,34 +344,53 @@ public class Order implements me.karven.orderium.api.Order {
 
     @Override
     public void setDelivered(int delivered) {
-        this.delivered = delivered;
-        update("delivered", delivered);
+        update(Field.DELIVERED, delivered);
     }
 
     @Override
     public void setInStorage(int inStorage) {
-        this.inStorage = inStorage;
-        update("in_storage", inStorage);
+        update(Field.IN_STORAGE, inStorage);
     }
 
     @Override
     public void setAmount(int amount) {
-        this.amount = amount;
-        update("amount", amount);
+        update(Field.AMOUNT, amount);
     }
 
     @Override
     public void setMoneyPer(double moneyPer) {
-        this.moneyPer = moneyPer;
-        update("money_per", moneyPer);
+        update(Field.MONEY_PER, moneyPer);
     }
 
-    private void update(String var, Object value) {
+    private void update(final Field field, final double value) {
+        switch (field) {
+            case MONEY_PER -> plugin.getDataCache().updateOrder(this, value, this.amount, this.delivered, this.inStorage);
+            default -> throw new IllegalArgumentException("Invalid field for updating double value");
+        }
+
+        updateDataCacheAndStorage(field, value);
+    }
+
+    private void update(final Field field, final int value) {
+        final DataCache dataCache = plugin.getDataCache();
+        switch (field) {
+            case DELIVERED -> dataCache.updateOrder(this, this.moneyPer, this.amount, value, this.inStorage);
+            case IN_STORAGE -> dataCache.updateOrder(this, this.moneyPer, this.amount, this.delivered, value);
+            case AMOUNT -> dataCache.updateOrder(this, this.moneyPer, value, this.delivered, this.inStorage);
+            default -> throw new IllegalArgumentException("Invalid field for updating int value");
+        }
+
+        updateDataCacheAndStorage(field, value);
+    }
+
+    private void updateDataCacheAndStorage(final Field field, final Object value) {
+
         if (shouldBeDeleted()) {
+            plugin.getDataCache().deleteOrder(this, false);
             plugin.getStorage().deleteOrder(this);
             return;
         }
-        plugin.getStorage().updateOrder(this, var, value).thenAccept(_ -> reload());
+        plugin.getStorage().updateOrder(this, field, value).thenAccept(_ -> reload());
     }
 
     /// Must be called in the player region
@@ -417,11 +438,19 @@ public class Order implements me.karven.orderium.api.Order {
         return Response.SUCCESS;
     }
 
+    public Object getLock() {
+        return lock;
+    }
+
     public interface Response {
         Response INVALID = new Response() {};
         Response SUCCESS = new Response() {};
         Response FAIL = new Response() {};
         Response CANCELLED = new Response() {};
         Response SCHEDULED = new Response() {};
+    }
+
+    public enum Field {
+        DELIVERED, IN_STORAGE, AMOUNT, MONEY_PER
     }
 }
