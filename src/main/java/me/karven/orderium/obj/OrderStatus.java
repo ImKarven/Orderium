@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 public enum OrderStatus {
     EXPIRED("expired", "<red>Order Expired"),
     COMPLETED("completed", "<green>Order Completed"),
-    AVAILABLE("available", "<gray>Expires after <day>d <hour>h <minute>m <second>s <millisecond>ms");
+    AVAILABLE("available", "<gray>Expires after <day>d <hour>h <minute>m <second>s");
 
     private final String identifier;
     private String text;
