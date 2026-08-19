@@ -21,6 +21,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -100,14 +101,7 @@ public class Order implements me.karven.orderium.api.Order {
     public @NotNull TagResolver[] placeholders() {
         final String playerName = ownerName == null ? owner.toString() : ownerName;
         long millis = expiresAt - System.currentTimeMillis();
-        long sec = millis / 1000;
-        long min = sec / 60;
-        long hour = min / 60;
-        final long day = hour / 24;
-        hour %= 24;
-        min %= 60;
-        sec %= 60;
-        millis %= 1000;
+        final Duration duration = Duration.ofMillis(millis);
         final ItemMeta meta = item.getItemMeta();
         final Component itemName = meta.hasCustomName() ? meta.customName() : Component.translatable(item.translationKey());
         assert itemName != null;
@@ -121,25 +115,18 @@ public class Order implements me.karven.orderium.api.Order {
                 Placeholder.unparsed("player", playerName),
                 Placeholder.component("item", itemName),
                 Placeholder.component("order-status", Values.minimessage.deserialize(getStatus().getText(),
-                        Placeholder.unparsed("day", String.valueOf(day)),
-                        Placeholder.unparsed("hour", String.valueOf(hour)),
-                        Placeholder.unparsed("minute", String.valueOf(min)),
-                        Placeholder.unparsed("second", String.valueOf(sec)),
-                        Placeholder.unparsed("millisecond", String.valueOf(millis))
+                        Placeholder.unparsed("day", String.valueOf(duration.toDays())),
+                        Placeholder.unparsed("hour", String.valueOf(duration.toHoursPart())),
+                        Placeholder.unparsed("minute", String.valueOf(duration.toMinutesPart())),
+                        Placeholder.unparsed("second", String.valueOf(duration.toSecondsPart())),
+                        Placeholder.unparsed("millisecond", String.valueOf(duration.toMillisPart()))
                 ))
         };
     }
     public @NotNull String[] stringPlaceholders() {
         final String playerName = ownerName == null ? owner.toString() : ownerName;
         long millis = expiresAt - System.currentTimeMillis();
-        long sec = millis / 1000;
-        long min = sec / 60;
-        long hour = min / 60;
-        final long day = hour / 24;
-        hour %= 24;
-        min %= 60;
-        sec %= 60;
-        millis %= 1000;
+        final Duration duration = Duration.ofMillis(millis);
         final ItemMeta meta = item.getItemMeta();
         final Component customName = item.getItemMeta().customName();
         final String itemName = meta.hasCustomName() && customName != null ? PlainTextComponentSerializer.plainText().serialize(customName) : item.getI18NDisplayName();
@@ -154,11 +141,11 @@ public class Order implements me.karven.orderium.api.Order {
                 "<player>", playerName,
                 "<item>", itemName,
                 "<order-status>", getStatus().getText()
-                .replaceAll("<day>", String.valueOf(day))
-                .replaceAll("<hour>", String.valueOf(hour))
-                .replaceAll("<minute>", String.valueOf(min))
-                .replaceAll("<second>", String.valueOf(sec))
-                .replaceAll("<millisecond>", String.valueOf(millis))
+                .replaceAll("<day>", String.valueOf(duration.toDays()))
+                .replaceAll("<hour>", String.valueOf(duration.toHoursPart()))
+                .replaceAll("<minute>", String.valueOf(duration.toMinutesPart()))
+                .replaceAll("<second>", String.valueOf(duration.toSecondsPart()))
+                .replaceAll("<millisecond>", String.valueOf(duration.toMillisPart()))
         };
     }
 
