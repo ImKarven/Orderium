@@ -348,16 +348,10 @@ public class SQLStorage extends Storage {
     public CompletableFuture<Boolean> updateOrder(Order order, Order.Field field, Object value) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
-            final String var = switch (field) {
-                case DELIVERED -> "delivered";
-                case IN_STORAGE -> "in_storage";
-                case AMOUNT -> "amount";
-                case MONEY_PER -> "money_per";
-            };
             try (
                     Connection connection = data.getConnection();
                     PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
-                    PreparedStatement updateOrder = connection.prepareStatement("UPDATE " + ORDER_TABLE + " SET " + var + " = ? WHERE id = ?")
+                    PreparedStatement updateOrder = connection.prepareStatement("UPDATE " + ORDER_TABLE + " SET " + field.getColumnName() + " = ? WHERE id = ?")
             ) {
                 connection.setAutoCommit(false);
                 int orderId = order.getId();

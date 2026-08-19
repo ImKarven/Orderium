@@ -443,6 +443,19 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     public enum Field {
-        DELIVERED, IN_STORAGE, AMOUNT, MONEY_PER
+        DELIVERED("delivered"),
+        IN_STORAGE("in_storage"),
+        AMOUNT("amount"),
+        MONEY_PER("money_per");
+
+        private final String columnName;
+
+        Field(final String columnName) {
+            this.columnName = columnName;
+        }
+
+        public String getColumnName() {
+            return columnName;
+        }
     }
 }
