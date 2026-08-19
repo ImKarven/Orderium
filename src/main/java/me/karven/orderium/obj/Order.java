@@ -37,6 +37,8 @@ public class Order implements me.karven.orderium.api.Order {
     private final @Nullable String ownerName;
     private ItemStack mainGUIItemStack;
     private ItemStack yourOrdersGUIItemStack;
+    private boolean hasOrderStatusInMainGUIOrderConfigLore = true;
+    private boolean hasOrderStatusInYourOrdersGUIOrderConfigLore = true;
     public final int id;
     public final UUID owner;
     public final ItemStack item;
@@ -64,9 +66,34 @@ public class Order implements me.karven.orderium.api.Order {
         this(id, Bukkit.getOfflinePlayer(owner), item, moneyPer, amount, delivered, inStorage, expiresAt);
     }
 
+    private void checkOrderStatusExistenceInOrderConfigsLore(final Config config) {
+        for (final String line : config.mainGUIConfig.orderConfig.lore) {
+            if (line.contains("<order-status>")) {
+                hasOrderStatusInMainGUIOrderConfigLore = true;
+                break;
+            }
+        }
+
+        for (final String line : config.yourOrdersGUIConfig.orderConfig.lore) {
+            if (line.contains("<order-status>")) {
+                hasOrderStatusInYourOrdersGUIOrderConfigLore = true;
+                break;
+            }
+        }
+    }
+
     public void reload() {
         final Config config = Config.config;
+        checkOrderStatusExistenceInOrderConfigsLore(config);
+        reloadMainGUIItemStack(config);
+        reloadYourOrdersGUIItemStack(config);
+    }
+
+    private void reloadMainGUIItemStack(final Config config) {
         this.mainGUIItemStack = syncItemStack(config.mainGUIConfig.orderConfig.lore.stream().map(this::deserializeText).toList());
+    }
+
+    private void reloadYourOrdersGUIItemStack(final Config config) {
         this.yourOrdersGUIItemStack = syncItemStack(config.yourOrdersGUIConfig.orderConfig.lore.stream().map(this::deserializeText).toList());
     }
 
@@ -79,18 +106,22 @@ public class Order implements me.karven.orderium.api.Order {
     public boolean isActive() { return delivered < amount && expiresAt > System.currentTimeMillis(); }
 
     public @NotNull InventoryItem yourOrdersInventoryItem(final Consumer<InventoryClickEvent> action) {
-        return new InventoryItem(yourOrdersGUIItemStack, action);
+        return new InventoryItem(yourOrdersItemStack(), action);
     }
 
     public @NotNull InventoryItem mainInventoryItem(final Consumer<InventoryClickEvent> action) {
-        return new InventoryItem(mainGUIItemStack, action);
+        return new InventoryItem(mainGUIItemStack(), action);
     }
 
     public @NotNull ItemStack yourOrdersItemStack() {
+        if (hasOrderStatusInYourOrdersGUIOrderConfigLore)
+            reloadYourOrdersGUIItemStack(Config.config);
         return yourOrdersGUIItemStack;
     }
 
     public @NotNull ItemStack mainGUIItemStack() {
+        if (hasOrderStatusInMainGUIOrderConfigLore)
+            reloadMainGUIItemStack(Config.config);
         return mainGUIItemStack;
     }
 
