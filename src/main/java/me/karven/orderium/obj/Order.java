@@ -133,9 +133,7 @@ public class Order implements me.karven.orderium.api.Order {
         final String playerName = ownerName == null ? owner.toString() : ownerName;
         long millis = expiresAt - System.currentTimeMillis();
         final Duration duration = Duration.ofMillis(millis);
-        final ItemMeta meta = item.getItemMeta();
-        final Component itemName = meta.hasCustomName() ? meta.customName() : Component.translatable(item.translationKey());
-        assert itemName != null;
+
         return new TagResolver[]{
                 Placeholder.unparsed("money-per", formatNumber(moneyPer)),
                 Placeholder.unparsed("paid", formatNumber(moneyPer * delivered)),
@@ -144,7 +142,7 @@ public class Order implements me.karven.orderium.api.Order {
                 Placeholder.unparsed("amount", formatNumber(amount)),
                 Placeholder.unparsed("in-storage", formatNumber(inStorage)),
                 Placeholder.unparsed("player", playerName),
-                Placeholder.component("item", itemName),
+                Placeholder.component("item", item.displayName()),
                 Placeholder.component("order-status", Values.minimessage.deserialize(getStatus().getText(),
                         Placeholder.unparsed("day", String.valueOf(duration.toDays())),
                         Placeholder.unparsed("hour", String.valueOf(duration.toHoursPart())),
