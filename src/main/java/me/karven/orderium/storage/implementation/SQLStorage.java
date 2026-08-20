@@ -86,7 +86,7 @@ public class SQLStorage extends Storage {
                 future.complete(ConvertUtils.convertOrders(raw));
             } catch (SQLException e) {
                 Log.error("Failed to load orders", e);
-                future.complete(null);
+                future.completeExceptionally(e);
             }
         });
         return future;
