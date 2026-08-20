@@ -68,7 +68,10 @@ public class SQLStorage extends Storage {
             default -> CREATE_ORDER_TABLE = "CREATE TABLE IF NOT EXISTS " + ORDER_TABLE + " (id INTEGER PRIMARY KEY AUTO_INCREMENT, owner_most BIGINT, owner_least BIGINT, item BLOB, money_per DOUBLE, amount INT, delivered INT DEFAULT 0, in_storage INT DEFAULT 0, expires_at BIGINT)";
         }
 
-        createTables().thenAccept(ignored -> loadOrders().thenAccept(plugin.getDataCache()::setOrders));
+        createTables().thenAccept(ignored -> loadOrders().thenAccept(plugin.getDataCache()::setOrders))
+                .exceptionally(exception -> {
+                    throw new RuntimeException(exception);
+                });
     }
 
     @Override
@@ -121,6 +124,7 @@ public class SQLStorage extends Storage {
                 future.complete(order);
             } catch (SQLException e) {
                 Log.error("Error while creating an order", e);
+                future.completeExceptionally(e);
             }
         });
 
@@ -173,6 +177,7 @@ public class SQLStorage extends Storage {
                 future.complete(payBack);
             } catch (SQLException e) {
                 Log.error("Failed to cancel order", e);
+                future.completeExceptionally(e);
             }
         });
         return future;
@@ -240,6 +245,7 @@ public class SQLStorage extends Storage {
                 future.complete((newDelivered - delivered) * moneyPer);
             } catch (SQLException e) {
                 Log.error("Failed to deliver order", e);
+                future.completeExceptionally(e);
             }
         });
         return future;
@@ -323,6 +329,7 @@ public class SQLStorage extends Storage {
                     if (deleteOrder(order) != null) plugin.getDataCache().deleteOrder(order);
                     else {
                         connection.commit();
+                        // TODO: proper message instead of assuming invalid value
                         future.complete(false);
                         return;
                     }
@@ -339,6 +346,7 @@ public class SQLStorage extends Storage {
                 future.complete(true);
             } catch (SQLException e) {
                 Log.error("Failed to collect items", e);
+                future.completeExceptionally(e);
             }
         });
 
@@ -391,6 +399,7 @@ public class SQLStorage extends Storage {
                 connection.commit();
             } catch (SQLException e) {
                 Log.error("Failed to update order", e);
+                future.completeExceptionally(e);
             }
         });
         return future;
@@ -417,6 +426,7 @@ public class SQLStorage extends Storage {
                 future.complete(null);
             } catch (SQLException e) {
                 Log.error("Failed to delete order", e);
+                future.completeExceptionally(e);
             }
         });
         return future;
@@ -440,6 +450,7 @@ public class SQLStorage extends Storage {
               future.complete(null);
            } catch (SQLException e) {
                Log.error("Failed to log transaction", e);
+               future.completeExceptionally(e);
            }
         });
         return future;
@@ -458,6 +469,7 @@ public class SQLStorage extends Storage {
             future.complete(null);
         } catch (SQLException e) {
             Log.error("Failed to create tables", e);
+            future.completeExceptionally(e);
         }
         return future;
     }

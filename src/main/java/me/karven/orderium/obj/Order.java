@@ -382,7 +382,9 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     private void updateStorage(final Field field, final Object value) {
-        plugin.getStorage().updateOrder(this, field, value).thenAccept(_ -> reload());
+        plugin.getStorage().updateOrder(this, field, value).thenAccept(success -> {
+            if (success != null && success) reload();
+        });
     }
 
     /// Must be called in the player region
