@@ -56,6 +56,7 @@ public class SQLStorage extends Storage {
     private SQLStorage(StorageMethod method, String jdbcUrl, String username, String password) {
         super();
         HikariConfig conf = new HikariConfig();
+        conf.setConnectionInitSql("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;");
         conf.setPoolName("orders data pool");
         conf.setJdbcUrl(jdbcUrl);
         if (username != null) conf.setUsername(username);
