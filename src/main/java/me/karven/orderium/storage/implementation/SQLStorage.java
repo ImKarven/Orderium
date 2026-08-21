@@ -28,7 +28,7 @@ import static me.karven.orderium.config.Config.config;
 public class SQLStorage extends Storage {
 
     // Universal Statements
-    private final String CREATE_TRANSACTION_TABLE = "CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE + " (time BIGINT PRIMARY KEY, player_most BIGINT, player_least BIGINT, `before` DOUBLE, amount DOUBLE, `after` DOUBLE)";
+    private final String CREATE_TRANSACTION_TABLE = "CREATE TABLE IF NOT EXISTS " + TRANSACTION_TABLE + " (id INTEGER PRIMARY KEY, time BIGINT, player_most BIGINT, player_least BIGINT, `before` DOUBLE, amount DOUBLE, `after` DOUBLE)";
     private final String CREATE_ORDER = "INSERT INTO " + ORDER_TABLE + " (owner_most, owner_least, item, money_per, amount, expires_at) VALUES (?, ?, ?, ?, ?, ?)";
     private final String UPDATE_ORDER = "UPDATE " + ORDER_TABLE + " SET amount = ?, money_per = ?, delivered = ?, in_storage = ? WHERE id = ?";
     private final String DELETE_ORDER = "DELETE FROM " + ORDER_TABLE + " WHERE id = ?";
