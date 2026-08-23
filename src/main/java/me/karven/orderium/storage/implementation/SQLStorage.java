@@ -213,7 +213,7 @@ public class SQLStorage extends Storage {
                     return;
                 }
 
-                cancelOrder(order, attempt + 1);
+                cancelOrder(order, attempt + 1).thenAccept(future::complete);
             } catch (SQLException e) {
                 Log.error("Failed to cancel order", e);
                 future.completeExceptionally(e);
@@ -230,7 +230,11 @@ public class SQLStorage extends Storage {
      * @return the amount of money the player receive after delivering
      */
     @Override
-    public CompletableFuture<Double> deliverOrder(Player deliverer, Order order, Iterable<ItemStack> items) {
+    public CompletableFuture<Double> deliverOrder(final Player deliverer, final Order order, final Iterable<ItemStack> items) {
+        return deliverOrder(deliverer, order, items, 1);
+    }
+
+    public CompletableFuture<Double> deliverOrder(Player deliverer, Order order, Iterable<ItemStack> items, final int attempt) {
         CompletableFuture<Double> future = new CompletableFuture<>();
 
         DispatchUtil.async(() -> {
@@ -294,10 +298,20 @@ public class SQLStorage extends Storage {
 //                updateOrder.setInt(3, newDelivered);
 //                updateOrder.setInt(4, inStorage + newDelivered - delivered);
 //                updateOrder.setInt(5, orderId);
-                updateOrder.executeUpdate();
-                plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, newDelivered, inStorage + newDelivered - delivered);
-                connection.commit();
-                future.complete((newDelivered - delivered) * moneyPer);
+                final int modifiedRows = updateOrder.executeUpdate();
+                if (modifiedRows > 0) {
+                    plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, newDelivered, inStorage + newDelivered - delivered);
+                    connection.commit();
+                    future.complete((newDelivered - delivered) * moneyPer);
+                    return;
+                }
+
+                if (attempt >= 5) {
+                    future.complete(null);
+                    return;
+                }
+
+                deliverOrder(deliverer, order, items, attempt + 1).thenAccept(future::complete);
             } catch (SQLException e) {
                 Log.error("Failed to deliver order", e);
                 future.completeExceptionally(e);

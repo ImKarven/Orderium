@@ -184,6 +184,7 @@ public class Order implements me.karven.orderium.api.Order {
         if (!preEvent.callEvent()) return;
 
         plugin.getStorage().deliverOrder(p, this, items).thenAccept(receive -> {
+            if (receive == null) return;
             double moneyReceived = receive; // I don't like working with wrapped class at all so will use primitive
             if (moneyReceived == 0.0) return;
             final Config config = Config.config;
