@@ -31,6 +31,7 @@ public record OrderRow(int id, @NotNull UUID owner, byte @NotNull [] itemBytes, 
         statement.setInt(3, delivered());
         statement.setInt(4, inStorage());
         statement.setLong(5, expiresAt());
-        statement.setInt(6, id());
+        statement.setInt(6, state());
+        statement.setInt(7, id());
     }
 }
