@@ -293,11 +293,6 @@ public class SQLStorage extends Storage {
 
                 updatedRow.toSQL(updateOrder);
 
-//                updateOrder.setInt(1, orderAmount);
-//                updateOrder.setDouble(2, moneyPer);
-//                updateOrder.setInt(3, newDelivered);
-//                updateOrder.setInt(4, inStorage + newDelivered - delivered);
-//                updateOrder.setInt(5, orderId);
                 final int modifiedRows = updateOrder.executeUpdate();
                 if (modifiedRows > 0) {
                     plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, newDelivered, inStorage + newDelivered - delivered);
@@ -367,7 +362,11 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public CompletableFuture<Boolean> collectItems(Order order, int amount) {
+    public CompletableFuture<Boolean> collectItems(final Order order, final int amount) {
+        return collectItems(order, amount, 1);
+    }
+
+    public CompletableFuture<Boolean> collectItems(Order order, int amount, final int attempt) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
         DispatchUtil.async(() -> {
@@ -380,39 +379,66 @@ public class SQLStorage extends Storage {
                 connection.setAutoCommit(false);
                 getOrder.setInt(1, orderId);
                 ResultSet raw = getOrder.executeQuery();
-                if (!raw.next()) {
+                final OrderRow row = OrderRow.fromSQL(raw);
+                if (row == null) {
                     connection.commit();
                     future.complete(false);
                     return;
                 }
-                int delivered = raw.getInt("delivered");
-                int orderAmount = raw.getInt("amount");
-                int inStorage = raw.getInt("in_storage");
-                double moneyPer = raw.getDouble("money_per");
+                int delivered = row.delivered();
+                int orderAmount = row.amount();
+                int inStorage = row.inStorage();
+                double moneyPer = row.moneyPer();
                 if (inStorage < amount) {
                     connection.commit();
                     future.complete(false);
                     return;
                 }
+
                 if (inStorage - amount == 0 && (delivered == orderAmount || order.getExpiresAt() < System.currentTimeMillis())) {
-                    if (deleteOrder(order) != null) plugin.getDataCache().deleteOrder(order);
-                    else {
+                    if (deleteOrder(order) == null) {
                         connection.commit();
                         // TODO: proper message instead of assuming invalid value
                         future.complete(false);
                         return;
                     }
-                } else {
-                    updateOrder.setInt(1, orderAmount);
-                    updateOrder.setDouble(2, moneyPer);
-                    updateOrder.setInt(3, delivered);
-                    updateOrder.setInt(4, inStorage - amount);
-                    updateOrder.setInt(5, orderId);
-                    updateOrder.executeUpdate();
-                    plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, delivered, inStorage - amount);
+
+                    plugin.getDataCache().deleteOrder(order);
+                    connection.commit();
+                    future.complete(true);
+                    return;
                 }
-                connection.commit();
-                future.complete(true);
+
+                final OrderRow updatedRow = new OrderRow(
+                        orderId,
+                        row.owner(),
+                        row.itemBytes(),
+                        moneyPer,
+                        orderAmount,
+                        delivered,
+                        inStorage - amount,
+                        row.expiresAt(),
+                        row.state()
+                );
+
+                updatedRow.toSQL(updateOrder);
+
+                final int modifiedRows = updateOrder.executeUpdate();
+
+                if (modifiedRows > 0) {
+                    plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, delivered, inStorage - amount);
+                    connection.commit();
+                    future.complete(true);
+                    return;
+                }
+
+                // TODO: proper message instead of assuming invalid value
+                if (attempt >= 5) {
+                    future.complete(false);
+                    return;
+                }
+
+                collectItems(order, amount, attempt + 1).thenAccept(future::complete);
             } catch (SQLException e) {
                 Log.error("Failed to collect items", e);
                 future.completeExceptionally(e);
