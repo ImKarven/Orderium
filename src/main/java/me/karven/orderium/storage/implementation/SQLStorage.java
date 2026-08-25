@@ -202,7 +202,7 @@ public class SQLStorage extends Storage {
                 updatedRow.toSQL(updateOrder);
                 final int modifiedRows = updateOrder.executeUpdate();
                 if (modifiedRows > 0) {
-                    // TODO: ????? what does this do
+                    order.expiresAt = System.currentTimeMillis() - 1;
                     plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, delivered, inStorage);
                     future.complete(payBack);
                     return;

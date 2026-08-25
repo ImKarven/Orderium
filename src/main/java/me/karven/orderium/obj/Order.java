@@ -288,7 +288,6 @@ public class Order implements me.karven.orderium.api.Order {
             if (reward == -1.0d) {
                 return;
             }
-            this.expiresAt = System.currentTimeMillis() - 1;
             YourOrderGUI.open(p, true);
             EconUtils.addMoney(ownerPlayer, reward);
             final Config config = Config.config;
