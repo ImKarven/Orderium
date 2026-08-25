@@ -110,7 +110,7 @@ public class AdminToolGUI {
         blacklist.clear();
 
         final Set<BlacklistedItem> items = plugin.getDataCache().getBlacklist();
-        int pageAmount = ConvertUtils.ceil_div(items.size(), 45);
+        int pageAmount = ConvertUtils.calculatePageAmount(items.size(), 45);
 
         InventoryGUI page = new InventoryGUI(6, Component.text("Blacklisted Items"));
         addBlacklistButtons(0, pageAmount, page);
@@ -151,7 +151,7 @@ public class AdminToolGUI {
         customItems.clear();
 
         final Set<CustomItem> items = plugin.getDataCache().getCustomItems();
-        int pageAmount = ConvertUtils.ceil_div(items.size(), 45);
+        int pageAmount = ConvertUtils.calculatePageAmount(items.size(), 45);
 
         InventoryGUI page = new InventoryGUI(6, Component.text("Custom Items"));
         addCustomItemsButtons(0, pageAmount, page);

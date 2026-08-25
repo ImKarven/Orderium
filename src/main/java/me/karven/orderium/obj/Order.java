@@ -184,6 +184,7 @@ public class Order implements me.karven.orderium.api.Order {
         if (!preEvent.callEvent()) return;
 
         plugin.getStorage().deliverOrder(p, this, items).thenAccept(receive -> {
+            if (receive == null) return;
             double moneyReceived = receive; // I don't like working with wrapped class at all so will use primitive
             if (moneyReceived == 0.0) return;
             final Config config = Config.config;
@@ -287,7 +288,6 @@ public class Order implements me.karven.orderium.api.Order {
             if (reward == -1.0d) {
                 return;
             }
-            this.expiresAt = System.currentTimeMillis() - 1;
             YourOrderGUI.open(p, true);
             EconUtils.addMoney(ownerPlayer, reward);
             final Config config = Config.config;
@@ -382,7 +382,9 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     private void updateStorage(final Field field, final Object value) {
-        plugin.getStorage().updateOrder(this, field, value).thenAccept(_ -> reload());
+        plugin.getStorage().updateOrder(this, field, value).thenAccept(success -> {
+            if (success != null && success) reload();
+        });
     }
 
     /// Must be called in the player region

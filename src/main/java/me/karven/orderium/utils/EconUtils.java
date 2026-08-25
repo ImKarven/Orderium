@@ -46,6 +46,11 @@ public class EconUtils {
     private static void logTransactionAfter(final MoneyTransaction transaction) {
         if (!transaction.config.logTransactions) return;
         transaction.after = plugin.getEconomy().getBalance(transaction.player);
-        plugin.getStorage().logTransaction(transaction.player.getUniqueId(), transaction.before, transaction.amount, transaction.after);
+        plugin.getStorage().logTransaction(transaction.player.getUniqueId(), transaction.before, transaction.amount, transaction.after)
+                .exceptionally(_ -> {
+                    Log.warn("Logging transaction to console.");
+                    Log.warn(transaction.player.getName() + " (UUID " + transaction.player.getUniqueId() + ") before=" + transaction.before + " amount=" + transaction.amount + " after=" + transaction.after);
+                    return null;
+                });
     }
 }
