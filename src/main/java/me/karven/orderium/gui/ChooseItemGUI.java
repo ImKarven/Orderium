@@ -111,7 +111,7 @@ public class ChooseItemGUI {
     }
 
     private static void createPages(List<InventoryGUI> pages, SortType sortType, Collection<OrderItem> items) {
-        final int pagesAmount = ConvertUtils.ceil_div(items.size(), config.chooseItemGUIConfig.slots.size());
+        final int pagesAmount = ConvertUtils.calculatePageAmount(items.size(), config.chooseItemGUIConfig.slots.size());
 
         InventoryGUI gui = initPage(pages, sortType, 0, pagesAmount);
         int idx = 0, cnt = 0;

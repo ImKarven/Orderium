@@ -5,7 +5,6 @@ import me.karven.orderium.api.events.PlayerCollectItemsEvent;
 import me.karven.orderium.api.events.PlayerCreateOrderEvent;
 import me.karven.orderium.api.events.PlayerDeliverOrderEvent;
 import me.karven.orderium.config.Config;
-import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.YourOrderGUI;
 import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.obj.orderitem.OrderItem;
@@ -23,6 +22,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -36,6 +36,8 @@ public class Order implements me.karven.orderium.api.Order {
     private final @Nullable String ownerName;
     private ItemStack mainGUIItemStack;
     private ItemStack yourOrdersGUIItemStack;
+    private boolean hasOrderStatusInMainGUIOrderConfigLore = true;
+    private boolean hasOrderStatusInYourOrdersGUIOrderConfigLore = true;
     public final int id;
     public final UUID owner;
     public final OrderItem item;
@@ -63,9 +65,34 @@ public class Order implements me.karven.orderium.api.Order {
         this(id, Bukkit.getOfflinePlayer(owner), item, moneyPer, amount, delivered, inStorage, expiresAt);
     }
 
+    private void checkOrderStatusExistenceInOrderConfigsLore(final Config config) {
+        for (final String line : config.mainGUIConfig.orderConfig.lore) {
+            if (line.contains("<order-status>")) {
+                hasOrderStatusInMainGUIOrderConfigLore = true;
+                break;
+            }
+        }
+
+        for (final String line : config.yourOrdersGUIConfig.orderConfig.lore) {
+            if (line.contains("<order-status>")) {
+                hasOrderStatusInYourOrdersGUIOrderConfigLore = true;
+                break;
+            }
+        }
+    }
+
     public void reload() {
         final Config config = Config.config;
+        checkOrderStatusExistenceInOrderConfigsLore(config);
+        reloadMainGUIItemStack(config);
+        reloadYourOrdersGUIItemStack(config);
+    }
+
+    private void reloadMainGUIItemStack(final Config config) {
         this.mainGUIItemStack = syncItemStack(config.mainGUIConfig.orderConfig.lore.stream().map(this::deserializeText).toList());
+    }
+
+    private void reloadYourOrdersGUIItemStack(final Config config) {
         this.yourOrdersGUIItemStack = syncItemStack(config.yourOrdersGUIConfig.orderConfig.lore.stream().map(this::deserializeText).toList());
     }
 
@@ -78,18 +105,22 @@ public class Order implements me.karven.orderium.api.Order {
     public boolean isActive() { return delivered < amount && expiresAt > System.currentTimeMillis(); }
 
     public @NotNull InventoryItem yourOrdersInventoryItem(final Consumer<InventoryClickEvent> action) {
-        return new InventoryItem(yourOrdersGUIItemStack, action);
+        return new InventoryItem(yourOrdersItemStack(), action);
     }
 
     public @NotNull InventoryItem mainInventoryItem(final Consumer<InventoryClickEvent> action) {
-        return new InventoryItem(mainGUIItemStack, action);
+        return new InventoryItem(mainGUIItemStack(), action);
     }
 
     public @NotNull ItemStack yourOrdersItemStack() {
+        if (hasOrderStatusInYourOrdersGUIOrderConfigLore)
+            reloadYourOrdersGUIItemStack(Config.config);
         return yourOrdersGUIItemStack;
     }
 
     public @NotNull ItemStack mainGUIItemStack() {
+        if (hasOrderStatusInMainGUIOrderConfigLore)
+            reloadMainGUIItemStack(Config.config);
         return mainGUIItemStack;
     }
 
@@ -100,18 +131,13 @@ public class Order implements me.karven.orderium.api.Order {
     public @NotNull TagResolver[] placeholders() {
         final String playerName = ownerName == null ? owner.toString() : ownerName;
         long millis = expiresAt - System.currentTimeMillis();
-        long sec = millis / 1000;
-        long min = sec / 60;
-        long hour = min / 60;
-        final long day = hour / 24;
-        hour %= 24;
-        min %= 60;
-        sec %= 60;
-        millis %= 1000;
+        final Duration duration = Duration.ofMillis(millis);
+
         final ItemStack itemStack = item.getItemStack();
         final ItemMeta meta = itemStack.getItemMeta();
         final Component itemName = meta.hasCustomName() ? meta.customName() : Component.translatable(itemStack.translationKey());
         assert itemName != null;
+
         return new TagResolver[]{
                 Placeholder.unparsed("money-per", formatNumber(moneyPer)),
                 Placeholder.unparsed("paid", formatNumber(moneyPer * delivered)),
@@ -122,25 +148,18 @@ public class Order implements me.karven.orderium.api.Order {
                 Placeholder.unparsed("player", playerName),
                 Placeholder.component("item", itemName),
                 Placeholder.component("order-status", Values.minimessage.deserialize(getStatus().getText(),
-                        Placeholder.unparsed("day", String.valueOf(day)),
-                        Placeholder.unparsed("hour", String.valueOf(hour)),
-                        Placeholder.unparsed("minute", String.valueOf(min)),
-                        Placeholder.unparsed("second", String.valueOf(sec)),
-                        Placeholder.unparsed("millisecond", String.valueOf(millis))
+                        Placeholder.unparsed("day", String.valueOf(duration.toDays())),
+                        Placeholder.unparsed("hour", String.valueOf(duration.toHoursPart())),
+                        Placeholder.unparsed("minute", String.valueOf(duration.toMinutesPart())),
+                        Placeholder.unparsed("second", String.valueOf(duration.toSecondsPart())),
+                        Placeholder.unparsed("millisecond", String.valueOf(duration.toMillisPart()))
                 ))
         };
     }
     public @NotNull String[] stringPlaceholders() {
         final String playerName = ownerName == null ? owner.toString() : ownerName;
         long millis = expiresAt - System.currentTimeMillis();
-        long sec = millis / 1000;
-        long min = sec / 60;
-        long hour = min / 60;
-        final long day = hour / 24;
-        hour %= 24;
-        min %= 60;
-        sec %= 60;
-        millis %= 1000;
+        final Duration duration = Duration.ofMillis(millis);
         final ItemStack itemStack = item.getItemStack();
         final ItemMeta meta = itemStack.getItemMeta();
         final Component customName = meta.customName();
@@ -156,11 +175,11 @@ public class Order implements me.karven.orderium.api.Order {
                 "<player>", playerName,
                 "<item>", itemName,
                 "<order-status>", getStatus().getText()
-                .replaceAll("<day>", String.valueOf(day))
-                .replaceAll("<hour>", String.valueOf(hour))
-                .replaceAll("<minute>", String.valueOf(min))
-                .replaceAll("<second>", String.valueOf(sec))
-                .replaceAll("<millisecond>", String.valueOf(millis))
+                .replaceAll("<day>", String.valueOf(duration.toDays()))
+                .replaceAll("<hour>", String.valueOf(duration.toHoursPart()))
+                .replaceAll("<minute>", String.valueOf(duration.toMinutesPart()))
+                .replaceAll("<second>", String.valueOf(duration.toSecondsPart()))
+                .replaceAll("<millisecond>", String.valueOf(duration.toMillisPart()))
         };
     }
 
@@ -170,6 +189,7 @@ public class Order implements me.karven.orderium.api.Order {
         if (!preEvent.callEvent()) return;
 
         plugin.getStorage().deliverOrder(p, this, items).thenAccept(receive -> {
+            if (receive == null) return;
             double moneyReceived = receive; // I don't like working with wrapped class at all so will use primitive
             if (moneyReceived == 0.0) return;
             final Config config = Config.config;
@@ -274,7 +294,6 @@ public class Order implements me.karven.orderium.api.Order {
             if (reward == -1.0d) {
                 return;
             }
-            this.expiresAt = System.currentTimeMillis() - 1;
             YourOrderGUI.open(p, true);
             EconUtils.addMoney(ownerPlayer, reward);
             final Config config = Config.config;
@@ -370,35 +389,14 @@ public class Order implements me.karven.orderium.api.Order {
         update(Field.MONEY_PER, moneyPer);
     }
 
-    private void update(final Field field, final double value) {
-        switch (field) {
-            case MONEY_PER -> plugin.getDataCache().updateOrder(this, value, this.amount, this.delivered, this.inStorage);
-            default -> throw new IllegalArgumentException("Invalid field for updating double value");
-        }
-
-        updateDataCacheAndStorage(field, value);
+    private void update(final Field field, final Object value) {
+        updateStorage(field, value);
     }
 
-    private void update(final Field field, final int value) {
-        final DataCache dataCache = plugin.getDataCache();
-        switch (field) {
-            case DELIVERED -> dataCache.updateOrder(this, this.moneyPer, this.amount, value, this.inStorage);
-            case IN_STORAGE -> dataCache.updateOrder(this, this.moneyPer, this.amount, this.delivered, value);
-            case AMOUNT -> dataCache.updateOrder(this, this.moneyPer, value, this.delivered, this.inStorage);
-            default -> throw new IllegalArgumentException("Invalid field for updating int value");
-        }
-
-        updateDataCacheAndStorage(field, value);
-    }
-
-    private void updateDataCacheAndStorage(final Field field, final Object value) {
-
-        if (shouldBeDeleted()) {
-            plugin.getDataCache().deleteOrder(this, false);
-            plugin.getStorage().deleteOrder(this);
-            return;
-        }
-        plugin.getStorage().updateOrder(this, field, value).thenAccept(_ -> reload());
+    private void updateStorage(final Field field, final Object value) {
+        plugin.getStorage().updateOrder(this, field, value).thenAccept(success -> {
+            if (success != null && success) reload();
+        });
     }
 
     /// Must be called in the player region
@@ -459,6 +457,19 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     public enum Field {
-        DELIVERED, IN_STORAGE, AMOUNT, MONEY_PER
+        DELIVERED("delivered"),
+        IN_STORAGE("in_storage"),
+        AMOUNT("amount"),
+        MONEY_PER("money_per");
+
+        private final String columnName;
+
+        Field(final String columnName) {
+            this.columnName = columnName;
+        }
+
+        public String getColumnName() {
+            return columnName;
+        }
     }
 }

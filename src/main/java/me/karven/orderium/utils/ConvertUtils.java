@@ -1,5 +1,6 @@
 package me.karven.orderium.utils;
 
+import com.google.common.base.Preconditions;
 import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
@@ -109,8 +110,11 @@ public class ConvertUtils {
         return item;
     }
 
-    public static int ceil_div(int a, int b) {
-        return 1 + ((a - 1) / b);
+    public static int calculatePageAmount(final int slotCount, final int amountPerPage) {
+        Preconditions.checkArgument(slotCount >= 0, "Slot count must be non-negative");
+        Preconditions.checkArgument(amountPerPage > 0, "Amount per page must be positive");
+        if (slotCount == 0) return 1;
+        return 1 + ((slotCount - 1) / amountPerPage);
     }
 
     public static String replaceText(final String text, final String... replacements) {

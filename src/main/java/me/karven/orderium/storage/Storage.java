@@ -32,7 +32,7 @@ import static me.karven.orderium.Orderium.plugin;
 public abstract class Storage {
     protected static final File dataDir = new File("plugins", "Orderium");
     protected final String ORDER_TABLE = "orderium_orders";
-    protected final String TRANSACTION_TABLE = "orderium_transactions";
+    protected final String TRANSACTION_TABLE = "orderium_transactions_v2";
     private final String CUSTOM_ITEMS_TABLE = "orderium_custom_items_v2";
     private final String BLACKLIST_TABLE = "orderium_blacklist";
 
@@ -186,7 +186,14 @@ public abstract class Storage {
      */
     public abstract CompletableFuture<Boolean> collectItems(Order order, int amount);
 
-    public abstract CompletableFuture<Void> updateOrder(Order order, Order.Field field, Object value);
+    /**
+     * Update a field of an order
+     * @param order the order
+     * @param field the field
+     * @param value the name to update
+     * @return true if the order is updated, false if the order is deleted because it should be
+     */
+    public abstract CompletableFuture<Boolean> updateOrder(Order order, Order.Field field, Object value);
 
     public abstract CompletableFuture<Void> logTransaction(UUID player, double before, double amount, double after);
 
