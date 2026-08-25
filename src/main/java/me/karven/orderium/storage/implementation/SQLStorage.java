@@ -448,28 +448,33 @@ public class SQLStorage extends Storage {
         return future;
     }
 
-    public CompletableFuture<Boolean> updateOrder(Order order, Order.Field field, Object value) {
+    public CompletableFuture<Boolean> updateOrder(final Order order, final Order.Field field, final Object value) {
+        return updateOrder(order, field, value, 1);
+    }
+
+    public CompletableFuture<Boolean> updateOrder(Order order, Order.Field field, Object value, final int attempt) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         DispatchUtil.async(() -> {
             try (
                     Connection connection = data.getConnection();
                     PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
-                    PreparedStatement updateOrder = connection.prepareStatement("UPDATE " + ORDER_TABLE + " SET " + field.getColumnName() + " = ? WHERE id = ?")
+                    PreparedStatement updateOrder = connection.prepareStatement(UPDATE_ORDER)
             ) {
                 connection.setAutoCommit(false);
                 int orderId = order.getId();
                 getOrder.setInt(1, orderId);
                 ResultSet raw = getOrder.executeQuery();
-                if (!raw.next()) {
+                final OrderRow row = OrderRow.fromSQL(raw);
+                if (row == null) {
                     connection.commit();
                     future.complete(false);
                     return;
                 }
-                int delivered = raw.getInt("delivered");
-                int amount = raw.getInt("amount");
-                int inStorage = raw.getInt("in_storage");
-                double moneyPer = raw.getDouble("money_per");
-                long expiresAt = raw.getLong("expires_at");
+                int delivered = row.delivered();
+                int amount = row.amount();
+                int inStorage = row.inStorage();
+                double moneyPer = row.moneyPer();
+                long expiresAt = row.expiresAt();
 
                 switch (field) {
                     case DELIVERED -> delivered = (int) value;
@@ -484,14 +489,35 @@ public class SQLStorage extends Storage {
                         future.complete(false);
                     } else future.complete(null);
                 } else {
-                    updateOrder.setObject(1, value);
-                    updateOrder.setInt(2, orderId);
-                    updateOrder.executeUpdate();
-                    plugin.getDataCache().updateOrder(order, moneyPer, amount, delivered, inStorage);
-                    future.complete(true);
+                    final OrderRow updatedRow = new OrderRow(
+                            row.id(),
+                            row.owner(),
+                            row.itemBytes(),
+                            moneyPer,
+                            amount,
+                            delivered,
+                            inStorage,
+                            row.expiresAt(),
+                            row.state()
+                    );
+                    updatedRow.toSQL(updateOrder);
+                    final int modifiedRows = updateOrder.executeUpdate();
+                    if (modifiedRows > 0) {
+                        plugin.getDataCache().updateOrder(order, moneyPer, amount, delivered, inStorage);
+                        future.complete(true);
+                        connection.commit();
+                        return;
+                    }
+
+                    if (attempt >= 5) {
+                        future.complete(false);
+                        connection.commit();
+                        return;
+                    }
+
+                    updateOrder(order, field, value, attempt + 1).thenAccept(future::complete);
                 }
 
-                connection.commit();
             } catch (SQLException e) {
                 Log.error("Failed to update order", e);
                 future.completeExceptionally(e);
