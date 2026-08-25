@@ -26,6 +26,3 @@ You should not open a PR for a feature that require large changes, open an issue
 
 ### Reviewing PRs
 In case you well understand how Orderium works and have experience with programming, you can review open PRs.
-
-### Need help?
-Feel free to reach out to me on the Discord Server if you need any help understanding the code.
