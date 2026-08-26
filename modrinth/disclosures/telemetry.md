@@ -12,6 +12,7 @@ Orderium opts in to error tracking.
 
 ### Additional metrics (Custom metrics)
 Orderium provides the following additional metrics:
+- List of Experimental Features enabled;
 - If the Server uses Orderium API;
 - Amount of Orderium Orders created;
 - Amount of copies of Orderium Items collected from all Orderium Orders.
