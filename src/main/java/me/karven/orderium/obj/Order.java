@@ -183,38 +183,43 @@ public class Order implements me.karven.orderium.api.Order {
         PlayerDeliverOrderEvent.Pre preEvent = new PlayerDeliverOrderEvent.Pre(p, this, isAsync);
         if (!preEvent.callEvent()) return;
 
-        plugin.getStorage().deliverOrder(p, this, items).thenAccept(receive -> {
-            if (receive == null) return;
-            double moneyReceived = receive; // I don't like working with wrapped class at all so will use primitive
-            if (moneyReceived == 0.0) return;
-            final Config config = Config.config;
-            EconUtils.addMoney(p, moneyReceived);
-            p.sendRichMessage(config.deliver, Placeholder.unparsed("money", formatNumber(moneyReceived)));
-            PlayerUtils.playSound(p, config.deliverSound);
+        plugin.getStorage().deliverOrder(p, this, items)
+                .exceptionally(exception -> {
+                    // TODO: Handle exception
+                    return null;
+                })
+                .thenAccept(receive -> {
+                    if (receive == null) return;
+                    double moneyReceived = receive; // I don't like working with wrapped class at all so will use primitive
+                    if (moneyReceived == 0.0) return;
+                    final Config config = Config.config;
+                    EconUtils.addMoney(p, moneyReceived);
+                    p.sendRichMessage(config.deliver, Placeholder.unparsed("money", formatNumber(moneyReceived)));
+                    PlayerUtils.playSound(p, config.deliverSound);
 
-            if (config.webhookConfig.deliverOrderOption.enabled) {
-                config.webhookConfig.deliverOrderOption.send(stringPlaceholders(), "<deliverer>", p.getName());
-            }
+                    if (config.webhookConfig.deliverOrderOption.enabled) {
+                        config.webhookConfig.deliverOrderOption.send(stringPlaceholders(), "<deliverer>", p.getName());
+                    }
 
-            final PlayerDeliverOrderEvent.Post postEvent = new PlayerDeliverOrderEvent.Post(p, this, isAsync);
+                    final PlayerDeliverOrderEvent.Post postEvent = new PlayerDeliverOrderEvent.Post(p, this, isAsync);
 
-            final Player ownerPlayer = Bukkit.getPlayer(owner);
-            if (ownerPlayer == null || !ownerPlayer.isOnline()) {
-                reload();
-                postEvent.callEvent();
-                return;
-            }
-            final ItemMeta meta = item.getItemMeta();
-            final Component displayName = meta == null ? null : meta.displayName();
-            assert item.getType().getItemTranslationKey() != null;
-            ownerPlayer.sendRichMessage(
-                    config.receiveDelivery,
-                    Placeholder.unparsed("deliverer", p.getName()),
-                    Placeholder.unparsed("amount",  formatNumber((int) (moneyReceived / moneyPer))),
-                    Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
-            );
-            postEvent.callEvent();
-        });
+                    final Player ownerPlayer = Bukkit.getPlayer(owner);
+                    if (ownerPlayer == null || !ownerPlayer.isOnline()) {
+                        reload();
+                        postEvent.callEvent();
+                        return;
+                    }
+                    final ItemMeta meta = item.getItemMeta();
+                    final Component displayName = meta == null ? null : meta.displayName();
+                    assert item.getType().getItemTranslationKey() != null;
+                    ownerPlayer.sendRichMessage(
+                            config.receiveDelivery,
+                            Placeholder.unparsed("deliverer", p.getName()),
+                            Placeholder.unparsed("amount", formatNumber((int) (moneyReceived / moneyPer))),
+                            Placeholder.component("item", (displayName == null ? Component.translatable(item.getType().getItemTranslationKey()) : displayName))
+                    );
+                    postEvent.callEvent();
+                });
     }
 
     /// Must be called in the player region
@@ -250,28 +255,33 @@ public class Order implements me.karven.orderium.api.Order {
         PlayerCollectItemsEvent.Pre preEvent = new PlayerCollectItemsEvent.Pre(p, amount, this, false);
         if (!preEvent.callEvent()) return Response.CANCELLED;
 
-        plugin.getStorage().collectItems(this, amount).thenAccept(success -> {
-            boolean succeeded = success;
-            if (!succeeded) {
-                p.sendRichMessage(config.invalidInput);
-                return;
-            }
+        plugin.getStorage().collectItems(this, amount)
+                .exceptionally(exception -> {
+                    // TODO: handle exception
+                    return false;
+                })
+                .thenAccept(success -> {
+                    boolean succeeded = success;
+                    if (!succeeded) {
+                        p.sendRichMessage(config.invalidInput);
+                        return;
+                    }
 
-            PDCUtils.setCollected(p, collectedInMinute + amount);
+                    PDCUtils.setCollected(p, collectedInMinute + amount);
 
-            PlayerUtils.give(p, getItem().clone(), amount, true);
+                    PlayerUtils.give(p, getItem().clone(), amount, true);
 
-            CustomMetrics.ITEMS_COLLECTED_CACHE.addAndGet(amount);
+                    CustomMetrics.ITEMS_COLLECTED_CACHE.addAndGet(amount);
 
-            if (config.webhookConfig.collectItemsOption.enabled) {
-                config.webhookConfig.collectItemsOption.send(stringPlaceholders(), "<collect-amount>", String.valueOf(amount));
-            }
+                    if (config.webhookConfig.collectItemsOption.enabled) {
+                        config.webhookConfig.collectItemsOption.send(stringPlaceholders(), "<collect-amount>", String.valueOf(amount));
+                    }
 
-            reload();
+                    reload();
 
-            PlayerCollectItemsEvent.Post postEvent = new PlayerCollectItemsEvent.Post(p, amount, this, true);
-            postEvent.callEvent();
-        });
+                    PlayerCollectItemsEvent.Post postEvent = new PlayerCollectItemsEvent.Post(p, amount, this, true);
+                    postEvent.callEvent();
+                });
 
         return Response.SCHEDULED;
     }
@@ -282,22 +292,28 @@ public class Order implements me.karven.orderium.api.Order {
         if (!preEvent.callEvent()) return;
         YourOrderGUI.open(p, false);
 
-        plugin.getStorage().cancelOrder(this).thenAccept(payBack -> {
-            double reward = payBack;
+        plugin.getStorage().cancelOrder(this)
+                .exceptionally(exception -> {
+                    // TODO: handle exception
+                    return null;
+                })
+                .thenAccept(payBack -> {
+                    double reward = payBack;
 
-            if (reward == -1.0d) {
-                return;
-            }
-            YourOrderGUI.open(p, true);
-            EconUtils.addMoney(ownerPlayer, reward);
-            final Config config = Config.config;
-            if (config.webhookConfig.cancelOrderOption.enabled) {
-                config.webhookConfig.cancelOrderOption.send(stringPlaceholders(), "<earn>", formatNumber(reward));
-            }
-            reload();
-            PlayerCancelOrderEvent.Post postEvent = new PlayerCancelOrderEvent.Post(p, this, true);
-            postEvent.callEvent();
-        });
+                    if (reward == -1.0d) {
+                        return;
+                    }
+                    YourOrderGUI.open(p, true);
+                    EconUtils.addMoney(ownerPlayer, reward);
+                    final Config config = Config.config;
+                    if (config.webhookConfig.cancelOrderOption.enabled) {
+                        config.webhookConfig.cancelOrderOption.send(stringPlaceholders(), "<earn>", formatNumber(reward));
+                    }
+                    reload();
+                    PlayerCancelOrderEvent.Post postEvent = new PlayerCancelOrderEvent.Post(p, this, true);
+                    postEvent.callEvent();
+                });
+
     }
 
     public OrderStatus getStatus() {
@@ -382,7 +398,12 @@ public class Order implements me.karven.orderium.api.Order {
     }
 
     private void updateStorage(final Field field, final Object value) {
-        plugin.getStorage().updateOrder(this, field, value).thenAccept(success -> {
+        plugin.getStorage().updateOrder(this, field, value)
+                .exceptionally(exception -> {
+                    // TODO: handle exception
+                    return false;
+                })
+                .thenAccept(success -> {
             if (success != null && success) reload();
         });
     }

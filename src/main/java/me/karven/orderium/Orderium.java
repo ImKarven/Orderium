@@ -13,7 +13,7 @@ import me.karven.orderium.listener.ContainerContentListener;
 import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.listener.ServerLoadListener;
 import me.karven.orderium.storage.Storage;
-import me.karven.orderium.storage.implementation.SQLStorage;
+import me.karven.orderium.storage.implementation.sql.SQLStorage;
 import me.karven.orderium.utils.*;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;

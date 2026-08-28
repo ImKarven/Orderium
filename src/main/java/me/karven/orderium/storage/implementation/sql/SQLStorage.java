@@ -1,4 +1,4 @@
-package me.karven.orderium.storage.implementation;
+package me.karven.orderium.storage.implementation.sql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -8,6 +8,7 @@ import me.karven.orderium.api.events.OrderRemoveEvent;
 import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.StorageMethod;
 import me.karven.orderium.storage.Storage;
+import me.karven.orderium.storage.object.RetryOperationException;
 import me.karven.orderium.storage.object.order.OrderRow;
 import me.karven.orderium.utils.*;
 import org.bukkit.Bukkit;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static me.karven.orderium.Orderium.plugin;
 import static me.karven.orderium.config.Config.config;
@@ -145,15 +147,8 @@ public class SQLStorage extends Storage {
 
     @Override
     public CompletableFuture<Double> cancelOrder(Order order) {
-        return cancelOrder(order, 1);
-    }
-
-    public CompletableFuture<Double> cancelOrder(Order order, final int attempt) {
-        CompletableFuture<Double> future = new CompletableFuture<>();
-
-        DispatchUtil.async(() -> {
+        final Function<Connection, Double> action = (final Connection connection) -> {
             try (
-                    Connection connection = data.getConnection();
                     PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
                     PreparedStatement updateOrder = connection.prepareStatement(UPDATE_ORDER)
             ) {
@@ -162,8 +157,7 @@ public class SQLStorage extends Storage {
                 ResultSet raw = getOrder.executeQuery();
                 final OrderRow row = OrderRow.fromSQL(raw);
                 if (row == null) {
-                    future.complete(-1.0);
-                    return;
+                    return -1.0;
                 }
                 int delivered = row.delivered();
                 int orderAmount = row.amount();
@@ -172,21 +166,18 @@ public class SQLStorage extends Storage {
                 long expiresAt = row.expiresAt();
                 final int state = row.state();
                 if (expiresAt < System.currentTimeMillis()) {
-                    future.complete(-1.0);
-                    return;
+                    return -1.0;
                 }
 
                 if (delivered == orderAmount) {
-                    future.complete(-1.0);
-                    return;
+                    return -1.0;
                 }
                 double payBack = (orderAmount - delivered) * moneyPer;
                 if (inStorage == 0) {
                     if (deleteOrder(order) != null) {
                         plugin.getDataCache().deleteOrder(order);
-                        future.complete(payBack);
-                    } else future.complete(-1.0);
-                    return;
+                        return payBack;
+                    } else return -1.0;
                 }
                 final OrderRow updatedRow = new OrderRow(
                         row.id(),
@@ -204,55 +195,30 @@ public class SQLStorage extends Storage {
                 if (modifiedRows > 0) {
                     order.expiresAt = System.currentTimeMillis() - 1;
                     plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, delivered, inStorage);
-                    future.complete(payBack);
-                    return;
+                    return payBack;
                 }
 
-                if (attempt >= 5) {
-                    future.complete(-1.0);
-                    return;
-                }
-
-                cancelOrder(order, attempt + 1).thenAccept(future::complete);
+                throw new RetryOperationException();
             } catch (SQLException e) {
-                Log.error("Failed to cancel order", e);
-                future.completeExceptionally(e);
+                throw new RuntimeException(e);
             }
-        });
-        return future;
+        };
+        final SQLAction<Double> sqlAction = new SQLAction<>(data, action);
+        return sqlAction.execute();
     }
 
-    /**
-     * deliver an order from an inventory of items
-     * @param deliverer the player that is delivering the order
-     * @param order the order the player is delivering
-     * @param items the inventory of items
-     * @return the amount of money the player receive after delivering
-     */
     @Override
-    public CompletableFuture<Double> deliverOrder(final Player deliverer, final Order order, final Iterable<ItemStack> items) {
-        return deliverOrder(deliverer, order, items, 1);
-    }
-
-    public CompletableFuture<Double> deliverOrder(Player deliverer, Order order, Iterable<ItemStack> items, final int attempt) {
-        CompletableFuture<Double> future = new CompletableFuture<>();
-
-        DispatchUtil.async(() -> {
+    public CompletableFuture<Double> deliverOrder(Player deliverer, Order order, Iterable<ItemStack> items) {
+        final Function<Connection, Double> action = (final Connection connection) -> {
             try (
-                    Connection connection = data.getConnection();
                     PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
                     PreparedStatement updateOrder = connection.prepareStatement(UPDATE_ORDER)
             ) {
-                connection.setAutoCommit(false);
                 int orderId = order.getId();
                 getOrder.setInt(1, orderId);
                 ResultSet raw = getOrder.executeQuery();
                 final OrderRow row = OrderRow.fromSQL(raw);
-                if (row == null) {
-                    connection.commit();
-                    future.complete(null);
-                    return;
-                }
+                if (row == null) return null;
                 int delivered = row.delivered();
                 int orderAmount = row.amount();
                 int inStorage = row.inStorage();
@@ -296,23 +262,17 @@ public class SQLStorage extends Storage {
                 final int modifiedRows = updateOrder.executeUpdate();
                 if (modifiedRows > 0) {
                     plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, newDelivered, inStorage + newDelivered - delivered);
-                    connection.commit();
-                    future.complete((newDelivered - delivered) * moneyPer);
-                    return;
+                    return ((newDelivered - delivered) * moneyPer);
                 }
 
-                if (attempt >= 5) {
-                    future.complete(null);
-                    return;
-                }
-
-                deliverOrder(deliverer, order, items, attempt + 1).thenAccept(future::complete);
+                throw new RetryOperationException();
             } catch (SQLException e) {
-                Log.error("Failed to deliver order", e);
-                future.completeExceptionally(e);
+                throw new RuntimeException(e);
             }
-        });
-        return future;
+        };
+
+        final SQLAction<Double> sqlAction = new SQLAction<>(data, action);
+        return sqlAction.execute();
     }
 
     /**
@@ -362,51 +322,35 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public CompletableFuture<Boolean> collectItems(final Order order, final int amount) {
-        return collectItems(order, amount, 1);
-    }
-
-    public CompletableFuture<Boolean> collectItems(Order order, int amount, final int attempt) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-
-        DispatchUtil.async(() -> {
+    public CompletableFuture<Boolean> collectItems(Order order, int amount) {
+        final Function<Connection, Boolean> action = (final Connection connection) -> {
             try (
-                    Connection connection = data.getConnection();
                     PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
                     PreparedStatement updateOrder = connection.prepareStatement(UPDATE_ORDER)
             ) {
                 int orderId = order.getId();
-                connection.setAutoCommit(false);
                 getOrder.setInt(1, orderId);
                 ResultSet raw = getOrder.executeQuery();
                 final OrderRow row = OrderRow.fromSQL(raw);
                 if (row == null) {
-                    connection.commit();
-                    future.complete(false);
-                    return;
+                    return false;
                 }
                 int delivered = row.delivered();
                 int orderAmount = row.amount();
                 int inStorage = row.inStorage();
                 double moneyPer = row.moneyPer();
                 if (inStorage < amount) {
-                    connection.commit();
-                    future.complete(false);
-                    return;
+                    return false;
                 }
 
                 if (inStorage - amount == 0 && (delivered == orderAmount || order.getExpiresAt() < System.currentTimeMillis())) {
                     if (deleteOrder(order) == null) {
-                        connection.commit();
                         // TODO: proper message instead of assuming invalid value
-                        future.complete(false);
-                        return;
+                        return false;
                     }
 
                     plugin.getDataCache().deleteOrder(order);
-                    connection.commit();
-                    future.complete(true);
-                    return;
+                    return true;
                 }
 
                 final OrderRow updatedRow = new OrderRow(
@@ -427,49 +371,31 @@ public class SQLStorage extends Storage {
 
                 if (modifiedRows > 0) {
                     plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, delivered, inStorage - amount);
-                    connection.commit();
-                    future.complete(true);
-                    return;
+                    return true;
                 }
 
-                // TODO: proper message instead of assuming invalid value
-                if (attempt >= 5) {
-                    future.complete(false);
-                    return;
-                }
-
-                collectItems(order, amount, attempt + 1).thenAccept(future::complete);
+                throw new RetryOperationException();
             } catch (SQLException e) {
-                Log.error("Failed to collect items", e);
-                future.completeExceptionally(e);
+                throw new RuntimeException(e);
             }
-        });
+        };
 
-        return future;
+        final SQLAction<Boolean> sqlAction = new SQLAction<>(data, action);
+        return sqlAction.execute();
     }
 
-    public CompletableFuture<Boolean> updateOrder(final Order order, final Order.Field field, final Object value) {
-        return updateOrder(order, field, value, 1);
-    }
-
-    public CompletableFuture<Boolean> updateOrder(Order order, Order.Field field, Object value, final int attempt) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        DispatchUtil.async(() -> {
+    @Override
+    public CompletableFuture<Boolean> updateOrder(Order order, Order.Field field, Object value) {
+        final Function<Connection, Boolean> action = (final Connection connection) -> {
             try (
-                    Connection connection = data.getConnection();
                     PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
                     PreparedStatement updateOrder = connection.prepareStatement(UPDATE_ORDER)
             ) {
-                connection.setAutoCommit(false);
                 int orderId = order.getId();
                 getOrder.setInt(1, orderId);
                 ResultSet raw = getOrder.executeQuery();
                 final OrderRow row = OrderRow.fromSQL(raw);
-                if (row == null) {
-                    connection.commit();
-                    future.complete(false);
-                    return;
-                }
+                if (row == null) return false;
                 int delivered = row.delivered();
                 int amount = row.amount();
                 int inStorage = row.inStorage();
@@ -486,8 +412,8 @@ public class SQLStorage extends Storage {
                 if ((delivered == amount || expiresAt <= System.currentTimeMillis()) && inStorage == 0) {
                     if (deleteOrder(order) != null) {
                         plugin.getDataCache().deleteOrder(order);
-                        future.complete(false);
-                    } else future.complete(null);
+                        return false;
+                    } else return null;
                 } else {
                     final OrderRow updatedRow = new OrderRow(
                             row.id(),
@@ -504,26 +430,19 @@ public class SQLStorage extends Storage {
                     final int modifiedRows = updateOrder.executeUpdate();
                     if (modifiedRows > 0) {
                         plugin.getDataCache().updateOrder(order, moneyPer, amount, delivered, inStorage);
-                        future.complete(true);
-                        connection.commit();
-                        return;
+                        return true;
                     }
 
-                    if (attempt >= 5) {
-                        future.complete(false);
-                        connection.commit();
-                        return;
-                    }
-
-                    updateOrder(order, field, value, attempt + 1).thenAccept(future::complete);
+                    throw new RetryOperationException();
                 }
 
             } catch (SQLException e) {
-                Log.error("Failed to update order", e);
-                future.completeExceptionally(e);
+                throw new RuntimeException(e);
             }
-        });
-        return future;
+        };
+
+        final SQLAction<Boolean> sqlAction = new SQLAction<>(data, action);
+        return sqlAction.execute();
     }
 
     public CompletableFuture<Void> deleteOrder(Order order) {
@@ -600,16 +519,18 @@ public class SQLStorage extends Storage {
         CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
         DispatchUtil.async(() -> {
             try (
-                    final Connection connection = data.getConnection();
-                    final PreparedStatement statement = connection.prepareStatement("ALTER TABLE " + ORDER_TABLE + " ADD COLUMN state INTEGER NOT NULL DEFAULT 0")
+                    final Connection connection = data.getConnection()
             ) {
                 if (columnExists(connection, ORDER_TABLE, "state")) {
                     future.complete(null);
                     return;
                 }
 
-                statement.executeUpdate();
-
+                try (
+                        final PreparedStatement statement = connection.prepareStatement("ALTER TABLE " + ORDER_TABLE + " ADD COLUMN state INTEGER NOT NULL DEFAULT 0")
+                ) {
+                    statement.executeUpdate();
+                }
             } catch (SQLException e) {
                 Log.error("Failed to migrate database", e);
                 future.completeExceptionally(e);
