@@ -15,11 +15,11 @@ You may understand what the text refers to based on the context.
 <br>
 The text may disambiguate such phrases/words, but this is not guaranteed.
 
-## Orderium
-[orderium.md](./orderium.md)
-
 ## Paper
 [paper.md](./paper.md)
 
 ## Vault
 [vault.md](./vault.md)
+
+## Orderium
+[orderium.md](./orderium.md)

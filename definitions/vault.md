@@ -8,7 +8,7 @@ VaultAPI can be used by Paper plugins to access features Vault Implementers prov
 <br>
 
 ## Availability
-Each of Vault's features must be implemented by an Implementer if Vault Users want to access that feature.
+Each of Vault's features must be implemented by a Vault Implementer if Vault Users want to access that feature.
 <br>
 If there is no Implementer that implements a feature, that feature is "not available".
 <br>
