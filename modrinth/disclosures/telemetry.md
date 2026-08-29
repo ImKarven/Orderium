@@ -1,6 +1,15 @@
 # Telemetry
 Orderium sends usage data to third-parties.
 
+## Update
+Updates to this disclosure are mentioned in the Changelog of a new version of Orderium.
+<br>
+Such updates are only applied on that new version of Orderium.
+<br>
+Therefore, the disclosure and telemetry are the same as the one you viewed at the time of downloading your current Orderium version, even if there is a new one.
+<br>
+This applies after September 27, 2026, which is when Modrinth starts enforcing their new AI policy and project disclosures system.
+
 ## Definitions
 Definitions explained in file [definitions.md](../../definitions/definitions.md) may appear in the content of this file.
 
