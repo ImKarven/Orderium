@@ -94,7 +94,7 @@ a Custom Item is an Amount-less Item.
 a list of Amount-less Items.
 
 ## Orderium API
-Orderium provides an unfinished, experimental API. Files related to this API is in the `src/main/java/me/karven/orderium/api` directory, recursively.
+Orderium provides an unfinished, experimental API. Files related to this API is in the `src/main/java/me/karven/orderium/api` directory of Orderium (as a Github repository), recursively.
 
 ### Usage
 The Server is considered using Orderium API if it listens to any Bukkit Events that is a part of Orderium API.
