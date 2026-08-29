@@ -2,7 +2,7 @@
 Orderium sends usage data to third-parties.
 
 ## Definitions
-Definitions explained in file [definitions.md](../../definitions.md) may appear in the content of this file.
+Definitions explained in file [definitions.md](../../definitions/definitions.md) may appear in the content of this file.
 
 ## FastStats (https://faststats.dev/)
 Information: https://faststats.dev/info.

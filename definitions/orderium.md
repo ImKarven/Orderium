@@ -1,29 +1,30 @@
-> [!NOTE]
-> This file does not fully explain how this plugin works.
-> <br>
-> It is not fully completed. You may use your common sense to understand it.
-> <br>
-> It is created as a part of `modrinth/disclosures/telemetry.md`.
-
-# Definitions
-
-## Disambiguation
-There may be multiple definitions for one phrase/word.
-<br>
-You may understand what the text refers to based on the context.
-<br>
-The text may disambiguate such phrases/words, but this is not guaranteed.
-
-## Orderium
+# Orderium
 "Orderium" refers to this project.
 <br>
-Orderium may be represented as a Paper plugin, a Github repository or a Modrinth project.
+Orderium may be represented as a Paper plugin, a GitHub repository or a Modrinth project.
 
-## Server
-"Server", "the Server", "your Server" is the [Java virtual machine](https://en.wikipedia.org/wiki/Java_virtual_machine) that Orderium (as a Paper plugin) runs in.
+## Dependency
+Orderium requires some dependencies to operate.
+
+### Paper
+Orderium is a Paper plugin.
+<br>
+Orderium uses Paper API.
+
+### Vault
+Orderium is a Vault User.
+<br>
+Orderium accesses Economy feature.
+<br>
+Therefore, Economy feature must be available.
 
 ## Config Option
+Orderium's configuration files use YAML configuration format.
+<br>
 Config Option is an option in Orderium's configuration files.
+
+### Values
+A Config Option has a `key: value` pair structure, where the `key` is also known as "path".
 
 ### General
 General Config Options are in `config.yml` file, in Orderium's Data Folder.
@@ -61,7 +62,7 @@ a 32-bit integer.
 
 #### `expiresAt`
 
-a 64-bit integer (as explained in 32-bit integer) that is the sum of the General Config Option `expires-after` and the difference, measured in milliseconds, between the current time and midnight, January 1, 1970 UTC.
+a 64-bit integer (as explained in 32-bit integer) that is the sum of the General Config Option `expires-after` and the difference, measured in milliseconds, between the current time and midnight, January 1, 1970, UTC.
 
 ### Creation
 An Orderium Order must be created by a Player.
@@ -84,8 +85,9 @@ The Owner Player must provide:
 If all the requirements are met, the Owner Player is given `collectAmount` copies of the Orderium Order's Orderium Item.
 
 ## Orderium Item
-Orderium Item is an [Item](https://minecraft.wiki/w/Item) that does not have Stacking ("Amount-less Item") in [the Creative inventory](https://minecraft.wiki/w/Creative_inventory) or the list of Custom Items that is not present in the Blacklist at the time of choosing the Orderium Item when creating an Orderium Order.
+Orderium Item is an Amount-less Item in [the Creative inventory](https://minecraft.wiki/w/Creative_inventory) or the list of Custom Items that is not present in the Blacklist at the time of choosing the Orderium Item when creating an Orderium Order.
 <br>
+An Amount-less Item is an [Item](https://minecraft.wiki/w/Item) that does not have Stacking.
 
 ## Custom Item
 a Custom Item is an Amount-less Item.
@@ -94,7 +96,7 @@ a Custom Item is an Amount-less Item.
 a list of Amount-less Items.
 
 ## Orderium API
-Orderium provides an unfinished, experimental API. Files related to this API is in the `src/main/java/me/karven/orderium/api` directory of Orderium (as a Github repository), recursively.
+Orderium provides an unfinished, experimental API. Files related to this API is in the `../src/main/java/me/karven/orderium/api` directory of Orderium (as a GitHub repository), recursively.
 
 ### Usage
 The Server is considered using Orderium API if it listens to any Bukkit Events that is a part of Orderium API.
