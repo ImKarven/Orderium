@@ -2,7 +2,8 @@
 Orderium is derivative of other projects.
 
 ## Update
-Updates to this disclosure are mentioned in the Changelog of a new version of Orderium.
+Updates to this disclosure and the derivative contents only happen when Orderium releases a new version.
+Such updates are mentioned in the changelog of the new version.
 <br>
 Such updates are only applied on that new version of Orderium.
 <br>
