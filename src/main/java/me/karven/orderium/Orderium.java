@@ -2,7 +2,6 @@ package me.karven.orderium;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
-import com.google.common.collect.ImmutableList;
 import dev.faststats.bukkit.BukkitContext;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.data.DataCache;
@@ -102,13 +101,14 @@ public final class Orderium extends JavaPlugin {
     }
 
     private void startCollectLimitResetLoop() {
-        Bukkit.getAsyncScheduler().runAtFixedRate(this, task -> {
-            for (Player p : ImmutableList.copyOf(Bukkit.getOnlinePlayers())) {
-                if (p == null || !p.isOnline()) continue;
-                DispatchUtil.entity(p, () -> PDCUtils.removeCollected(p));
-            }
-
-        }, 1, 1, TimeUnit.MINUTES);
+        Bukkit.getAsyncScheduler().runAtFixedRate(this, task ->
+                        Bukkit.getGlobalRegionScheduler().run(this, _ -> {
+                            for (Player p : Bukkit.getOnlinePlayers()) {
+                                if (p == null || !p.isOnline()) continue;
+                                DispatchUtil.entity(p, () -> PDCUtils.removeCollected(p));
+                            }
+                        }),
+                1, 1, TimeUnit.MINUTES);
     }
 
     private void checkUpdates() {
