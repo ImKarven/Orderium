@@ -134,8 +134,9 @@ public class Order implements me.karven.orderium.api.Order {
         long millis = expiresAt - System.currentTimeMillis();
         final Duration duration = Duration.ofMillis(millis);
         final ItemMeta meta = item.getItemMeta();
-        final Component itemName = meta.hasCustomName() ? meta.customName() : Component.translatable(item.translationKey());
-        assert itemName != null;
+        Component itemName = meta.hasCustomName() ? meta.customName() : Component.translatable(item.translationKey());
+        if (itemName == null) itemName = Component.translatable(item.translationKey());
+        itemName = itemName.hoverEvent(item.asHoverEvent());
         return new TagResolver[]{
                 Placeholder.unparsed("money-per", formatNumber(moneyPer)),
                 Placeholder.unparsed("paid", formatNumber(moneyPer * delivered)),
