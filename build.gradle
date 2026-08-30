@@ -97,6 +97,4 @@ modrinth {
     gameVersions = mcVersions
     loaders = ["paper", "purpur", "folia"]
     changelog = rootProject.file("modrinth" + File.separator + "CHANGELOG.md").text
-
-    syncBodyFrom = rootProject.file("modrinth" + File.separator + "DESCRIPTION.md").text
 }
