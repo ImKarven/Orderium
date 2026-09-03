@@ -9,7 +9,6 @@ import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.SignGUI;
 import me.karven.orderium.guiframework.GUIListener;
-import me.karven.orderium.listener.ContainerContentListener;
 import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.listener.ServerLoadListener;
 import me.karven.orderium.storage.Storage;
@@ -98,7 +97,6 @@ public final class Orderium extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new GUIListener(), this);
         Bukkit.getPluginManager().registerEvents(new DisconnectListener(), this);
         PacketEvents.getAPI().getEventManager().registerListener(new SignGUI(), PacketListenerPriority.NORMAL);
-        PacketEvents.getAPI().getEventManager().registerListener(new ContainerContentListener(), PacketListenerPriority.NORMAL);
     }
 
     private void startCollectLimitResetLoop() {
