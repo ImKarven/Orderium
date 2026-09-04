@@ -53,7 +53,7 @@ public abstract class GUIConfigFile implements IConfigFile {
      * They then should be saved to respective files after the method call
      * @param oldConfig the old config file
      */
-    public abstract void migrateV5(final @NotNull ConfigFile oldConfig);
+    public void migrateV5(final @NotNull ConfigFile oldConfig) {}
     public abstract void applyDefaultValues();
 
     public void saveToFile() throws Exception {
