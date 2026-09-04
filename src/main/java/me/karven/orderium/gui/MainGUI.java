@@ -2,6 +2,7 @@ package me.karven.orderium.gui;
 
 import io.papermc.paper.dialog.Dialog;
 import me.karven.orderium.config.Config;
+import me.karven.orderium.config.util.component.SearchGUITypeConfig;
 import me.karven.orderium.data.DataCache;
 import me.karven.orderium.guiframework.InventoryGUI;
 import me.karven.orderium.guiframework.PaginatedGUI;
@@ -117,14 +118,24 @@ public class MainGUI extends PaginatedGUI<Order> {
                 config.mainGUIConfig.sortButton.slot
         );
         gui.addItem(
-                config.mainGUIConfig.searchButton.item(_ -> SignGUI.newSession(
-                        player,
-                        (s) -> DispatchUtil.entity(player, () -> {
-                            final MainGUI mainGUI = new MainGUI(player, s);
-                            mainGUI.openNextPage();
-                        }),
-                        config.signGUIConfig.signLines, config.signGUIConfig.signType(), config.signGUIConfig.queryLine
-                )),
+                config.mainGUIConfig.searchButton.item(_ -> {
+                    final Consumer<String> searchAction = query -> DispatchUtil.entity(player, () -> {
+                        final MainGUI mainGUI = new MainGUI(player, query);
+                        mainGUI.openNextPage();
+                    });
+
+                    if (config.mainGUIConfig.searchGUITypeConfig.searchGUIType == SearchGUITypeConfig.SearchGUIType.DIALOG) {
+                        player.showDialog(SearchDialog.getDialog(searchAction));
+                        return;
+                    }
+
+                    SignGUI.newSession(
+                            player, searchAction,
+                            config.signGUIConfig.signLines,
+                            config.signGUIConfig.signType(),
+                            config.signGUIConfig.queryLine
+                    );
+                }),
                 config.mainGUIConfig.searchButton.slot
         );
 

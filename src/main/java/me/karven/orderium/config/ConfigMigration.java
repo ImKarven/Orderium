@@ -3,6 +3,7 @@ package me.karven.orderium.config;
 import com.google.common.io.Files;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.SlotInfo;
+import me.karven.orderium.config.util.component.SearchGUITypeConfig;
 import me.karven.orderium.obj.OrderStatus;
 import me.karven.orderium.obj.SortType;
 import me.karven.orderium.utils.Log;
@@ -51,7 +52,9 @@ public class ConfigMigration {
          - Add confirmation tooltip for new order GUI
          - Add orders limit for different permissions
          */
-        migrateV6(config);
+        if (configVersion(config) == 5) migrateV6(config);
+
+        migrateV7(config);
     }
 
     private static void migrateV5(final @NotNull Config config) throws Exception {
@@ -99,6 +102,17 @@ public class ConfigMigration {
         config.newOrderDialogConfig.saveToFile();
         config.manageOrderDialogConfig.saveToFile();
         config.webhookConfig.saveToFile();
+        config.configFile.save();
+        config.load();
+    }
+
+    private static void migrateV7(final @NotNull Config config) throws Exception {
+        config.setDefaults();
+        config.mainGUIConfig.searchGUITypeConfig.searchGUIType = SearchGUITypeConfig.SearchGUIType.SIGN;
+        config.mainGUIConfig.save();
+        config.configFile.set("config-version", 7);
+        config.mainGUIConfig.saveToFile();
+        config.searchDialogConfig.saveToFile();
         config.configFile.save();
         config.load();
     }

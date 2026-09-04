@@ -2,10 +2,7 @@ package me.karven.orderium.config.util.chestgui;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.GUIConfigFile;
-import me.karven.orderium.config.util.component.ButtonConfig;
-import me.karven.orderium.config.util.component.OrderConfig;
-import me.karven.orderium.config.util.component.SortButtonConfig;
-import me.karven.orderium.config.util.component.SortsOrderConfig;
+import me.karven.orderium.config.util.component.*;
 import me.karven.orderium.obj.SortType;
 import me.karven.orderium.utils.DecoratedText;
 import org.bukkit.Material;
@@ -20,6 +17,7 @@ import java.util.stream.IntStream;
 public class MainGUIConfig extends GUIConfigFile {
     public String title;
     public int rows;
+    public final @NotNull SearchGUITypeConfig searchGUITypeConfig = new SearchGUITypeConfig("search-gui-type");
     public final @NotNull OrderConfig orderConfig = new OrderConfig("order");
     public final @NotNull SortsOrderConfig sortsOrderConfig = new SortsOrderConfig("sorts-order");
     public final @NotNull SortButtonConfig sortButton = new SortButtonConfig("buttons.sort");
@@ -35,6 +33,7 @@ public class MainGUIConfig extends GUIConfigFile {
 
     @Override
     public void reload() {
+        searchGUITypeConfig.reload(config);
         orderConfig.reload(config);
         sortsOrderConfig.reload(config);
         sortButton.reload(config);
@@ -51,6 +50,7 @@ public class MainGUIConfig extends GUIConfigFile {
     public void save() {
         config.set("title", title);
         config.set("rows", rows);
+        searchGUITypeConfig.save(config);
         orderConfig.save(config);
         sortsOrderConfig.save(config);
         sortButton.save(config);
@@ -65,6 +65,7 @@ public class MainGUIConfig extends GUIConfigFile {
     public void setDefault() {
         config.addDefault("title", title);
         config.addDefault("rows", rows);
+        searchGUITypeConfig.setDefault(config);
         orderConfig.setDefault(config);
         sortsOrderConfig.setDefault(config);
         sortButton.setDefault(config);
@@ -99,6 +100,9 @@ public class MainGUIConfig extends GUIConfigFile {
     public void applyDefaultValues() {
         title = "Orders";
         rows = 6;
+
+        searchGUITypeConfig.searchGUIType = SearchGUITypeConfig.SearchGUIType.DIALOG;
+
         orderConfig.lore.add("");
         orderConfig.lore.add("<!i><#786500>$<paid><gray>/<#017800>$<total> <gray>Paid");
         orderConfig.lore.add("<!i><#786500><delivered><gray>/<#017800><amount> <gray>Delivered");

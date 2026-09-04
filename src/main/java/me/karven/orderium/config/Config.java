@@ -7,6 +7,7 @@ import me.karven.orderium.config.util.chestgui.*;
 import me.karven.orderium.config.util.dialog.ConfirmDeliveryDialogConfig;
 import me.karven.orderium.config.util.dialog.ManageOrderDialogConfig;
 import me.karven.orderium.config.util.dialog.NewOrderDialogConfig;
+import me.karven.orderium.config.util.dialog.SearchDialogConfig;
 import me.karven.orderium.data.DataCache;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.ChooseItemGUI;
@@ -34,7 +35,7 @@ import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 public class Config {
     private static final AtomicBoolean reloading = new AtomicBoolean(false);
     public static volatile Config config;
-    public static final int CURRENT_CONFIG_VERSION = 6;
+    public static final int CURRENT_CONFIG_VERSION = 7;
     public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
 
     public ConfigFile configFile;
@@ -50,6 +51,7 @@ public class Config {
     public final NewOrderDialogConfig newOrderDialogConfig = new NewOrderDialogConfig();
     public final ConfirmDeliveryDialogConfig confirmDeliveryDialogConfig = new ConfirmDeliveryDialogConfig();
     public final ManageOrderDialogConfig manageOrderDialogConfig = new ManageOrderDialogConfig();
+    public final SearchDialogConfig searchDialogConfig = new SearchDialogConfig();
 
     public boolean bStats;
     public boolean checkForUpdates;
@@ -113,6 +115,7 @@ public class Config {
         newOrderDialogConfig.saveToFile();
         confirmDeliveryDialogConfig.saveToFile();
         manageOrderDialogConfig.saveToFile();
+        searchDialogConfig.saveToFile();
     }
 
     public void setDefaults() {
@@ -126,6 +129,7 @@ public class Config {
         newOrderDialogConfig.applyDefaultValues();
         confirmDeliveryDialogConfig.applyDefaultValues();
         manageOrderDialogConfig.applyDefaultValues();
+        searchDialogConfig.applyDefaultValues();
 
         webhookConfig.setDefault();
         mainGUIConfig.setDefault();
@@ -137,6 +141,7 @@ public class Config {
         newOrderDialogConfig.setDefault();
         confirmDeliveryDialogConfig.setDefault();
         manageOrderDialogConfig.setDefault();
+        searchDialogConfig.setDefault();
 
 
         configFile.addDefault("bstats", true);
@@ -236,6 +241,7 @@ public class Config {
         newOrderDialogConfig.reload();
         confirmDeliveryDialogConfig.reload();
         manageOrderDialogConfig.reload();
+        searchDialogConfig.reload();
     }
 
     public void reloadGUIsFromFile() {
@@ -248,6 +254,7 @@ public class Config {
         newOrderDialogConfig.reloadFromFile();
         confirmDeliveryDialogConfig.reloadFromFile();
         manageOrderDialogConfig.reloadFromFile();
+        searchDialogConfig.reloadFromFile();
     }
 
 
