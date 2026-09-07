@@ -11,7 +11,7 @@ public interface IConfigFile {
 
     void save();
 
-    void setDefault() throws Exception;
+    void setDefault();
 
     default void migrateV5(final @NotNull ConfigFile oldConfig) {}
 

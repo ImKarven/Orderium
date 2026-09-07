@@ -46,7 +46,7 @@ public abstract class GUIConfigFile implements IConfigFile {
 //        }
 //    }
     public abstract void save();
-    public abstract void setDefault() throws Exception;
+    public abstract void setDefault();
 
     /**
      * This caches the values from the old config file to the objects

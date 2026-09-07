@@ -1,6 +1,7 @@
 package me.karven.orderium.config;
 
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
+import me.karven.orderium.config.util.GUIConfigFile;
 import me.karven.orderium.config.util.SignGUIConfig;
 import me.karven.orderium.config.util.WebhookConfig;
 import me.karven.orderium.config.util.chestgui.*;
@@ -52,6 +53,11 @@ public class Config {
     public final ConfirmDeliveryDialogConfig confirmDeliveryDialogConfig = new ConfirmDeliveryDialogConfig();
     public final ManageOrderDialogConfig manageOrderDialogConfig = new ManageOrderDialogConfig();
     public final SearchDialogConfig searchDialogConfig = new SearchDialogConfig();
+
+    private final List<GUIConfigFile> GUI_CONFIGS = List.of(
+            searchDialogConfig, mainGUIConfig, yourOrdersGUIConfig, chooseItemGUIConfig, signGUIConfig,
+            enchantGUIConfig, deliverGUIConfig, newOrderDialogConfig, confirmDeliveryDialogConfig, manageOrderDialogConfig
+    );
 
     public boolean bStats;
     public boolean checkForUpdates;
@@ -106,43 +112,15 @@ public class Config {
         configFile.set("config-version", CURRENT_CONFIG_VERSION);
         configFile.save();
         webhookConfig.saveToFile();
-        mainGUIConfig.saveToFile();
-        yourOrdersGUIConfig.saveToFile();
-        chooseItemGUIConfig.saveToFile();
-        signGUIConfig.saveToFile();
-        enchantGUIConfig.saveToFile();
-        deliverGUIConfig.saveToFile();
-        newOrderDialogConfig.saveToFile();
-        confirmDeliveryDialogConfig.saveToFile();
-        manageOrderDialogConfig.saveToFile();
-        searchDialogConfig.saveToFile();
+        for (final GUIConfigFile config : GUI_CONFIGS) config.saveToFile();
     }
 
     public void setDefaults() {
         webhookConfig.applyDefaultValues();
-        mainGUIConfig.applyDefaultValues();
-        yourOrdersGUIConfig.applyDefaultValues();
-        chooseItemGUIConfig.applyDefaultValues();
-        signGUIConfig.applyDefaultValues();
-        enchantGUIConfig.applyDefaultValues();
-        deliverGUIConfig.applyDefaultValues();
-        newOrderDialogConfig.applyDefaultValues();
-        confirmDeliveryDialogConfig.applyDefaultValues();
-        manageOrderDialogConfig.applyDefaultValues();
-        searchDialogConfig.applyDefaultValues();
+        for (final GUIConfigFile config : GUI_CONFIGS) config.applyDefaultValues();
 
         webhookConfig.setDefault();
-        mainGUIConfig.setDefault();
-        yourOrdersGUIConfig.setDefault();
-        chooseItemGUIConfig.setDefault();
-        signGUIConfig.setDefault();
-        enchantGUIConfig.setDefault();
-        deliverGUIConfig.setDefault();
-        newOrderDialogConfig.setDefault();
-        confirmDeliveryDialogConfig.setDefault();
-        manageOrderDialogConfig.setDefault();
-        searchDialogConfig.setDefault();
-
+        for (final GUIConfigFile config : GUI_CONFIGS) config.setDefault();
 
         configFile.addDefault("bstats", true);
         configFile.addDefault("check-for-updates", true);
@@ -232,29 +210,11 @@ public class Config {
     }
 
     public void reloadGUIs() {
-        mainGUIConfig.reload();
-        yourOrdersGUIConfig.reload();
-        chooseItemGUIConfig.reload();
-        signGUIConfig.reload();
-        enchantGUIConfig.reload();
-        deliverGUIConfig.reload();
-        newOrderDialogConfig.reload();
-        confirmDeliveryDialogConfig.reload();
-        manageOrderDialogConfig.reload();
-        searchDialogConfig.reload();
+        for (final GUIConfigFile config : GUI_CONFIGS) config.reload();
     }
 
     public void reloadGUIsFromFile() {
-        mainGUIConfig.reloadFromFile();
-        yourOrdersGUIConfig.reloadFromFile();
-        chooseItemGUIConfig.reloadFromFile();
-        signGUIConfig.reloadFromFile();
-        enchantGUIConfig.reloadFromFile();
-        deliverGUIConfig.reloadFromFile();
-        newOrderDialogConfig.reloadFromFile();
-        confirmDeliveryDialogConfig.reloadFromFile();
-        manageOrderDialogConfig.reloadFromFile();
-        searchDialogConfig.reloadFromFile();
+        for (final GUIConfigFile config : GUI_CONFIGS) config.reloadFromFile();
     }
 
 
