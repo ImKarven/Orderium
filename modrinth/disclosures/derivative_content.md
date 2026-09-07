@@ -7,7 +7,7 @@ Such updates are mentioned in the changelog of the new version.
 <br>
 Such updates are only applied on that new version of Orderium.
 <br>
-Therefore, the disclosure and derivative contents are the same as the one you viewed at the time of downloading your current Orderium version, even if there is a new one.
+This means that the derivative contents are the same as the one you viewed at the time of downloading your current Orderium version, even if it is modified on a more recent version.
 <br>
 This applies after September 27, 2026, which is when Modrinth starts enforcing their new AI policy and project disclosures system.
 
