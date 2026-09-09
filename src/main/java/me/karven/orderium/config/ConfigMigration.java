@@ -109,9 +109,12 @@ public class ConfigMigration {
     private static void migrateV7(final @NotNull Config config) throws Exception {
         config.setDefaults();
         config.mainGUIConfig.searchGUITypeConfig.searchGUIType = SearchGUITypeConfig.SearchGUIType.SIGN;
+        config.chooseItemGUIConfig.searchGUITypeConfig.searchGUIType = SearchGUITypeConfig.SearchGUIType.SIGN;
         config.mainGUIConfig.save();
+        config.chooseItemGUIConfig.save();
         config.configFile.set("config-version", 7);
         config.mainGUIConfig.saveToFile();
+        config.chooseItemGUIConfig.saveToFile();
         config.searchDialogConfig.saveToFile();
         config.configFile.save();
         config.load();

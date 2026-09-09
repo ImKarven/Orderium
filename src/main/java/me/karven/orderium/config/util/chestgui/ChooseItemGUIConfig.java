@@ -3,6 +3,7 @@ package me.karven.orderium.config.util.chestgui;
 import io.github.thatsmusic99.configurationmaster.api.ConfigFile;
 import me.karven.orderium.config.util.GUIConfigFile;
 import me.karven.orderium.config.util.component.ButtonConfig;
+import me.karven.orderium.config.util.component.SearchGUITypeConfig;
 import me.karven.orderium.config.util.component.SortButtonConfig;
 import me.karven.orderium.config.util.component.SortsOrderConfig;
 import me.karven.orderium.obj.SortType;
@@ -20,6 +21,7 @@ import java.util.stream.IntStream;
 public class ChooseItemGUIConfig extends GUIConfigFile {
     public String title;
     public int rows;
+    public final @NotNull SearchGUITypeConfig searchGUITypeConfig = new SearchGUITypeConfig("search-gui-type");
     public final @NotNull List<Integer> slots = new ArrayList<>();
     public final @NotNull SortsOrderConfig sortsOrderConfig = new SortsOrderConfig("sorts-order");
     public final @NotNull SortButtonConfig sortButton = new SortButtonConfig("buttons.sort");
@@ -37,6 +39,7 @@ public class ChooseItemGUIConfig extends GUIConfigFile {
         rows = config.getInteger("rows");
         slots.clear();
         config.getList("slots").forEach(slot -> slots.add((Integer) slot));
+        searchGUITypeConfig.reload(config);
         sortsOrderConfig.reload(config);
         sortButton.reload(config);
         nextButton.reload(config);
@@ -49,6 +52,7 @@ public class ChooseItemGUIConfig extends GUIConfigFile {
         config.set("title", title);
         config.set("rows", rows);
         config.set("slots", slots);
+        searchGUITypeConfig.save(config);
         sortsOrderConfig.save(config);
         sortButton.save(config);
         nextButton.save(config);
@@ -61,6 +65,7 @@ public class ChooseItemGUIConfig extends GUIConfigFile {
         config.addDefault("title", title);
         config.addDefault("rows", rows);
         config.addDefault("slots", slots);
+        searchGUITypeConfig.setDefault(config);
         sortsOrderConfig.setDefault(config);
         sortButton.setDefault(config);
         nextButton.setDefault(config);
@@ -91,6 +96,7 @@ public class ChooseItemGUIConfig extends GUIConfigFile {
         title = "Choose Your Item";
         rows = 6;
         slots.addAll(IntStream.range(0, 45).boxed().toList());
+        searchGUITypeConfig.searchGUIType = SearchGUITypeConfig.SearchGUIType.DIALOG;
         sortsOrderConfig.orderArray.add(SortType.A_Z);
         sortsOrderConfig.orderArray.add(SortType.Z_A);
         sortButton.slot = 48;
