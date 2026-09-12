@@ -1,0 +1,22 @@
+# Normalize all text files to LF on checkout/commit, regardless of contributor OS
+* text=auto eol=lf
+
+# Explicit for common doc/site file types
+*.md text eol=lf
+*.mdx text eol=lf
+*.astro text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary files should never be touched by line-ending normalization
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg binary
+*.ico binary
+*.webp binary

@@ -1,0 +1,13 @@
+# Commits listed here are ignored by `git blame` (and GitHub's blame view).
+# Add the hash of your initial "run Prettier across the whole repo" commit below.
+#
+# How to use this file:
+#   1. Add all the config files from this bundle to your repo.
+#   2. Run `npx prettier --write .` once to reformat everything.
+#   3. Commit that single mass-reformat with a clear message, e.g.:
+#        git commit -am "chore: apply Prettier formatting repo-wide"
+#   4. Copy that commit's hash and paste it below, one hash per line.
+#   5. Commit this updated file.
+#
+# Example:
+# 1a2b3c4d5e6f7890abcdef1234567890abcdef12

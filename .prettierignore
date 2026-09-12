@@ -1,0 +1,12 @@
+# Build output
+dist/
+.astro/
+node_modules/
+
+# Lockfiles (never hand-format these)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Generated / vendored content
+public/
