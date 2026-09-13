@@ -10,31 +10,36 @@ hero:
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
+import FancyLinkCard from '/src/components/FancyLinkCard.astro';
 
 ## Getting Started
 
 <CardGrid>
-    <Card title="How does it work?" icon="information">
+    <FancyLinkCard title="How does it work?" icon="information" href="/onboarding">
         Find out the system design of the plugin.
-    </Card>
-    <Card title="Installing" icon="download">
+    </FancyLinkCard>
+    <FancyLinkCard title="Installing" icon="download" href="/getting-started/installing">
         A guide to get Orderium running on your server.
-    </Card>
-    <Card title="Using Orderium" icon="approve-check-circle">
+    </FancyLinkCard>
+    <FancyLinkCard
+        title="Using Orderium"
+        icon="approve-check-circle"
+        href="/getting-started/creating-an-order"
+    >
         Start with creating your first order.
-    </Card>
-    <Card title="Configuring" icon="setting">
+    </FancyLinkCard>
+    <FancyLinkCard title="Configuring" icon="setting" href="#">
         Tweak settings to make Orderium fits with your server.
-    </Card>
+    </FancyLinkCard>
 </CardGrid>
 
 ## For Developers
 
 <CardGrid>
-    <Card title="Orderium API" icon="puzzle">
+    <FancyLinkCard title="Orderium API" icon="puzzle">
         Orderium provides an API that you can interact with.
-    </Card>
-    <Card title="Contributing" icon="star">
-        Support Orderium and be a part of contributors!
-    </Card>
+    </FancyLinkCard>
+    <FancyLinkCard title="Contributing" icon="star">
+        Support Orderium and be a part of the contributors!
+    </FancyLinkCard>
 </CardGrid>
