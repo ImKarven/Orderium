@@ -1,5 +1,5 @@
 // @ts-check
-import {defineConfig} from 'astro/config';
+import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
@@ -13,7 +13,10 @@ export default defineConfig({
             sidebar: [
                 {
                     label: 'Getting Started',
-                    items: [{ autogenerate: { directory: 'getting-started' } }],
+                    items: [
+                        { label: 'Installing', link: '/getting-started/installing' },
+                        { label: 'Creating An Order', link: '/getting-started/creating-an-order' },
+                    ],
                 },
             ],
         }),
