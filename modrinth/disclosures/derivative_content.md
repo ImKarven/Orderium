@@ -1,5 +1,5 @@
 > [!WARNING]
-> Due to the confusion of "Deriavative Content" disclosure on Modrinth, this file does not fully state what software Orderium is a derivative work of.
+> Due to the confusion of "Derivative Content" disclosure on Modrinth, this file does not fully state what software Orderium is a derivative work of.
 > 
 > It is expected that you ignore contents in this file and understand that contents in this file are not accurate.
 
