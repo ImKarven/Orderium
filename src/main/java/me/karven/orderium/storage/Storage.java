@@ -17,10 +17,15 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.CreativeModeTab;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -30,6 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import static me.karven.orderium.Orderium.plugin;
 
 public abstract class Storage {
+    private static final MethodHandle AS_BUKKIT_COPY = findAsBukkitCopy();
     protected static final File dataDir = new File("plugins", "Orderium");
     protected final String ORDER_TABLE = "orderium_orders";
     protected final String TRANSACTION_TABLE = "orderium_transactions_v2";
@@ -156,9 +162,30 @@ public abstract class Storage {
         }
 
         for (net.minecraft.world.item.ItemStack mcItem : minecraftItems) {
-            items.add(new VanillaItem(mcItem.asBukkitCopy(), true));
+            items.add(new VanillaItem(asBukkitCopy(mcItem), true));
         }
         return items;
+    }
+
+    private static ItemStack asBukkitCopy(net.minecraft.world.item.ItemStack mcItem) {
+        try {
+            return (ItemStack) AS_BUKKIT_COPY.invokeExact(mcItem);
+        } catch (Throwable e) {
+            throw new RuntimeException("Failed to convert " + mcItem + " to a bukkit item", e);
+        }
+    }
+
+    private static MethodHandle findAsBukkitCopy() {
+        for (Method method : CraftItemStack.class.getMethods()) {
+            if (!method.getName().equals("asBukkitCopy") || method.getParameterCount() != 1) continue;
+            if (!method.getParameterTypes()[0].isAssignableFrom(net.minecraft.world.item.ItemStack.class)) continue;
+            try {
+                return MethodHandles.publicLookup().unreflect(method).asType(MethodType.methodType(ItemStack.class, net.minecraft.world.item.ItemStack.class));
+            } catch (IllegalAccessException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        throw new IllegalStateException("Could not find CraftItemStack#asBukkitCopy");
     }
 
     public abstract CompletableFuture<Collection<Order>> loadOrders();

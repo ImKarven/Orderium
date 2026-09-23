@@ -44,7 +44,7 @@ public abstract class NBTSerializer<T> {
                     continue;
                 }
                 if (!(component instanceof DataComponentType.Valued<?> valuedComponent)) {
-                    Log.error("Component is neither valued nor non-valued. This is a bug", new IllegalStateException());
+                    if (!hasDefault) Log.warn("Component " + componentKey + " is not supported by the API and will not be saved");
                     continue;
                 }
                 final Object componentData = item.getData(valuedComponent);
