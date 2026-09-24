@@ -1,31 +1,38 @@
 package me.karven.orderium.listener;
 
+import me.karven.orderium.obj.PendingDelivery;
 import me.karven.orderium.utils.PlayerUtils;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
-import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DialogListener {
     // TODO: probably should replace `Player` with `UUID`.
-    private static final ConcurrentHashMap<Player, Collection<ItemStack>> pendingItems = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Player, PendingDelivery> pendingDeliveries = new ConcurrentHashMap<>();
 
-    public static Map<Player, Collection<ItemStack>> pendingItems() {
-        return pendingItems;
+    // Registers the delivery of a newly opened confirm dialog. A previous one that was never answered is handed back.
+    public static void addDelivery(Player p, PendingDelivery delivery) {
+        final PendingDelivery previous = pendingDeliveries.put(p, delivery);
+        if (previous != null) giveBack(p, previous);
     }
 
-    public static void addItems(Player p, Collection<ItemStack> items) {
-        pendingItems.put(p, items);
+    // Returns true if the items may be delivered, and false if they were already delivered or handed back
+    public static boolean confirm(Player p, PendingDelivery delivery) {
+        pendingDeliveries.remove(p, delivery);
+        return delivery.claim();
     }
 
-    public static void removeItems(Player p) { pendingItems.remove(p); }
+    public static void cancel(Player p, PendingDelivery delivery) {
+        pendingDeliveries.remove(p, delivery);
+        giveBack(p, delivery);
+    }
 
     public static void onCancel(Player p) {
-        Collection<ItemStack> items = pendingItems.get(p);
-        if (items == null) return;
-        PlayerUtils.give(p, items, false);
-        pendingItems.remove(p);
+        final PendingDelivery delivery = pendingDeliveries.remove(p);
+        if (delivery != null) giveBack(p, delivery);
+    }
+
+    private static void giveBack(Player p, PendingDelivery delivery) {
+        if (delivery.claim()) PlayerUtils.give(p, delivery.items(), false);
     }
 }
