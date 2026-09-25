@@ -1,12 +1,12 @@
 plugins {
     id 'java'
-    id("xyz.jpenilla.run-paper") version "3.0.2"
+    id("xyz.jpenilla.run-paper") version "3.1.0"
     id 'com.gradleup.shadow' version '9.4.3'
     id "com.modrinth.minotaur" version "2.+"
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
 }
 
-def version = "2.3.0"
+def version = "2.4.0"
 def type = "release"
 def mcVersions = [
         "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11",
@@ -57,7 +57,7 @@ paperweight {
 
 tasks {
     runServer {
-        minecraftVersion("26.2")
+        minecraftVersion("26.3")
     }
 
     shadowJar {
