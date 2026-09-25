@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -185,11 +186,14 @@ public class Order implements me.karven.orderium.api.Order {
     /// Must be called in the player region
     public void deliver(Player p, Iterable<ItemStack> items, boolean isAsync) {
         PlayerDeliverOrderEvent.Pre preEvent = new PlayerDeliverOrderEvent.Pre(p, this, isAsync);
-        if (!preEvent.callEvent()) return;
+        if (!preEvent.callEvent()) {
+            giveBack(p, items);
+            return;
+        }
 
         plugin.getStorage().deliverOrder(p, this, items)
                 .exceptionally(exception -> {
-                    // TODO: Handle exception
+                    giveBack(p, items);
                     return null;
                 })
                 .thenAccept(receive -> {
@@ -227,13 +231,19 @@ public class Order implements me.karven.orderium.api.Order {
                 });
     }
 
+    private static void giveBack(Player p, Iterable<ItemStack> items) {
+        final List<ItemStack> returnedItems = new ArrayList<>();
+        items.forEach(returnedItems::add);
+        PlayerUtils.give(p, returnedItems, true);
+    }
+
     /// Must be called in the player region
     public Response collect(String rawAmount) {
         final Player p = Bukkit.getPlayer(getOwnerUniqueId());
         if (p == null || !p.isOnline() || rawAmount == null) return Response.INVALID;
         final double dAmount = formatNumber(rawAmount);
         final int amount = (int) dAmount;
-        if (dAmount == -1 || dAmount != amount) {
+        if (dAmount <= 0 || dAmount != amount) {
             p.sendRichMessage(Config.config.invalidInput);
             return Response.INVALID;
         }
@@ -245,6 +255,11 @@ public class Order implements me.karven.orderium.api.Order {
         final Player p = Bukkit.getPlayer(this.getOwnerUniqueId());
         if (p == null || !p.isOnline()) return Response.INVALID;
         final Config config = Config.config;
+
+        if (amount <= 0) {
+            p.sendRichMessage(config.invalidInput);
+            return Response.INVALID;
+        }
 
         if (amount > config.maxCollect && !p.hasPermission("orderium.bypass.max-collect")) {
             p.sendRichMessage(config.exceedMaxCollect);

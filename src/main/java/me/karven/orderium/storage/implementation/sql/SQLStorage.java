@@ -214,7 +214,7 @@ public class SQLStorage extends Storage {
 
     @Override
     public CompletableFuture<Double> deliverOrder(Player deliverer, Order order, Iterable<ItemStack> items) {
-        final Function<Connection, Double> action = (final Connection connection) -> {
+        final Function<Connection, DeliveryResult> action = (final Connection connection) -> {
             try (
                     PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);
                     PreparedStatement updateOrder = connection.prepareStatement(UPDATE_ORDER)
@@ -223,7 +223,12 @@ public class SQLStorage extends Storage {
                 getOrder.setInt(1, orderId);
                 ResultSet raw = getOrder.executeQuery();
                 final OrderRow row = OrderRow.fromSQL(raw);
-                if (row == null) return null;
+                final List<ItemStack> returnedItems = new ArrayList<>();
+
+                if (row == null || row.expiresAt() <= System.currentTimeMillis() || row.delivered() >= row.amount()) {
+                    for (final ItemStack item : items) returnedItems.add(item.clone());
+                    return new DeliveryResult(0.0, returnedItems);
+                }
                 int delivered = row.delivered();
                 int orderAmount = row.amount();
                 int inStorage = row.inStorage();
@@ -231,12 +236,13 @@ public class SQLStorage extends Storage {
 
                 int deliverable = orderAmount - delivered;
                 final ItemStack comparingItemStack = order.getOrderItem().getItemStack();
-                for (ItemStack item : items) {
+                for (final ItemStack original : items) {
+                    final ItemStack item = original.clone();
                     if (!AlgoUtils.isSimilar(item, comparingItemStack)) {
                         if (isShulkerBox(item) && config.shulkerDelivering) {
                             deliverable = scanShulkerBox(item, comparingItemStack, deliverable);
                         }
-                        PlayerUtils.give(deliverer, item, true);
+                        returnedItems.add(item);
                         continue;
                     }
                     int itemAmount = item.getAmount();
@@ -245,7 +251,7 @@ public class SQLStorage extends Storage {
                         continue;
                     }
                     item.setAmount(itemAmount - deliverable);
-                    PlayerUtils.give(deliverer, item, true);
+                    returnedItems.add(item);
                     deliverable = 0;
                 }
                 int newDelivered = orderAmount - deliverable;
@@ -267,7 +273,7 @@ public class SQLStorage extends Storage {
                 final int modifiedRows = updateOrder.executeUpdate();
                 if (modifiedRows > 0) {
                     plugin.getDataCache().updateOrder(order, moneyPer, orderAmount, newDelivered, inStorage + newDelivered - delivered);
-                    return ((newDelivered - delivered) * moneyPer);
+                    return new DeliveryResult((newDelivered - delivered) * moneyPer, returnedItems);
                 }
 
                 throw new RetryOperationException();
@@ -276,9 +282,14 @@ public class SQLStorage extends Storage {
             }
         };
 
-        final SQLAction<Double> sqlAction = new SQLAction<>(data, action);
-        return sqlAction.execute();
+        final SQLAction<DeliveryResult> sqlAction = new SQLAction<>(data, action);
+        return sqlAction.execute().thenApply(result -> {
+            if (!result.returnedItems().isEmpty()) PlayerUtils.give(deliverer, result.returnedItems(), true);
+            return result.money();
+        });
     }
+
+    private record DeliveryResult(double money, List<ItemStack> returnedItems) {}
 
     /**
      * scan this shulker box for similar items
@@ -328,6 +339,8 @@ public class SQLStorage extends Storage {
 
     @Override
     public CompletableFuture<Boolean> collectItems(Order order, int amount) {
+        if (amount <= 0) return CompletableFuture.completedFuture(false);
+
         final Function<Connection, Boolean> action = (final Connection connection) -> {
             try (
                     PreparedStatement getOrder = connection.prepareStatement(GET_ORDER);

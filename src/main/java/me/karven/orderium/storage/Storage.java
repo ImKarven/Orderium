@@ -199,7 +199,9 @@ public abstract class Storage {
      * @param deliverer the player that delivers the order
      * @param order the order the player is delivering
      * @param items the inventory the player is requesting to deliver
-     * @return the amount of money the player receive for this delivery, or null if an error occurred
+     * @return the amount of money the player receive for this delivery, 0 if the order no longer accepts deliveries.
+     * Items that were not delivered are given back to the deliverer. Completes exceptionally if an error occurred,
+     * in which case nothing was delivered and no items were given back
      */
     public abstract CompletableFuture<Double> deliverOrder(Player deliverer, Order order, Iterable<ItemStack> items);
 

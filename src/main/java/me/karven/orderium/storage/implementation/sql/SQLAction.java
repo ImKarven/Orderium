@@ -28,9 +28,11 @@ public record SQLAction<T>(
                 try {
                     connection.setAutoCommit(false);
                     final T result = action.apply(connection);
-                    future.complete(result);
+                    // Commit before completing, so callbacks (e.g. paying money) only run for persisted changes
                     connection.commit();
+                    future.complete(result);
                 } catch (final RetryOperationException retryOperationException) {
+                    connection.rollback();
                     if (retryAttempt.get() >= 5) {
                         future.completeExceptionally(retryOperationException);
                         return;
