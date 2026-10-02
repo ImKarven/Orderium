@@ -3,11 +3,10 @@ package me.karven.orderium.gui;
 import io.papermc.paper.dialog.Dialog;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.config.util.component.SearchGUITypeConfig;
-import me.karven.orderium.data.DataCache;
 import me.karven.orderium.guiframework.InventoryGUI;
 import me.karven.orderium.guiframework.PaginatedGUI;
 import me.karven.orderium.obj.ItemClickContext;
-import me.karven.orderium.obj.Order;
+import me.karven.orderium.order.Order;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.DispatchUtil;
 import me.karven.orderium.utils.PlayerUtils;
@@ -19,6 +18,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Consumer;
+
+import static me.karven.orderium.Orderium.plugin;
 
 public class MainGUI extends PaginatedGUI<Order> {
     private final Config config;
@@ -38,7 +39,7 @@ public class MainGUI extends PaginatedGUI<Order> {
     public MainGUI(final @NotNull Player player, final int sortIndex, final @NotNull String search) {
         final Config config = Config.config;
 
-        final List<Order> activeOrders = DataCache.getInstance().getSortedOrders(config.mainGUIConfig.sortsOrderConfig.index(sortIndex)).stream().filter(Order::isActive).toList();
+        final List<Order> activeOrders = plugin.getOrderService().getSortedOrders(config.mainGUIConfig.sortsOrderConfig.index(sortIndex)).stream().filter(Order::isActive).toList();
         final List<Order> matchedOrders = search.isEmpty() ? activeOrders : AlgoUtils.searchOrder(search, activeOrders);
         final Consumer<ItemClickContext<Order>> clickAction = context -> {
             final InventoryClickEvent event = context.event();
@@ -58,8 +59,7 @@ public class MainGUI extends PaginatedGUI<Order> {
                 skippedPage.open(player);
                 return;
             }
-            final InventoryGUI deliverGUI = new DeliverGUI(order).getGUI();
-            deliverGUI.open(player);
+            order.openDelivery(player);
         };
         super(
                 config.mainGUIConfig.rows,

@@ -10,8 +10,10 @@ import me.karven.orderium.gui.SignGUI;
 import me.karven.orderium.guiframework.GUIListener;
 import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.listener.ServerLoadListener;
+import me.karven.orderium.data.VanillaItems;
+import me.karven.orderium.order.OrderService;
 import me.karven.orderium.storage.Storage;
-import me.karven.orderium.storage.implementation.sql.SQLStorage;
+import me.karven.orderium.storage.StorageSettings;
 import me.karven.orderium.utils.*;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.milkbowl.vault.economy.Economy;
@@ -45,14 +47,14 @@ public final class Orderium extends JavaPlugin {
             .create();
 
     private Storage storage;
+    private OrderService orderService;
     private Economy economy = null;
     public final MiniMessage mm = MiniMessage.miniMessage();
 
     public Storage getStorage() { return storage; }
+    public OrderService getOrderService() { return orderService; }
     public @NotNull DataCache getDataCache() { return DataCache.getInstance(); }
     public Economy getEconomy() { return economy; }
-
-    public void setStorage(Storage storage) { this.storage = storage; }
 
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -63,7 +65,17 @@ public final class Orderium extends JavaPlugin {
         AdminToolGUI.init();
 
         getDataFolder().mkdirs();
-        storage = createStorage();
+        try {
+            storage = Storage.open(StorageSettings.load(getDataFolder()), getDataFolder());
+            orderService = new OrderService(storage);
+            loadData();
+        } catch (Exception e) {
+            Log.error("Failed to load the storage. Check storage.yml. Orderium cannot work without it", e);
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
+        Log.info("Using " + storage.type() + " storage");
+
         try {
             Config.reload();
         } catch (Exception e) {
@@ -77,6 +89,7 @@ public final class Orderium extends JavaPlugin {
     @Override
     public void onDisable() {
         faststatsContext.shutdown();
+        if (storage != null) storage.close();
     }
 
     public void postEconomyRegistration() {
@@ -120,8 +133,10 @@ public final class Orderium extends JavaPlugin {
         }
     }
 
-    public Storage createStorage() {
-        return SQLStorage.sqlite();
+    /// Load the orderable items and every order. Blocks until done
+    private void loadData() {
+        getDataCache().setItems(VanillaItems.load(), storage.items().findBlacklist(), storage.items().findCustomItems());
+        orderService.loadAll();
     }
 
     private boolean checkVault() {

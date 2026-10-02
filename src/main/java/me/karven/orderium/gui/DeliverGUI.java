@@ -5,7 +5,7 @@ import io.papermc.paper.datacomponent.item.ItemContainerContents;
 import io.papermc.paper.dialog.Dialog;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.guiframework.InventoryGUI;
-import me.karven.orderium.obj.Order;
+import me.karven.orderium.order.ItemOrder;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -23,7 +23,7 @@ public class DeliverGUI {
     public static final MiniMessage mm = MiniMessage.miniMessage();
     private final InventoryGUI deliverGUI;
 
-    public DeliverGUI(final @NotNull Order order) {
+    public DeliverGUI(final @NotNull ItemOrder order) {
         final ItemStack comparer = order.getOrderItem().getItemStack();
         final Config currentConfig = Config.config;
         this.deliverGUI = new InventoryGUI(currentConfig.deliverGUIConfig.rows, mm.deserialize(currentConfig.deliverGUIConfig.title), false);
@@ -47,7 +47,7 @@ public class DeliverGUI {
                 return;
             }
 
-            final Dialog dialog = DeliveryConfirmDialog.getDialog(deliveringPlayer, order, amount, order.moneyPer * amount, items);
+            final Dialog dialog = DeliveryConfirmDialog.getDialog(deliveringPlayer, order, amount, order.getMoneyPer() * amount, items);
 
             PlayerUtils.openDialog(deliveringPlayer, dialog);
         });

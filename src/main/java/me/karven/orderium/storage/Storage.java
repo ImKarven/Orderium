@@ -1,232 +1,143 @@
 package me.karven.orderium.storage;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.Pair;
-import me.karven.orderium.obj.orderitem.BlacklistedItem;
-import me.karven.orderium.obj.orderitem.CustomItem;
-import me.karven.orderium.obj.orderitem.OrderItem;
-import me.karven.orderium.obj.orderitem.VanillaItem;
-import me.karven.orderium.utils.ConvertUtils;
+import me.karven.orderium.storage.repository.ItemRepository;
+import me.karven.orderium.storage.repository.OrderRepository;
+import me.karven.orderium.storage.repository.TransactionLogRepository;
+import me.karven.orderium.storage.sql.*;
+import me.karven.orderium.storage.sql.mysql.MySqlItemRepository;
+import me.karven.orderium.storage.sql.mysql.MySqlOrderRepository;
+import me.karven.orderium.storage.sql.mysql.MySqlTransactionLogRepository;
+import me.karven.orderium.storage.sql.sqlite.SqliteItemRepository;
+import me.karven.orderium.storage.sql.sqlite.SqliteOrderRepository;
+import me.karven.orderium.storage.sql.sqlite.SqliteTransactionLogRepository;
 import me.karven.orderium.utils.Log;
-import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.flag.FeatureFlags;
-import net.minecraft.world.item.CreativeModeTab;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
-import static me.karven.orderium.Orderium.plugin;
+public final class Storage {
+    private final StorageType type;
+    private final OrderRepository orders;
+    private final ItemRepository items;
+    private final TransactionLogRepository transactionLog;
+    private final AutoCloseable database;
+    private final ExecutorService executor;
 
-public abstract class Storage {
-    private static final MethodHandle AS_BUKKIT_COPY = findAsBukkitCopy();
-    protected static final File dataDir = new File("plugins", "Orderium");
-    protected final String ORDER_TABLE = "orderium_orders";
-    protected final String TRANSACTION_TABLE = "orderium_transactions_v2";
-    private final String CUSTOM_ITEMS_TABLE = "orderium_custom_items_v2";
-    private final String BLACKLIST_TABLE = "orderium_blacklist";
+    private Storage(
+            final StorageType type,
+            final OrderRepository orders,
+            final ItemRepository items,
+            final TransactionLogRepository transactionLog,
+            final AutoCloseable database,
+            final int threads
+    ) {
+        this.type = type;
+        this.orders = orders;
+        this.items = items;
+        this.transactionLog = transactionLog;
+        this.database = database;
 
-    private final HikariDataSource modifiedItemDataSource;
-
-    protected Storage() {
-        HikariConfig modifiedItemsConfig = new HikariConfig();
-        modifiedItemsConfig.setPoolName("modified items pool");
-        modifiedItemsConfig.setJdbcUrl("jdbc:sqlite:" + plugin.getDataFolder() + File.separator + "modified_items.db");
-        this.modifiedItemDataSource = new HikariDataSource(modifiedItemsConfig);
-
-        Collection<VanillaItem> itemsList = loadItems();
-        Pair<Collection<BlacklistedItem>, Collection<CustomItem>> blacklistAndCustomItems = loadBlacklistAndCustomItems();
-
-        plugin.getDataCache().setItems(itemsList, blacklistAndCustomItems.first, blacklistAndCustomItems.second);
+        final AtomicInteger threadCount = new AtomicInteger();
+        this.executor = Executors.newFixedThreadPool(threads, runnable -> {
+            final Thread thread = new Thread(runnable, "Orderium Storage #" + threadCount.incrementAndGet());
+            thread.setDaemon(true);
+            return thread;
+        });
     }
 
-    public void addBlacklist(BlacklistedItem item) {
-        try (
-                Connection connection = modifiedItemDataSource.getConnection();
-                PreparedStatement addItem = connection.prepareStatement("INSERT INTO " + BLACKLIST_TABLE + " (item) VALUES (?)")
-        ) {
-            addItem.setBytes(1, item.getItemAsBytes());
-            addItem.executeUpdate();
-        } catch (SQLException e) {
-            Log.error("Failed to add blacklist item", e);
-        }
+    public static Storage open(final StorageSettings settings, final File dataFolder) {
+        return switch (settings.type()) {
+            case SQLITE -> {
+                final SqlDatabase database = SqlDatabase.sqlite(new File(dataFolder, "data.db"));
+                yield openSql(settings.type(), database, 1,
+                        new SqliteOrderRepository(database),
+                        new SqliteItemRepository(database, new File(dataFolder, "modified_items.db")),
+                        new SqliteTransactionLogRepository(database)
+                );
+            }
+            case MYSQL -> {
+                final SqlDatabase database = SqlDatabase.mysql(settings.mysql(), settings.pool());
+                yield openSql(settings.type(), database, Math.max(1, settings.pool().maximumPoolSize()),
+                        new MySqlOrderRepository(database),
+                        new MySqlItemRepository(database),
+                        new MySqlTransactionLogRepository(database)
+                );
+            }
+        };
     }
 
-    public void addCustomItem(CustomItem item) {
-        try (
-                Connection connection = modifiedItemDataSource.getConnection();
-                PreparedStatement addItem = connection.prepareStatement("INSERT INTO " + CUSTOM_ITEMS_TABLE + " (item, search) VALUES (?, ?)")
-        ) {
-            addItem.setBytes(1, item.getItemAsBytes());
-            addItem.setString(2, String.join(",", item.getSearches()));
-            addItem.executeUpdate();
-        } catch (SQLException e) {
-            Log.error("Failed to add custom item", e);
+    private static Storage openSql(
+            final StorageType type,
+            final SqlDatabase database,
+            final int threads,
+            final SqlOrderRepository orders,
+            final SqlItemRepository items,
+            final SqlTransactionLogRepository transactionLog
+    ) {
+        try {
+            new SqlSchemaMigrator(database).migrate(List.of(orders, items, transactionLog));
+        } catch (RuntimeException e) {
+            database.close();
+            throw e;
         }
+        return new Storage(type, orders, items, transactionLog, database, threads);
     }
 
-    public void removeBlacklist(BlacklistedItem item) {
-        try (
-                Connection connection = modifiedItemDataSource.getConnection();
-                PreparedStatement removeItem = connection.prepareStatement("DELETE FROM " + BLACKLIST_TABLE + " WHERE item = (?)")
-        ) {
-            removeItem.setBytes(1, item.getItemAsBytes());
-            removeItem.executeUpdate();
-        } catch (SQLException e) {
-            Log.error("Failed to remove blacklist item", e);
-        }
+    public StorageType type() {
+        return type;
     }
 
-    public void removeCustomItem(CustomItem item) {
-        try (
-                Connection connection = modifiedItemDataSource.getConnection();
-                PreparedStatement removeCustomItem = connection.prepareStatement("DELETE FROM " + CUSTOM_ITEMS_TABLE + " WHERE item = (?)")
-        ) {
-            removeCustomItem.setBytes(1, item.getItemAsBytes());
-            removeCustomItem.executeUpdate();
-        } catch (SQLException e) {
-            Log.error("Failed to remove custom item", e);
-        }
+    public OrderRepository orders() {
+        return orders;
     }
 
-    public void updateCustomItemSearch(CustomItem item) {
-        try (
-                Connection connection = modifiedItemDataSource.getConnection();
-                PreparedStatement updateSearch = connection.prepareStatement("UPDATE " + CUSTOM_ITEMS_TABLE + " SET search = ? WHERE item = ?")
-        ) {
-            updateSearch.setString(1, item.getParsedSearches());
-            updateSearch.setBytes(2, item.getItemAsBytes());
-            updateSearch.executeUpdate();
-        } catch (SQLException e) {
-            Log.error("Failed to update custom item search", e);
-        }
-    }
-
-    private Pair<Collection<BlacklistedItem>, Collection<CustomItem>> loadBlacklistAndCustomItems() {
-        try (
-                Connection connection = modifiedItemDataSource.getConnection();
-                PreparedStatement createCustomItemsTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + CUSTOM_ITEMS_TABLE + " (item BLOB, search VARCHAR(65535))");
-                PreparedStatement createBlacklistTable = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + BLACKLIST_TABLE + " (item BLOB)")
-        ) {
-            createCustomItemsTable.executeUpdate();
-            createBlacklistTable.executeUpdate();
-
-            PreparedStatement getCustomItems = connection.prepareStatement("SELECT * FROM " + CUSTOM_ITEMS_TABLE);
-            PreparedStatement getBlacklist = connection.prepareStatement("SELECT * FROM " + BLACKLIST_TABLE);
-
-            Collection<BlacklistedItem> blacklist = ConvertUtils.convertBlacklistedItems(getBlacklist.executeQuery());
-            Collection<CustomItem> customItems = ConvertUtils.convertCustomItems(getCustomItems.executeQuery());
-
-            getCustomItems.close();
-            getBlacklist.close();
-
-            return new Pair<>(blacklist, customItems);
-
-        } catch (SQLException e) {
-            Log.error("Failed to load modified items", e);
-        }
-        return new Pair<>(new ArrayList<>(), new ArrayList<>());
-    }
-
-    /**
-     * Use minecraft internals to get the items
-     * @return the default items
-     */
-    private Collection<VanillaItem> loadItems() {
-        MinecraftServer server = MinecraftServer.getServer();
-        RegistryAccess registryAccess = server.registryAccess();
-        CreativeModeTab.ItemDisplayParameters params = new CreativeModeTab.ItemDisplayParameters(FeatureFlags.VANILLA_SET, false, registryAccess);
-        Registry<CreativeModeTab> tabs = BuiltInRegistries.CREATIVE_MODE_TAB;
-        Collection<net.minecraft.world.item.ItemStack> minecraftItems = new HashSet<>();
-        Set<VanillaItem> items = new HashSet<>();
-
-        for (CreativeModeTab tab : tabs) {
-            tab.buildContents(params);
-            minecraftItems.addAll(tab.getSearchTabDisplayItems());
-        }
-
-        for (net.minecraft.world.item.ItemStack mcItem : minecraftItems) {
-            items.add(new VanillaItem(asBukkitCopy(mcItem), true));
-        }
+    public ItemRepository items() {
         return items;
     }
 
-    private static ItemStack asBukkitCopy(net.minecraft.world.item.ItemStack mcItem) {
+    public TransactionLogRepository transactionLog() {
+        return transactionLog;
+    }
+
+    public <T> CompletableFuture<T> supplyAsync(final String action, final Supplier<T> task) {
+        final CompletableFuture<T> future;
         try {
-            return (ItemStack) AS_BUKKIT_COPY.invokeExact(mcItem);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to convert " + mcItem + " to a bukkit item", e);
+            future = CompletableFuture.supplyAsync(task, executor);
+        } catch (RejectedExecutionException e) {
+            Log.error("Failed to " + action + ", the storage is closed", e);
+            return CompletableFuture.failedFuture(e);
         }
+        return future.whenComplete((_, exception) -> {
+            if (exception != null) Log.error("Failed to " + action, exception instanceof CompletionException && exception.getCause() != null ? exception.getCause() : exception);
+        });
     }
 
-    private static MethodHandle findAsBukkitCopy() {
-        for (Method method : CraftItemStack.class.getMethods()) {
-            if (!method.getName().equals("asBukkitCopy") || method.getParameterCount() != 1) continue;
-            if (!method.getParameterTypes()[0].isAssignableFrom(net.minecraft.world.item.ItemStack.class)) continue;
-            try {
-                return MethodHandles.publicLookup().unreflect(method).asType(MethodType.methodType(ItemStack.class, net.minecraft.world.item.ItemStack.class));
-            } catch (IllegalAccessException e) {
-                throw new IllegalStateException(e);
+    public CompletableFuture<Void> runAsync(final String action, final Runnable task) {
+        return supplyAsync(action, () -> {
+            task.run();
+            return null;
+        });
+    }
+
+    public void close() {
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                Log.warn("Storage tasks did not finish in time, some changes may be lost");
+                executor.shutdownNow();
             }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
         }
-        throw new IllegalStateException("Could not find CraftItemStack#asBukkitCopy");
+
+        try {
+            database.close();
+        } catch (Exception e) {
+            Log.error("Failed to close the database", e);
+        }
     }
-
-    public abstract CompletableFuture<Collection<Order>> loadOrders();
-
-    public abstract CompletableFuture<Order> createOrder(OfflinePlayer owner, OrderItem item, int amount, double moneyPer);
-
-    public abstract CompletableFuture<Double> cancelOrder(Order order);
-
-    /**
-     * Process a delivery from a player
-     * @param deliverer the player that delivers the order
-     * @param order the order the player is delivering
-     * @param items the inventory the player is requesting to deliver
-     * @return the amount of money the player receive for this delivery, 0 if the order no longer accepts deliveries.
-     * Items that were not delivered are given back to the deliverer. Completes exceptionally if an error occurred,
-     * in which case nothing was delivered and no items were given back
-     */
-    public abstract CompletableFuture<Double> deliverOrder(Player deliverer, Order order, Iterable<ItemStack> items);
-
-    public abstract CompletableFuture<Void> deleteOrder(Order order);
-
-    /**
-     * Subtract {@code amount} to inStorage of an order
-     * @param order the order
-     * @param amount the amount to collect
-     * @return {@code true} if there is enough items in storage, and they are subtracted, otherwise {@code false}
-     */
-    public abstract CompletableFuture<Boolean> collectItems(Order order, int amount);
-
-    /**
-     * Update a field of an order
-     * @param order the order
-     * @param field the field
-     * @param value the name to update
-     * @return true if the order is updated, false if the order is deleted because it should be
-     */
-    public abstract CompletableFuture<Boolean> updateOrder(Order order, Order.Field field, Object value);
-
-    public abstract CompletableFuture<Void> logTransaction(UUID player, double before, double amount, double after);
-
-    public abstract CompletableFuture<Void> createTables();
-
-    public abstract CompletableFuture<Void>  performMigration();
 }

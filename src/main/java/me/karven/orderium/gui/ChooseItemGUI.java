@@ -7,6 +7,7 @@ import me.karven.orderium.obj.SortType;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.EnchantableItem;
 import me.karven.orderium.obj.orderitem.OrderItem;
+import me.karven.orderium.storage.Storage;
 import me.karven.orderium.utils.AlgoUtils;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.PDCUtils;
@@ -146,7 +147,9 @@ public class ChooseItemGUI {
                 final ItemStack guiItemStack = guiItem.getItem();
                 if (PDCUtils.isBlacklist(guiItemStack.getItemMeta())) return;
                 ItemStack orderItemStack = orderItem.getItemStack();
-                plugin.getStorage().addBlacklist(new BlacklistedItem(orderItemStack.serializeAsBytes(), orderItemStack));
+                final BlacklistedItem blacklistedItem = new BlacklistedItem(orderItemStack.serializeAsBytes(), orderItemStack);
+                final Storage storage = plugin.getStorage();
+                storage.runAsync("add a blacklisted item", () -> storage.items().addBlacklisted(blacklistedItem));
                 p.sendRichMessage("<green>Item added to blacklist. Reload to take effects");
                 guiItemStack.editMeta(PDCUtils::setBlacklist);
             });

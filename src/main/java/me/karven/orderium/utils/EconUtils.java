@@ -1,6 +1,7 @@
 package me.karven.orderium.utils;
 
 import me.karven.orderium.obj.MoneyTransaction;
+import me.karven.orderium.storage.Storage;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +47,9 @@ public class EconUtils {
     private static void logTransactionAfter(final MoneyTransaction transaction) {
         if (!transaction.config.logTransactions) return;
         transaction.after = plugin.getEconomy().getBalance(transaction.player);
-        plugin.getStorage().logTransaction(transaction.player.getUniqueId(), transaction.before, transaction.amount, transaction.after)
+        final Storage storage = plugin.getStorage();
+        final long time = System.currentTimeMillis();
+        storage.runAsync("log a transaction", () -> storage.transactionLog().log(transaction.player.getUniqueId(), time, transaction.before, transaction.amount, transaction.after))
                 .exceptionally(_ -> {
                     Log.warn("Logging transaction to console.");
                     Log.warn(transaction.player.getName() + " (UUID " + transaction.player.getUniqueId() + ") before=" + transaction.before + " amount=" + transaction.amount + " after=" + transaction.after);
