@@ -2,10 +2,6 @@ package me.karven.orderium.utils;
 
 import com.google.common.base.Preconditions;
 import io.github.thatsmusic99.configurationmaster.api.ConfigSection;
-import me.karven.orderium.obj.Order;
-import me.karven.orderium.obj.orderitem.BlacklistedItem;
-import me.karven.orderium.obj.orderitem.CustomItem;
-import me.karven.orderium.obj.orderitem.OrderItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -16,15 +12,8 @@ import org.bukkit.inventory.ItemType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.logging.Level;
-
-import static me.karven.orderium.Orderium.plugin;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ConvertUtils {
@@ -37,63 +26,6 @@ public class ConvertUtils {
         final ItemType itemType = Registry.ITEM.get(new NamespacedKey(components[0], components[1]));
         if (itemType == null) return ItemType.STONE;
         return itemType;
-    }
-
-    public static List<Order> convertOrders(ResultSet raw) {
-        final List<Order> orders = new ArrayList<>();
-        if (raw == null) return orders;
-        try (raw) {
-            while (raw.next()) {
-                orders.add(
-                        new Order(raw.getInt(1),
-                                new UUID(raw.getLong(2), raw.getLong(3)),
-                                OrderItem.fromBytes(raw.getBytes(4)),
-                                raw.getDouble(5),
-                                raw.getInt(6),
-                                raw.getInt(7),
-                                raw.getInt(8),
-                                raw.getLong(9)
-                        )
-                );
-            }
-        } catch (SQLException e) {
-            Log.error("Failed to fetch order from database", e);
-        }
-
-        return orders;
-    }
-
-    public static List<BlacklistedItem> convertBlacklistedItems(ResultSet raw) {
-        final List<BlacklistedItem> items = new ArrayList<>();
-        if (raw == null) return items;
-        try (raw) {
-
-            while (raw.next()) {
-                items.add(new BlacklistedItem(raw.getBytes(1)));
-            }
-
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to fetch item from database", e);
-        }
-
-        return items;
-    }
-
-    public static List<CustomItem> convertCustomItems(ResultSet raw) {
-        final List<CustomItem> items = new ArrayList<>();
-        if (raw == null) return items;
-        try (raw) {
-            while (raw.next()) {
-                final byte[] itemBytes = raw.getBytes(1);
-                final String search = raw.getString(2);
-                items.add(new CustomItem(itemBytes, search.split(",")));
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to fetch searchable item from database", e);
-        }
-
-        return items;
-
     }
 
     public static ItemStack addLore(ItemStack item, List<String> toAdd) {

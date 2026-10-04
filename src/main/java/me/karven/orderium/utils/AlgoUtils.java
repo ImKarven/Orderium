@@ -6,10 +6,10 @@ import io.papermc.paper.datacomponent.item.ItemEnchantments;
 import io.papermc.paper.datacomponent.item.PotionContents;
 import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
-import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.SortType;
 import me.karven.orderium.obj.orderitem.OrderItem;
 import me.karven.orderium.obj.orderitem.SearchableItem;
+import me.karven.orderium.order.Order;
 import org.bukkit.Material;
 import org.bukkit.MusicInstrument;
 import org.bukkit.NamespacedKey;
@@ -52,12 +52,12 @@ public class AlgoUtils {
     }
 
     private static boolean search(Order order, String q) {
-        final boolean searchItem = searchWrappedItem(order.getOrderItem(), q);
+        final boolean searchItem = order.matchesSearch(q);
         final boolean searchOwnerName = order.getOwnerName() != null && fixQuery(order.getOwnerName()).contains(q);
         return searchItem || searchOwnerName;
     }
 
-    private static boolean searchWrappedItem(final OrderItem item, String q) {
+    public static boolean searchWrappedItem(final OrderItem item, String q) {
         if (!(item instanceof SearchableItem searchableItem)) return searchLegacyItem(item.getItemStack(), q);
 
         for (String search : searchableItem.getSearches()) {

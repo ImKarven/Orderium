@@ -12,9 +12,10 @@ import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.karven.orderium.guiframework.InteractLocation;
 import me.karven.orderium.guiframework.InventoryGUI;
 import me.karven.orderium.guiframework.InventoryItem;
-import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.orderitem.BlacklistedItem;
 import me.karven.orderium.obj.orderitem.CustomItem;
+import me.karven.orderium.order.Order;
+import me.karven.orderium.storage.Storage;
 import me.karven.orderium.utils.ConvertUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
@@ -55,7 +56,8 @@ public class AdminToolGUI {
             ItemStack clicked = e.getCurrentItem();
             if (clicked == null || clicked.isEmpty()) return;
             CustomItem customItem = new CustomItem(clicked.serializeAsBytes());
-            plugin.getStorage().addCustomItem(customItem);
+            final Storage storage = plugin.getStorage();
+            storage.runAsync("add a custom item", () -> storage.items().addCustomItem(customItem));
             plugin.getDataCache().getCustomItems().add(customItem);
             createCustomItems();
             PlayerUtils.openGUI(e.getWhoClicked(), customItems.get(Math.min(i, customItems.size() - 1)), false);
@@ -131,7 +133,8 @@ public class AdminToolGUI {
                     "<white>Click to <red>remove<white> from blacklist"
             )), e -> {
                 items.remove(blacklistedItem);
-                plugin.getStorage().removeBlacklist(blacklistedItem);
+                final Storage storage = plugin.getStorage();
+                storage.runAsync("remove a blacklisted item", () -> storage.items().removeBlacklisted(blacklistedItem));
 
                 createBlacklist();
                 PlayerUtils.openGUI(e.getWhoClicked(), blacklist.get(Math.min(currentPage, blacklist.size() - 1)), false);
@@ -179,7 +182,8 @@ public class AdminToolGUI {
                     }
 
                     case SHIFT_RIGHT -> {
-                        plugin.getStorage().removeCustomItem(item);
+                        final Storage storage = plugin.getStorage();
+                        storage.runAsync("remove a custom item", () -> storage.items().removeCustomItem(item));
                         items.remove(item);
                         createCustomItems();
                         PlayerUtils.openGUI(e.getWhoClicked(), customItems.get(Math.min(currentPage, customItems.size() - 1)), false);
@@ -231,7 +235,8 @@ public class AdminToolGUI {
 
                                                         case null, default -> {}
                                                     }
-                                                    plugin.getStorage().updateCustomItemSearch(item);
+                                                    final Storage storage = plugin.getStorage();
+                                                    storage.runAsync("update the searches of a custom item", () -> storage.items().updateCustomItemSearches(item));
                                                 }, ClickCallback.Options.builder().build()))
                                                 .build(),
                                         ActionButton.builder(Component.text("Cancel", NamedTextColor.RED)).build()
@@ -250,7 +255,7 @@ public class AdminToolGUI {
 
     @SuppressWarnings("UnstableApiUsage")
     public static Dialog createEditOrder(Order order) {
-        DialogBody body = DialogBody.item(order.getOrderItem().getItemStack()).description(DialogBody.plainMessage(Component.text("You're editing this order"))).build();
+        DialogBody body = DialogBody.item(order.getIcon()).description(DialogBody.plainMessage(Component.text("You're editing this order"))).build();
 
         DialogInput option = DialogInput.singleOption("option", Component.text("Action"), List.of(
                 SingleOptionDialogInput.OptionEntry.create("change_amount", Component.text("Change Amount"), true),

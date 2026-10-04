@@ -3,7 +3,7 @@ package me.karven.orderium.gui;
 import io.papermc.paper.dialog.Dialog;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.guiframework.InventoryGUI;
-import me.karven.orderium.obj.Order;
+import me.karven.orderium.order.Order;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
@@ -23,7 +23,7 @@ public class YourOrderGUI {
     public static void open(Player p, boolean isAsync) {
         final Config config = Config.config;
         final UUID pUUID = p.getUniqueId();
-        final List<Order> orders = plugin.getDataCache().getOrders(pUUID);
+        final List<Order> orders = plugin.getOrderService().getOrders(pUUID);
         final MiniMessage mm = plugin.mm;
         final InventoryGUI gui = new InventoryGUI(config.yourOrdersGUIConfig.rows, mm.deserialize(config.yourOrdersGUIConfig.title), true);
         int currentSlotIndex = 0;

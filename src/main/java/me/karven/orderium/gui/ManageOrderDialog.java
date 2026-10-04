@@ -2,7 +2,7 @@ package me.karven.orderium.gui;
 
 import io.papermc.paper.dialog.Dialog;
 import me.karven.orderium.config.Config;
-import me.karven.orderium.obj.Order;
+import me.karven.orderium.order.Order;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;

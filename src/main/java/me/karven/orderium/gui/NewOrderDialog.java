@@ -4,16 +4,17 @@ import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.action.DialogActionCallback;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.guiframework.InventoryGUI;
-import me.karven.orderium.obj.Order;
 import me.karven.orderium.obj.orderitem.OrderItem;
 import me.karven.orderium.obj.orderitem.SearchableItem;
+import me.karven.orderium.order.ItemOrder;
+import me.karven.orderium.order.Order;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import static me.karven.orderium.config.Config.config;
-import static me.karven.orderium.obj.Order.Response.*;
+import static me.karven.orderium.order.Order.Response.*;
 import static me.karven.orderium.utils.ConvertUtils.formatNumber;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -55,7 +56,7 @@ public class NewOrderDialog {
                     final Runnable confirmAction = () -> {
                         PlayerUtils.closeInv(p);
                         // Create new order
-                        final Order.Response response = Order.create(p, orderItem, moneyPer, amount);
+                        final Order.Response response = ItemOrder.create(p, orderItem, moneyPer, amount);
 
                         final Config nestedConfig = Config.config;
                         if (response == INVALID) p.sendRichMessage(nestedConfig.invalidInput);
