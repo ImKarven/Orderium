@@ -1,2 +1,3 @@
-### Fix
-Patches to some duping exploits/vulnerabilities
+- Allow using order placeholders in `receive-delivery` message
+- Storage system refactor with MySQL support
+- bStats is removed
