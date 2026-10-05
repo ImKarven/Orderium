@@ -12,6 +12,7 @@ import me.karven.orderium.utils.EconUtils;
 import me.karven.orderium.utils.PlayerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -103,16 +104,14 @@ public final class ItemOrder extends Order {
                         postEvent.callEvent();
                         return;
                     }
-                    final ItemStack itemStack = item.getItemStack();
-                    final ItemMeta meta = itemStack.getItemMeta();
-                    final Component displayName = meta == null ? null : meta.displayName();
-                    assert itemStack.getType().getItemTranslationKey() != null;
-                    ownerPlayer.sendRichMessage(
-                            config.receiveDelivery,
-                            Placeholder.unparsed("deliverer", p.getName()),
-                            Placeholder.unparsed("amount", formatNumber(delivery.units())),
-                            Placeholder.component("item", (displayName == null ? Component.translatable(itemStack.getType().getItemTranslationKey()) : displayName))
-                    );
+
+                    final TagResolver[] orderPlaceholders = this.placeholders();
+                    final TagResolver[] tagResolvers = new TagResolver[orderPlaceholders.length + 2];
+                    System.arraycopy(orderPlaceholders, 0, tagResolvers, 0, orderPlaceholders.length);
+                    tagResolvers[orderPlaceholders.length + 1] = Placeholder.unparsed("deliverer", p.getName());
+                    tagResolvers[orderPlaceholders.length + 2] = Placeholder.unparsed("deliver-amount", formatNumber(delivery.units()));
+
+                    ownerPlayer.sendRichMessage(config.receiveDelivery, tagResolvers);
                     postEvent.callEvent();
                 });
     }

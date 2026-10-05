@@ -35,7 +35,7 @@ import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 public class Config {
     private static final AtomicBoolean reloading = new AtomicBoolean(false);
     public static volatile Config config;
-    public static final int CURRENT_CONFIG_VERSION = 7;
+    public static final int CURRENT_CONFIG_VERSION = 8;
     public final File javaConfigFile = new File(plugin.getDataFolder(), "config.yml");
 
     public ConfigFile configFile;
@@ -58,7 +58,6 @@ public class Config {
             enchantGUIConfig, deliverGUIConfig, newOrderDialogConfig, confirmDeliveryDialogConfig, manageOrderDialogConfig
     );
 
-    public boolean bStats;
     public boolean checkForUpdates;
 
     public String invalidInput;
@@ -121,7 +120,6 @@ public class Config {
         webhookConfig.setDefault();
         for (final GUIConfigFile config : GUI_CONFIGS) config.setDefault();
 
-        configFile.addDefault("bstats", true);
         configFile.addDefault("check-for-updates", true);
         configFile.addDefault("log-transactions", true);
         configFile.addDefault("expires-after", 7L * 24L * 60L * 60L * 1000L);
@@ -197,7 +195,6 @@ public class Config {
     public static void reload() throws Exception {
         config = new Config();
 
-        plugin.reloadBStats(config);
         ChooseItemGUI.init();
 
         AdminToolGUI.createBlacklist();
@@ -230,7 +227,6 @@ public class Config {
             if (display != null) status.setText(display);
         }
 
-        bStats = configFile.getBoolean("bstats");
         checkForUpdates = configFile.getBoolean("check-for-updates");
         logTransactions = configFile.getBoolean("log-transactions");
         expiresAfter = configFile.getLong("expires-after");
@@ -276,8 +272,6 @@ public class Config {
         sortSound = getSound("sort");
         newOrderSound = getSound("new-order");
         deliverSound = getSound("deliver");
-
-        plugin.reloadBStats(this);
     }
 
     private Sound getSound(String name) {
@@ -318,7 +312,7 @@ public class Config {
         configFile.addDefault("messages.create-order-success", "<gray>Your order has been created");
         configFile.addDefault("messages.invalid-input", "<red>Invalid number or format");
         configFile.addDefault("messages.deliver", "<gray>You earned <green>$<money><gray> from delivering an order");
-        configFile.addDefault("messages.receive-delivery", "<aqua><deliverer> <gray>delivered you <aqua><amount> <item>");
+        configFile.addDefault("messages.receive-delivery", "<aqua><deliverer> <gray>delivered you <aqua><deliver-amount> <item>");
         configFile.addDefault("messages.not-enough-money", "<red>You do not have enough money");
         configFile.addDefault("messages.deliver-self", "<red>You cannot deliver your own order");
         configFile.addDefault("messages.exceeded-max-collect", "<red>You are collecting too many items");

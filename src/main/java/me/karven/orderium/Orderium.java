@@ -5,12 +5,12 @@ import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import dev.faststats.bukkit.BukkitContext;
 import me.karven.orderium.config.Config;
 import me.karven.orderium.data.DataCache;
+import me.karven.orderium.data.VanillaItems;
 import me.karven.orderium.gui.AdminToolGUI;
 import me.karven.orderium.gui.SignGUI;
 import me.karven.orderium.guiframework.GUIListener;
 import me.karven.orderium.listener.DisconnectListener;
 import me.karven.orderium.listener.ServerLoadListener;
-import me.karven.orderium.data.VanillaItems;
 import me.karven.orderium.order.OrderService;
 import me.karven.orderium.storage.Storage;
 import me.karven.orderium.storage.StorageSettings;
@@ -30,8 +30,6 @@ import static me.karven.orderium.utils.Values.ERROR_TRACKER;
 
 public final class Orderium extends JavaPlugin {
     public static Orderium plugin;
-    public final int bStatsID = 27569;
-    public org.bstats.bukkit.Metrics bStatsMetrics = null;
     public static boolean isFolia;
 
     public final String faststatsToken = "241271513528286847e7c7ee08df7ec9";
@@ -157,16 +155,6 @@ public final class Orderium extends JavaPlugin {
             return true;
         } catch (ClassNotFoundException e) {
             return false;
-        }
-    }
-
-    public void reloadBStats(final Config config) {
-        if (config.bStats) {
-            if (bStatsMetrics == null)
-                bStatsMetrics = new org.bstats.bukkit.Metrics(plugin, bStatsID);
-        } else if (bStatsMetrics != null) {
-            bStatsMetrics.shutdown();
-            bStatsMetrics = null;
         }
     }
 }

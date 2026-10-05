@@ -54,7 +54,9 @@ public class ConfigMigration {
          */
         if (configVersion(config) == 5) migrateV6(config);
 
-        migrateV7(config);
+        if (configVersion(config) == 6) migrateV7(config);
+
+        if (configVersion(config) == 7) migrateV8(config);
     }
 
     private static void migrateV5(final @NotNull Config config) throws Exception {
@@ -116,6 +118,18 @@ public class ConfigMigration {
         config.mainGUIConfig.saveToFile();
         config.chooseItemGUIConfig.saveToFile();
         config.searchDialogConfig.saveToFile();
+        config.configFile.save();
+        config.load();
+    }
+
+    private static void migrateV8(final @NotNull Config config) throws Exception {
+        config.setDefaults();
+        final String receiveDeliveryString = config.configFile.getString("messages.receive-delivery");
+        if (receiveDeliveryString != null) {
+            config.configFile.set("messages.receive-delivery", receiveDeliveryString.replace("<amount>", "<deliver-amount>"));
+        }
+        config.configFile.set("bstats", null);
+        config.configFile.set("config-version", 8);
         config.configFile.save();
         config.load();
     }
