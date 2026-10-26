@@ -27,8 +27,10 @@ public class YourOrderGUI {
         final MiniMessage mm = plugin.mm;
         final InventoryGUI gui = new InventoryGUI(config.yourOrdersGUIConfig.rows, mm.deserialize(config.yourOrdersGUIConfig.title), true);
         int currentSlotIndex = 0;
+        // TODO: add paginated your orders gui
+        final int maximumSlotAmount = Math.min(config.yourOrdersGUIConfig.orderConfig.slots.size(), config.yourOrdersGUIConfig.rows * 9);
         for (Order order : orders) {
-            if (currentSlotIndex == config.yourOrdersGUIConfig.rows * 9) break;
+            if (currentSlotIndex >= maximumSlotAmount) break;
             gui.addItem(order.yourOrdersInventoryItem(_ -> {
                 Dialog dialog = ManageOrderDialog.getDialog(order);
                 PlayerUtils.openDialog(p, dialog);
