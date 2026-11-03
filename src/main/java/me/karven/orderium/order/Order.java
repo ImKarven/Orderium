@@ -7,7 +7,10 @@ import me.karven.orderium.config.Config;
 import me.karven.orderium.gui.YourOrderGUI;
 import me.karven.orderium.guiframework.InventoryItem;
 import me.karven.orderium.obj.OrderStatus;
-import me.karven.orderium.utils.*;
+import me.karven.orderium.utils.CustomMetrics;
+import me.karven.orderium.utils.EconUtils;
+import me.karven.orderium.utils.PDCUtils;
+import me.karven.orderium.utils.Values;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -103,6 +106,10 @@ public abstract class Order implements me.karven.orderium.api.Order {
     }
 
     public boolean isActive() { return state.isActive(System.currentTimeMillis()); }
+
+    public boolean isCompleted() {
+        return this.state.isCompleted();
+    }
 
     public @NotNull InventoryItem yourOrdersInventoryItem(final Consumer<InventoryClickEvent> action) {
         return new InventoryItem(yourOrdersItemStack(), action);

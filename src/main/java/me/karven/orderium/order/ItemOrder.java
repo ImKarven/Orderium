@@ -119,6 +119,11 @@ public final class ItemOrder extends Order {
 
                     ownerPlayer.sendRichMessage(config.receiveDelivery, tagResolvers);
                     postEvent.callEvent();
+
+                    if (!this.isCompleted()) return;
+                    if (config.webhookConfig.orderCompleteOption.enabled) {
+                        config.webhookConfig.orderCompleteOption.send(stringPlaceholders());
+                    }
                 });
     }
 

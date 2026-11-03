@@ -16,6 +16,10 @@ public record OrderState(double moneyPer, int amount, int delivered, int inStora
         return !isActive(now) && inStorage == 0;
     }
 
+    public boolean isCompleted() {
+        return this.amount == this.delivered;
+    }
+
     public int remaining() {
         return Math.max(0, amount - delivered);
     }
