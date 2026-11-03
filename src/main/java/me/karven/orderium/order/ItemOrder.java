@@ -92,8 +92,14 @@ public final class ItemOrder extends Order {
                     p.sendRichMessage(config.deliver, Placeholder.unparsed("money", formatNumber(moneyReceived)));
                     PlayerUtils.playSound(p, config.deliverSound);
 
+                    final String formattedDeliverAmount = formatNumber(delivery.units());
+
                     if (config.webhookConfig.deliverOrderOption.enabled) {
-                        config.webhookConfig.deliverOrderOption.send(stringPlaceholders(), "<deliverer>", p.getName());
+                        config.webhookConfig.deliverOrderOption.send(
+                                stringPlaceholders(),
+                                "<deliverer>", p.getName(),
+                                "<deliver-amount>", formattedDeliverAmount
+                        );
                     }
 
                     final PlayerDeliverOrderEvent.Post postEvent = new PlayerDeliverOrderEvent.Post(p, this, !Bukkit.isPrimaryThread());
@@ -109,7 +115,7 @@ public final class ItemOrder extends Order {
                     final TagResolver[] tagResolvers = new TagResolver[orderPlaceholders.length + 2];
                     System.arraycopy(orderPlaceholders, 0, tagResolvers, 0, orderPlaceholders.length);
                     tagResolvers[orderPlaceholders.length + 1] = Placeholder.unparsed("deliverer", p.getName());
-                    tagResolvers[orderPlaceholders.length + 2] = Placeholder.unparsed("deliver-amount", formatNumber(delivery.units()));
+                    tagResolvers[orderPlaceholders.length + 2] = Placeholder.unparsed("deliver-amount", formattedDeliverAmount);
 
                     ownerPlayer.sendRichMessage(config.receiveDelivery, tagResolvers);
                     postEvent.callEvent();
