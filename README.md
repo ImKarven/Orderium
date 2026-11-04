@@ -4,7 +4,7 @@ Orderium is a plugin that allows players on your server to create and deliver or
 <br>Download the plugin on [Modrinth](https://modrinth.com/plugin/orderium).
 
 # Documentation
-Documentation for usage of Orderium can be found in [this repository wiki](https://github.com/ImKarven/Orderium/wiki).
+Documentation for usage of Orderium is present on [the docs site](https://orderium.github.io/).
 
 # Compiling
 <br>Once the repository is cloned, run `./gradlew shadowJar` to compile the plugin.
